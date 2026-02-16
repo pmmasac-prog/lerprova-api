@@ -18,7 +18,7 @@ services:
     name: lerprova-frontend-app
     runtime: static
     rootDir: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm install @rollup/rollup-linux-x64-gnu && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
