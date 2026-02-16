@@ -37,13 +37,15 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#0f172a] font-sans">
+        <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#0f172a] font-sans p-4 sm:p-6">
             {/* Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-violet-500/15 rounded-full blur-[120px] animate-pulse pointer-events-none" style={{ animationDelay: '1s' }} />
 
-            <div className="relative z-10 w-full max-w-md p-8 sm:p-4">
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-[2rem] p-10 shadow-2xl">
+            <div className="relative z-10 w-full max-w-md">
+                <div className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-black/50 overflow-hidden relative">
+                    {/* Decorative internal blur */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-16 -mt-16 rounded-full" />
                     <div className="flex flex-col items-center mb-10 text-center">
                         <div className="w-20 h-20 bg-gradient-to-tr from-blue-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 mb-6 rotate-3 hover:rotate-0 transition-transform duration-300">
                             <Shield className="w-10 h-10 text-white" />

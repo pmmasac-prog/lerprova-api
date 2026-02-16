@@ -163,6 +163,14 @@
     color: #3b82f6;
 }
 
+.action-btn.edit {
+    background: #eff6ff;
+}
+
+.action-btn.edit span {
+    color: #3b82f6;
+}
+
 .action-btn.scan {
     background: #dcfce7;
 }
@@ -171,20 +179,20 @@
     color: #10b981;
 }
 
-.action-btn.notes {
-    background: #e0e7ff;
+.action-btn.upload {
+    background: #f5f3ff;
 }
 
-.action-btn.notes span {
-    color: #4f46e5;
+.action-btn.upload span {
+    color: #8b5cf6;
 }
 
-.action-btn.edit {
-    background: #eff6ff;
+.action-btn.download {
+    background: #e0f2fe;
 }
 
-.action-btn.edit span {
-    color: #3b82f6;
+.action-btn.download span {
+    color: #0284c7;
 }
 
 .action-btn.delete {
@@ -467,6 +475,7 @@
     padding: 40px 20px;
     font-size: 14px;
 }
+
 /* Batch Processing Overlay */
 .batch-overlay {
     position: fixed;
@@ -509,6 +518,11 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
