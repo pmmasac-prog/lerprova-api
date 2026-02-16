@@ -148,11 +148,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 10px;
-    background: #eff6ff;
-    border: none;
-    border-radius: 10px;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 8px;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
 }

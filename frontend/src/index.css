@@ -360,61 +360,63 @@ code {
 
 .text-center {
   text-align: center;
-}\
+}
+
 /* ===== ICON SYSTEM (GLASSMORPHISM) ===== */
 
 .icon-bg {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 14px;
-    transition: all 0.2s;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .icon-bg-sm {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
 }
 
 .icon-bg:hover {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 .icon-blue {
-    background: #eff6ff;
-    color: #3b82f6;
-    border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #dbeafe;
 }
 
 .icon-purple {
-    background: #f3e8ff;
-    color: #a855f7;
-    border: 1px solid #f3e8ff;
+  background: #f3e8ff;
+  color: #a855f7;
+  border: 1px solid #f3e8ff;
 }
 
 .icon-green {
-    background: #dcfce7;
-    color: #22c55e;
-    border: 1px solid #dcfce7;
+  background: #dcfce7;
+  color: #22c55e;
+  border: 1px solid #dcfce7;
 }
 
 .icon-orange {
-    background: #ffedd5;
-    color: #f97316;
-    border: 1px solid #ffedd5;
+  background: #ffedd5;
+  color: #f97316;
+  border: 1px solid #ffedd5;
 }
 
 .icon-red {
-    background: #fee2e2;
-    color: #ef4444;
-    border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
 }
 
 .icon-indigo {
-    background: #e0e7ff;
-    color: #4f46e5;
-    border: 1px solid #c7d2fe;
-}\
+  background: #e0e7ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Trash2, User, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp } from 'lucide-react';
+import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp } from 'lucide-react';
 import { api } from '../services/api';
 import './TurmaDetail.css';
 
@@ -35,6 +35,7 @@ export const TurmaDetail: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'desempenho' | 'frequencia' | 'cartao'>('desempenho');
     const [selectedAlunoStats, setSelectedAlunoStats] = useState({ media: '0.0', provas: 0, presenca: '0%' });
     const [alunoResultados, setAlunoResultados] = useState<any[]>([]);
+    const [alunoFreqHistory, setAlunoFreqHistory] = useState<any[]>([]);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
 
@@ -85,7 +86,12 @@ export const TurmaDetail: React.FC = () => {
 
             // Se tiver endpoint de histórico detalhado, usaríamos aqui. 
             // Como não temos GET /frequencia/aluno/{id}/history, vamos simular ou deixar estatístico por enquanto
-            // Para "Frequência" tab, vamos mostrar o stats
+            // Carregar histórico real
+            const allFreqs = await api.getFrequenciaTurma(parseInt(id || '0'));
+            const studentHistory = allFreqs.filter((f: any) => f.aluno_id === aluno.id)
+                .sort((a: any, b: any) => b.data.localeCompare(a.data));
+            setAlunoFreqHistory(studentHistory);
+
             setSelectedAlunoStats({
                 media: resultadosDoAluno.length > 0 ? (resultadosDoAluno.reduce((acc: number, curr: any) => acc + curr.nota, 0) / resultadosDoAluno.length).toFixed(1) : '0.0',
                 provas: resultadosDoAluno.length,
@@ -257,10 +263,15 @@ export const TurmaDetail: React.FC = () => {
                     <ArrowLeft size={18} />
                 </button>
                 <div className="header-info">
-                    <h1 className="turma-detail-title">{turma.nome}</h1>
-                    {turma.disciplina && (
-                        <p className="turma-detail-subtitle">{turma.disciplina}</p>
-                    )}
+                    <div className="icon-bg icon-bg-sm icon-purple">
+                        <Users size={18} />
+                    </div>
+                    <div>
+                        <h1 className="turma-detail-title">{turma.nome}</h1>
+                        {turma.disciplina && (
+                            <p className="turma-detail-subtitle">{turma.disciplina}</p>
+                        )}
+                    </div>
                 </div>
                 <div className="header-actions">
                     <button
@@ -292,16 +303,22 @@ export const TurmaDetail: React.FC = () => {
 
             {/* Stats */}
             <div className="turma-stats">
-                <div className="stat-item blue">
-                    <User size={18} />
+                <div className="stat-item">
+                    <div className="icon-bg icon-bg-sm icon-blue">
+                        <User size={18} />
+                    </div>
                     <span>{alunos.length} Alunos</span>
                 </div>
-                <div className="stat-item purple">
-                    <FileText size={18} />
+                <div className="stat-item">
+                    <div className="icon-bg icon-bg-sm icon-purple">
+                        <FileText size={18} />
+                    </div>
                     <span>0 Gabaritos</span>
                 </div>
-                <div className="stat-item green">
-                    <BarChart3 size={18} />
+                <div className="stat-item">
+                    <div className="icon-bg icon-bg-sm icon-green">
+                        <BarChart3 size={18} />
+                    </div>
                     <span>Média: 0.0</span>
                 </div>
             </div>
@@ -528,15 +545,34 @@ export const TurmaDetail: React.FC = () => {
                                         <p style={{ color: '#64748b' }}>Frequência Global</p>
                                     </div>
 
-                                    <div className="freq-history-placeholder" style={{ textAlign: 'center', marginTop: '20px', padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #e2e8f0' }}>
-                                        <Calendar size={32} color="#94a3b8" />
-                                        <p style={{ fontSize: '13px', color: '#64748b', marginTop: '10px' }}>Histórico detalhado das aulas</p>
-                                        <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                            {/* Mock de dias */}
-                                            <span style={{ padding: '4px 8px', background: '#ecfdf5', color: '#065f46', borderRadius: '4px', fontSize: '11px', border: '1px solid #d1fae5' }}>27/10: Presente</span>
-                                            <span style={{ padding: '4px 8px', background: '#fef2f2', color: '#991b1b', borderRadius: '4px', fontSize: '11px', border: '1px solid #fee2e2' }}>26/10: Falta</span>
-                                            <span style={{ padding: '4px 8px', background: '#ecfdf5', color: '#065f46', borderRadius: '4px', fontSize: '11px', border: '1px solid #d1fae5' }}>25/10: Presente</span>
-                                        </div>
+                                    <div className="freq-history-real" style={{ marginTop: '20px' }}>
+                                        <h3 style={{ fontSize: '14px', margin: '0 0 10px', color: '#64748b' }}>Histórico de Presenças</h3>
+                                        {alunoFreqHistory.length > 0 ? (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                {alunoFreqHistory.map((entry: any) => (
+                                                    <span key={entry.id} style={{
+                                                        padding: '6px 12px',
+                                                        background: entry.presente ? '#ecfdf5' : '#fef2f2',
+                                                        color: entry.presente ? '#065f46' : '#991b1b',
+                                                        borderRadius: '8px',
+                                                        fontSize: '12px',
+                                                        fontWeight: '500',
+                                                        border: `1px solid ${entry.presente ? '#d1fae5' : '#fee2e2'}`,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px'
+                                                    }}>
+                                                        {entry.presente ? <ClipboardCheck size={14} /> : <X size={14} />}
+                                                        {new Date(entry.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}: {entry.presente ? 'Presente' : 'Falta'}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div style={{ textAlign: 'center', padding: '30px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #e2e8f0' }}>
+                                                <Calendar size={32} color="#94a3b8" />
+                                                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '10px' }}>Nenhuma aula registrada ainda</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}

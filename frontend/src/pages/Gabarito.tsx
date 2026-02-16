@@ -317,15 +317,21 @@ export const Gabarito: React.FC = () => {
 
                                     <div className="history-actions">
                                         <button className="action-btn edit" onClick={() => handleEdit(g)}>
-                                            <Edit3 size={20} />
+                                            <div className="icon-bg icon-bg-sm icon-blue">
+                                                <Edit3 size={18} />
+                                            </div>
                                             <span>Editar</span>
                                         </button>
                                         <button className="action-btn scan" onClick={() => setActiveScanner({ id: g.id, numQuestions: g.num_questoes })}>
-                                            <Camera size={20} />
+                                            <div className="icon-bg icon-bg-sm icon-green">
+                                                <Camera size={18} />
+                                            </div>
                                             <span>Corrigir</span>
                                         </button>
                                         <button className="action-btn upload" onClick={() => fileInputRef.current?.click()}>
-                                            <Upload size={20} />
+                                            <div className="icon-bg icon-bg-sm icon-purple">
+                                                <Upload size={18} />
+                                            </div>
                                             <span>Lote</span>
                                             <input
                                                 type="file"
@@ -337,11 +343,15 @@ export const Gabarito: React.FC = () => {
                                             />
                                         </button>
                                         <button className="action-btn download" onClick={() => setPrintData({ gabarito: g, turmaNome: g.turma_nome || 'Todas as Turmas' })}>
-                                            <Download size={20} />
+                                            <div className="icon-bg icon-bg-sm icon-indigo">
+                                                <Download size={18} />
+                                            </div>
                                             <span>Cartões</span>
                                         </button>
                                         <button className="action-btn delete" onClick={() => handleDelete(g.id)}>
-                                            <Trash2 size={20} />
+                                            <div className="icon-bg icon-bg-sm icon-red">
+                                                <Trash2 size={18} />
+                                            </div>
                                             <span>Excluir</span>
                                         </button>
                                     </div>
