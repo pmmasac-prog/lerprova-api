@@ -1,0 +1,191 @@
+.turmas-container {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding-bottom: 100px;
+}
+
+.turmas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    /* Padding reduzido */
+    background: #fff;
+    margin-bottom: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.turmas-title {
+    font-size: 20px;
+    /* Fonte levemente menor */
+    font-weight: bold;
+    color: #0f172a;
+}
+
+.turmas-subtitle {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Botão Compacto */
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    /* Menor */
+    border-radius: 8px;
+    /* Menor */
+    font-weight: 600;
+    font-size: 12px;
+    /* Fonte menor */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 36px;
+    /* Altura fixa compacta */
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.turmas-content {
+    padding: 16px;
+}
+
+/* Layout em Lista Compacto */
+.turmas-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Coladinhos */
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.turma-card {
+    background: white;
+    border-radius: 8px;
+    /* Radius menor para combinar com altura */
+    border: 1px solid #e2e8f0;
+    padding: 0 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 44px !important;
+    /* Altura 44px TRAVADA */
+    min-height: 44px;
+    overflow: hidden;
+    /* Garantir que nada vaze */
+}
+
+.turma-card:hover {
+    border-color: #bfdbfe;
+    background: #f8fafc;
+}
+
+.turma-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.turma-icon {
+    width: 28px;
+    /* Ícone bem menor para caber nos 44px */
+    height: 28px;
+    border-radius: 6px;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+/* Ajustes no size do ícone SVG dentro (via CSS se possível, ou confiar no container) 
+   Mas o SVG tem size inline no React, então o container clipa ou centraliza
+*/
+
+.turma-info {
+    display: flex;
+    align-items: center;
+    /* Agora lado a lado (nome - disciplina) para economizar altura vertical */
+    gap: 8px;
+    overflow: hidden;
+}
+
+.turma-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.turma-disciplina {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-left: 1px solid #e2e8f0;
+    padding-left: 8px;
+}
+
+.turma-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Delete Button - Ultra Compact */
+.icon-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.empty-state h3 {
+    margin: 12px 0 4px;
+    color: #0f172a;
+    font-size: 16px;
+}
+
+.empty-state p {
+    font-size: 13px;
+    margin-bottom: 20px;
+}

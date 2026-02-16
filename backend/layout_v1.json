@@ -1,0 +1,29 @@
+{
+    "version": "v1-antigravity-refined",
+    "warped_size": {
+        "w": 1120,
+        "h": 1600
+    },
+    "thresholds": {
+        "marked": 0.20,
+        "ambiguous": 0.10
+    },
+    "roi_size_pct_of_width": 0.035,
+    "options": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+    ],
+    "x_centers_pct": [
+        0.245,
+        0.318,
+        0.392,
+        0.465,
+        0.538
+    ],
+    "y_start_pct": 0.21,
+    "y_end_pct": 0.88,
+    "num_questions": 25
+}

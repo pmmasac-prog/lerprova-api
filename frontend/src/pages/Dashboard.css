@@ -1,0 +1,171 @@
+.dashboard-container {
+    min-height: 100vh;
+    background: #f8fafc;
+    padding: 20px;
+    padding-top: 20px;
+    padding-bottom: 100px;
+}
+
+.dashboard-header {
+    margin-bottom: 30px;
+}
+
+.dashboard-title {
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+}
+
+.dashboard-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon-bg {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.icon-blue {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.icon-purple {
+    background: #f3e8ff;
+    color: #a855f7;
+}
+
+.icon-green {
+    background: #dcfce7;
+    color: #22c55e;
+}
+
+.icon-orange {
+    background: #ffedd5;
+    color: #f97316;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-info h3 {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px 0;
+    font-weight: 600;
+}
+
+.stat-info p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1;
+}
+
+/* Welcome Section */
+.welcome-banner {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 20px;
+    padding: 30px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+    max-width: 60%;
+}
+
+.welcome-content h2 {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.welcome-content p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 20px 0;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.action-button.primary {
+    background: white;
+    color: #2563eb;
+}
+
+.action-button.primary:hover {
+    background: #f8fafc;
+}
+
+.action-button.secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.action-button.secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.welcome-image {
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    opacity: 0.2;
+    transform: rotate(-10deg);
+}

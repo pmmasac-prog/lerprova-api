@@ -1,0 +1,356 @@
+/* ===== LERPROVA Design System ===== */
+/* Baseado nos arquivos mobile: tema escuro, glassmorphism, componentes modernos */
+
+:root {
+  /* Cores Principais */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: rgba(255,255,255,0.05);
+  --bg-card-light: #fff;
+  
+  /* Cores de Ação */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  /* Cores de Texto */
+  --color-text: #fff;
+  --color-text-dark: #0f172a;
+  --color-text-muted: #94a3b8;
+  --color-text-secondary: #64748b;
+  
+  /* Bordas */
+  --border-color: #e2e8f0;
+  --border-color-dark: #f1f5f9;
+  
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  
+  /* Raios de Borda */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--color-text);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* ===== BOTÕES ===== */
+
+/* Botão Primário */
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Botão Success */
+.btn-success {
+  background: var(--color-success);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* Botão Danger */
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* Botão Secundário */
+.btn-secondary {
+  background: #f1f5f9;
+  color: var(--color-text-secondary);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* ===== CHIPS ===== */
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.chip-active, .chip:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+/* ===== BADGES ===== */
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.badge-success {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.badge-warning {
+  background: var(--color-warning);
+  color: #fff;
+}
+
+.badge-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.nota-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  min-width: 36px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.nota-badge.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.nota-badge.warning {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.nota-badge.danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== CARDS ===== */
+
+.card {
+  background: var(--bg-card-light);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  border: 1px solid var(--border-color-dark);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+.card-subtitle {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+/* Mini Stats */
+.mini-stat {
+  flex: 1;
+  background: var(--bg-card-light);
+  padding: 12px;
+  border-radius: 14px;
+  text-align: center;
+  border: 1px solid var(--border-color-dark);
+}
+
+.mini-stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+.mini-stat-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ===== INPUTS ===== */
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 38px;
+  border: 1px solid var(--border-color);
+}
+
+.search-input {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-dark);
+  border: none;
+  outline: none;
+  background: transparent;
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ===== MODAL ===== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 25px;
+  padding: 25px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+/* ===== UTILIDADES ===== */
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+.mt-4 {
+  margin-top: 16px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.p-4 {
+  padding: 16px;
+}
+
+.text-center {
+  text-align: center;
+}

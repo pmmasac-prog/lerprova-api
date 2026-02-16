@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+.env
+
+# Database
+*.db
+lerprova_server.db
+
+# Logs
+logs/
+debug_logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

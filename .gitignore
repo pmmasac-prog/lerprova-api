@@ -1,0 +1,27 @@
+# Monorepo Root Gitignore
+
+# Components
+backend/lerprova_server.db
+backend/__pycache__/
+backend/debug_logs/
+frontend/node_modules/
+frontend/dist/
+
+# Unwanted folders in the main codebase
+backend_old_v1/
+lerprova-api-main/
+lerprova-api-main.zip
+lerprova-app/
+mobile/
+recovery/
+lerprova_server.db
+users.json
+backend_stable.txt
+backend_url.txt
+frontend_url.txt
+
+# OS/System
+.DS_Store
+Thumbs.db
+.env
+*.local

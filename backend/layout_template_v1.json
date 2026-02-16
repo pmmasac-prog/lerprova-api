@@ -1,0 +1,14 @@
+{
+  "target_width": 1120,
+  "target_height": 1600,
+  "bubble_layout": {
+    "x_base_pct": [0.20, 0.29, 0.38, 0.47, 0.56],
+    "y_start_pct": 0.20,
+    "y_end_pct": 0.90,
+    "roi_size_pct": 0.04
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Template para cartão A4 Paisagem (2 cartões por folha). Alinhamento à esquerda."
+  }
+}
