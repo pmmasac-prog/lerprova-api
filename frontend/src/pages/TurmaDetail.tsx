@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Trash2, User, FileText, BarChart3, ClipboardCheck, X, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, Trash2, User, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp } from 'lucide-react';
 import { api } from '../services/api';
 import './TurmaDetail.css';
 
@@ -35,6 +35,8 @@ export const TurmaDetail: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'desempenho' | 'frequencia' | 'cartao'>('desempenho');
     const [selectedAlunoStats, setSelectedAlunoStats] = useState({ media: '0.0', provas: 0, presenca: '0%' });
     const [alunoResultados, setAlunoResultados] = useState<any[]>([]);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [importing, setImporting] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -170,6 +172,67 @@ export const TurmaDetail: React.FC = () => {
         }
     };
 
+    const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !id) return;
+
+        setImporting(true);
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const text = e.target?.result as string;
+                const lines = text.split(/\r?\n/);
+
+                // Get headers and clean them
+                const rawHeaders = lines[0].split(/[;,]/).map(h => h.trim().toLowerCase());
+                const nomeIdx = rawHeaders.indexOf('nome');
+                const codigoIdx = rawHeaders.indexOf('codigo') !== -1 ? rawHeaders.indexOf('codigo') : rawHeaders.indexOf('matricula');
+
+                if (nomeIdx === -1) {
+                    alert('CSV inválido. Certifique-se de ter uma coluna chamada "nome".');
+                    return;
+                }
+
+                let successCount = 0;
+                let errorCount = 0;
+
+                // Process data lines
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+
+                    const values = line.split(/[;,]/);
+                    const nome = values[nomeIdx]?.trim();
+                    const codigo = codigoIdx !== -1 ? values[codigoIdx]?.trim() : (i + (alunos.length || 0)).toString();
+
+                    if (nome) {
+                        try {
+                            await api.addAluno({
+                                nome,
+                                codigo: codigo || (Date.now() + i).toString(),
+                                turma_id: parseInt(id),
+                                qr_token: `ALUNO_${codigo}`
+                            });
+                            successCount++;
+                        } catch (err) {
+                            errorCount++;
+                        }
+                    }
+                }
+
+                alert(`Importação concluída!\nSucesso: ${successCount}\nErros: ${errorCount}`);
+                loadData();
+            } catch (err) {
+                console.error('Erro ao processar CSV:', err);
+                alert('Erro ao processar o arquivo CSV.');
+            } finally {
+                setImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+        reader.readAsText(file);
+    };
+
     if (loading) {
         return (
             <div className="turma-detail-container">
@@ -200,6 +263,21 @@ export const TurmaDetail: React.FC = () => {
                     )}
                 </div>
                 <div className="header-actions">
+                    <button
+                        className="action-icon-btn blue"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Importar CSV"
+                        disabled={importing}
+                    >
+                        {importing ? <div className="spinner-small" /> : <FileUp size={18} />}
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept=".csv"
+                        onChange={handleImportCSV}
+                    />
                     <button className="action-icon-btn calendar" onClick={() => setShowFrequenciaModal(true)} title="Frequência">
                         <Calendar size={18} />
                     </button>

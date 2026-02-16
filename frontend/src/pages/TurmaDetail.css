@@ -547,4 +547,29 @@
     font-size: 18px;
     font-weight: bold;
     color: #0f172a;
+}\
+/* Import Styles */
+.action-icon-btn.blue {
+    color: #3b82f6;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
 }
+
+.action-icon-btn.blue:hover {
+    background: #dbeafe;
+    border-color: #bfdbfe;
+}
+
+.spinner-small {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin-small 0.8s linear infinite;
+}
+
+@keyframes spin-small {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}\
