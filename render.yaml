@@ -26,6 +26,6 @@ services:
         destination: /index.html
     envVars:
       - key: NODE_VERSION
-        value: 20.11.1
+        value: 22.14.0
       - key: VITE_API_URL
         value: https://lerprova-api-app.onrender.com
