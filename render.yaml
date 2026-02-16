@@ -18,7 +18,6 @@ services:
     name: lerprova-frontend-app
     runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm install && npm run build
     staticPublishDir: dist
     envVars:
