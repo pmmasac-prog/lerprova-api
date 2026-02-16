@@ -6,6 +6,7 @@ import { Relatorios } from './pages/Relatorios';
 import { Assinatura } from './pages/Assinatura';
 import { Gabarito } from './pages/Gabarito';
 import { TurmaDetail } from './pages/TurmaDetail';
+import { Debug } from './pages/Debug';
 import { TabNavigation } from './components/TabNavigation';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +47,7 @@ function App() {
             <Assinatura />
           </PrivateRoute>
         } />
+        <Route path="/dashboard/debug" element={<PrivateRoute><Debug /></PrivateRoute>} />
       </Routes>
     </Router >
   );

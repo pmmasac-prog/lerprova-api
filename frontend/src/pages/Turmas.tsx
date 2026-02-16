@@ -83,7 +83,7 @@ export const Turmas: React.FC = () => {
                         {turmas.map(turma => (
                             <div key={turma.id} className="turma-card" onClick={() => navigate(`/dashboard/turma/${turma.id}`)}>
                                 <div className="turma-left">
-                                    <div className="turma-icon">
+                                    <div className="icon-bg icon-bg-sm icon-purple">
                                         <BookOpen size={20} />
                                     </div>
                                     <div className="turma-info">
@@ -102,7 +102,9 @@ export const Turmas: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <Users size={48} />
+                        <div className="icon-bg icon-blue mb-4" style={{ width: '80px', height: '80px', borderRadius: '24px' }}>
+                            <Users size={40} />
+                        </div>
                         <h3>Nenhuma turma encontrada</h3>
                         <p>Crie sua primeira turma para começar</p>
                         <button className="btn-primary" onClick={() => setShowAddModal(true)}>

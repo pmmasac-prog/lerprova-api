@@ -247,7 +247,9 @@ export const Gabarito: React.FC = () => {
         <div className="gabarito-container">
             <div className="gabarito-header">
                 <div className="header-info">
-                    <ClipboardList size={24} color="#10b981" />
+                    <div className="icon-bg icon-bg-sm icon-green">
+                        <ClipboardList size={20} />
+                    </div>
                     <h1 className="gabarito-title">Gabaritos</h1>
                 </div>
                 {editingId && (
@@ -347,7 +349,9 @@ export const Gabarito: React.FC = () => {
                             ))
                         ) : (
                             <div className="empty-history">
-                                <ClipboardList size={48} color="#cbd5e1" />
+                                <div className="icon-bg icon-blue mb-4" style={{ width: '80px', height: '80px', borderRadius: '24px' }}>
+                                    <ClipboardList size={40} />
+                                </div>
                                 <p>Nenhum gabarito cadastrado.</p>
                                 <button className="empty-btn" onClick={() => setViewMode('create')}>
                                     Criar Primeiro Gabarito

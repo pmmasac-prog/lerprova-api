@@ -20,7 +20,9 @@ export const Assinatura: React.FC = () => {
         <div className="assinatura-container">
             <div className="assinatura-header">
                 <div className="plan-badge">
-                    <Crown size={20} color={isPro ? '#f59e0b' : '#94a3b8'} />
+                    <div className={`icon-bg icon-bg-sm ${isPro ? 'icon-orange' : 'icon-blue'}`}>
+                        <Crown size={20} />
+                    </div>
                     <span className={`plan-text ${isPro ? 'pro' : ''}`}>
                         {isPro ? 'PLANO PRO ATIVO' : 'PLANO GRÁTIS'}
                     </span>
@@ -77,7 +79,9 @@ export const Assinatura: React.FC = () => {
                 <h3 className="section-title">Seu Uso Atual</h3>
                 <div className="stat-card">
                     <div className="stat-item">
-                        <Zap size={24} color="#3b82f6" />
+                        <div className="icon-bg icon-bg-sm icon-blue">
+                            <Zap size={20} />
+                        </div>
                         <div>
                             <div className="stat-label">Provas Corrigidas</div>
                             <div className="stat-value">

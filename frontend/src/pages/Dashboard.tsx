@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, BookOpen, ClipboardList, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, ClipboardList, TrendingUp, LogOut, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import './Dashboard.css';
 
@@ -18,10 +19,19 @@ export const Dashboard: React.FC = () => {
         total_resultados: 0
     });
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadStats();
     }, []);
+
+    const handleLogout = () => {
+        if (confirm('Deseja realmente sair?')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+    };
 
     const loadStats = async () => {
         try {
@@ -43,8 +53,21 @@ export const Dashboard: React.FC = () => {
                     <h1 className="dashboard-title">Olá, Professor(a)</h1>
                     <p className="dashboard-subtitle">Bem-vindo(a) ao LerProva</p>
                 </div>
-                <div className="header-date">
-                    <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                <div className="flex items-center gap-3">
+                    <button
+                        className="p-2 text-slate-400 hover:text-blue-500 transition-colors"
+                        onClick={() => navigate('/dashboard/debug')}
+                        title="Diagnóstico"
+                    >
+                        <Settings size={22} />
+                    </button>
+                    <button
+                        className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                        onClick={handleLogout}
+                        title="Sair"
+                    >
+                        <LogOut size={22} />
+                    </button>
                 </div>
             </div>
 

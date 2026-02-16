@@ -148,7 +148,12 @@ export const Relatorios: React.FC = () => {
   return (
     <div className="relatorios-container">
       <div className="relatorios-header">
-        <h1 className="relatorios-title">Relatórios</h1>
+        <div className="flex items-center gap-3">
+          <div className="icon-bg icon-bg-sm icon-indigo">
+            <TrendingUp size={20} />
+          </div>
+          <h1 className="relatorios-title">Relatórios</h1>
+        </div>
         <button className="refresh-btn" onClick={loadData}>Atualizar</button>
       </div>
 

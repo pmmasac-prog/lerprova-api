@@ -48,34 +48,7 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.stat-icon-bg {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-}
-
-.icon-blue {
-    background: #eff6ff;
-    color: #3b82f6;
-}
-
-.icon-purple {
-    background: #f3e8ff;
-    color: #a855f7;
-}
-
-.icon-green {
-    background: #dcfce7;
-    color: #22c55e;
-}
-
-.icon-orange {
-    background: #ffedd5;
-    color: #f97316;
-}
+/* Mover para index.css */
 
 .stat-info {
     flex: 1;
