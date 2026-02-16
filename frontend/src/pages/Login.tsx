@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Shield, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../services/api';
 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -16,19 +16,20 @@ export const Login: React.FC = () => {
         setError('');
 
         try {
-            const response = await axios.post('http://localhost:8000/auth/login', {
-                email,
-                password
-            });
+            const res = await api.login(email, password);
 
-            if (response.data.access_token) {
+            if (res.access_token) {
+                localStorage.setItem('token', res.access_token);
+                if (res.user) {
+                    localStorage.setItem('user', JSON.stringify(res.user));
+                }
                 console.log("Login realizado com sucesso!");
                 navigate('/dashboard');
             } else {
-                setError(response.data.error || 'Falha na autenticação');
+                setError(res.detail || res.error || 'Falha na autenticação');
             }
         } catch (err: any) {
-            setError('Não foi possível conectar ao servidor. Verifique se o backend está rodando.');
+            setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
             console.error(err);
         } finally {
             setIsLoading(false);

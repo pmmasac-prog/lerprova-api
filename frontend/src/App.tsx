@@ -8,32 +8,43 @@ import { Gabarito } from './pages/Gabarito';
 import { TurmaDetail } from './pages/TurmaDetail';
 import { TabNavigation } from './components/TabNavigation';
 
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
 function App() {
+  const token = localStorage.getItem('token');
+
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<><Dashboard /><TabNavigation /></>} />
-        <Route path="/dashboard/turmas" element={<><Turmas /><TabNavigation /></>} />
-        <Route path="/dashboard/turma/:id" element={<><TurmaDetail /><TabNavigation /></>} />
+
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /><TabNavigation /></PrivateRoute>} />
+        <Route path="/dashboard/turmas" element={<PrivateRoute><Turmas /><TabNavigation /></PrivateRoute>} />
+        <Route path="/dashboard/turma/:id" element={<PrivateRoute><TurmaDetail /><TabNavigation /></PrivateRoute>} />
         <Route path="/dashboard/relatorios" element={
-          <>
+          <PrivateRoute>
             <TabNavigation />
             <Relatorios />
-          </>
+          </PrivateRoute>
         } />
         <Route path="/dashboard/gabarito" element={
-          <>
+          <PrivateRoute>
             <TabNavigation />
             <Gabarito />
-          </>
+          </PrivateRoute>
         } />
         <Route path="/dashboard/assinatura" element={
-          <>
+          <PrivateRoute>
             <TabNavigation />
             <Assinatura />
-          </>
+          </PrivateRoute>
         } />
       </Routes>
     </Router >
