@@ -1,5 +1,5 @@
-# Use uma imagem base oficial do Python
-FROM python:3.11-slim
+# Use a imagem 3.10-slim que é extremamente estável no Render
+FROM python:3.10-slim
 
 # Evitar que o Python gere arquivos .pyc e permitir logs em tempo real
 ENV PYTHONDONTWRITEBYTECODE 1
