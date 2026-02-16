@@ -14,11 +14,12 @@ services:
         value: sqlite:///./lerprova_server.db
 
   # Frontend (React + Vite)
-  - type: static
+  - type: web
     name: lerprova-frontend-app
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
