@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardList, Plus, Search, Download, Trash2, Save, Edit3, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon } from 'lucide-react';
+import { ClipboardList, Plus, Search, Download, Trash2, Save, Edit3, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload } from 'lucide-react';
 import { api } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
@@ -44,6 +44,8 @@ export const Gabarito: React.FC = () => {
     const [printData, setPrintData] = useState<{ gabarito: Gabarito, turmaNome: string } | null>(null);
     const [activeScanner, setActiveScanner] = useState<{ id: number, numQuestions: number } | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [batchProcessing, setBatchProcessing] = useState(false);
 
     const handlePrint = useReactToPrint({
         contentRef: printRef,
@@ -143,6 +145,46 @@ export const Gabarito: React.FC = () => {
             console.error('Erro ao excluir gabarito:', error);
             alert('Erro ao excluir gabarito');
         }
+    };
+
+    const handleBatchUpload = async (event: React.ChangeEvent<HTMLInputElement>, g: Gabarito) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        setBatchProcessing(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+
+            const processFile = () => new Promise<void>((resolve) => {
+                reader.onload = async (e) => {
+                    const base64 = e.target?.result as string;
+                    try {
+                        const res = await api.processarProva({
+                            image: base64,
+                            num_questions: g.num_questoes,
+                            gabarito_id: g.id
+                        });
+                        if (res.success) successCount++;
+                        else failCount++;
+                    } catch {
+                        failCount++;
+                    }
+                    resolve();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            await processFile();
+        }
+
+        setBatchProcessing(false);
+        alert(`Processamento em Lote concluído!\nSucesso: ${successCount}\nFalhas: ${failCount}`);
+        loadData();
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const handleReset = () => {
@@ -279,6 +321,18 @@ export const Gabarito: React.FC = () => {
                                         <button className="action-btn scan" onClick={() => setActiveScanner({ id: g.id, numQuestions: g.num_questoes })}>
                                             <Camera size={20} />
                                             <span>Corrigir</span>
+                                        </button>
+                                        <button className="action-btn upload" onClick={() => fileInputRef.current?.click()}>
+                                            <Upload size={20} />
+                                            <span>Lote</span>
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                style={{ display: 'none' }}
+                                                multiple
+                                                accept="image/*"
+                                                onChange={(e) => handleBatchUpload(e, g)}
+                                            />
                                         </button>
                                         <button className="action-btn download" onClick={() => setPrintData({ gabarito: g, turmaNome: g.turma_nome || 'Todas as Turmas' })}>
                                             <Download size={20} />
@@ -418,6 +472,16 @@ export const Gabarito: React.FC = () => {
                     numQuestions={activeScanner.numQuestions}
                     onSuccess={() => loadData()}
                 />
+            )}
+
+            {/* Batch Processing Overlay */}
+            {batchProcessing && (
+                <div className="batch-overlay">
+                    <div className="batch-loader">
+                        <div className="spinner"></div>
+                        <p>Processando lote de provas... Por favor, aguarde.</p>
+                    </div>
+                </div>
             )}
         </div>
     );
