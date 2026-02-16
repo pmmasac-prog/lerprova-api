@@ -30,7 +30,4 @@ services:
         - frontend/**
     envVars:
       - key: VITE_API_URL
-        fromService:
-          name: lerprova-api-app
-          type: web
-          property: host
+        value: https://lerprova-api-app.onrender.com
