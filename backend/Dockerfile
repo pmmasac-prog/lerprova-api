@@ -5,9 +5,9 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Instalar dependências do sistema necessárias para o OpenCV e compilação de pacotes
+# Instalar dependências do sistema necessárias para o OpenCV, Pyzbar e compilação
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 \
+    libgl1-mesa-glx \
     libglib2.0-0 \
     libzbar0 \
     build-essential \
@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Definir diretório de trabalho
 WORKDIR /app
+
+# Upgrade pip
+RUN pip install --upgrade pip
 
 # Copiar apenas requirements primeiro para aproveitar o cache do Docker
 COPY requirements.txt .
