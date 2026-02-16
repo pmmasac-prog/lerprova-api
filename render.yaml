@@ -24,10 +24,6 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    # Evitar builds desnecessários (Otimização)
-    buildFilters:
-      push:
-        - frontend/**
     envVars:
       - key: VITE_API_URL
         value: https://lerprova-api-app.onrender.com
