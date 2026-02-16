@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* ===== LERPROVA Design System ===== */
 /* Baseado nos arquivos mobile: tema escuro, glassmorphism, componentes modernos */
 
@@ -5,31 +7,31 @@
   /* Cores Principais */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
-  --bg-card: rgba(255,255,255,0.05);
+  --bg-card: rgba(255, 255, 255, 0.05);
   --bg-card-light: #fff;
-  
+
   /* Cores de Ação */
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
-  
+
   /* Cores de Texto */
   --color-text: #fff;
   --color-text-dark: #0f172a;
   --color-text-muted: #94a3b8;
   --color-text-secondary: #64748b;
-  
+
   /* Bordas */
   --border-color: #e2e8f0;
   --border-color-dark: #f1f5f9;
-  
+
   /* Sombras */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  
+
   /* Raios de Borda */
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -134,7 +136,8 @@ code {
   display: inline-block;
 }
 
-.chip-active, .chip:hover {
+.chip-active,
+.chip:hover {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
@@ -275,7 +278,7 @@ code {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
