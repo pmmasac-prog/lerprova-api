@@ -1,27 +1,29 @@
 services:
   # Backend API (Python + OpenCV + OMR)
   - type: web
-    name: lerprova-api
+    name: lerprova-api-app
     runtime: docker
     rootDir: backend
+    plan: free
     envVars:
       - key: PORT
         value: 8000
       - key: API_KEY_SECRET
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite:///./lerprova_server.db # Pode ser trocado por Postgres se desejado
+        value: sqlite:///./lerprova_server.db
 
   # Frontend (React + Vite)
   - type: web
-    name: lerprova-app
+    name: lerprova-frontend-app
     runtime: static
     rootDir: frontend
+    plan: free
     buildCommand: npm install && npm run build
     staticPublishDir: dist
     envVars:
       - key: VITE_API_URL
         fromService:
-          name: lerprova-api
+          name: lerprova-api-app
           type: web
           property: host

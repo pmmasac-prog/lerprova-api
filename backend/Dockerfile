@@ -1,5 +1,5 @@
-# Use a imagem 3.10-slim que é extremamente estável no Render
-FROM python:3.10-slim
+# Use a imagem 3.10 COMPLETA para garantir que todas as ferramentas de build estejam lá
+FROM python:3.10
 
 # Evitar que o Python gere arquivos .pyc e permitir logs em tempo real
 ENV PYTHONDONTWRITEBYTECODE 1
