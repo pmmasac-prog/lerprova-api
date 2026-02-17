@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, AlertCircle, BookOpen, Calendar as CalendarIcon, ChevronDown, List, Book } from 'lucide-react';
+import { Plus, CheckCircle2, AlertCircle, BookOpen, Book } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
 

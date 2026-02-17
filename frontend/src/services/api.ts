@@ -293,7 +293,7 @@ export const api = {
         return response.json();
     },
 
-    async createPlano(data: { turma_id: number, titulo: string, disciplina?: string, data_inicio: string, aulas: any[], intervalo_dias?: number }) {
+    async createPlano(data: { turma_id: number, titulo: string, disciplina?: string, data_inicio: string, aulas: any[], intervalo_dias?: number, dias_semana?: number[] }) {
         const response = await fetch(`${API_URL}/planos`, {
             method: 'POST',
             headers: getAuthHeaders(),
