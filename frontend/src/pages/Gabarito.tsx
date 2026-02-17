@@ -343,14 +343,13 @@ export const Gabarito: React.FC = () => {
                             />
                         </div>
 
-                        <div className="history-filters" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                            <div className="input-group" style={{ flex: 1, margin: 0, height: '45px' }}>
+                        <div className="history-filters">
+                            <div className="input-group">
                                 <Users size={18} color="#94a3b8" />
                                 <select
                                     className="filter-select"
                                     value={filterTurmaId || ''}
                                     onChange={(e) => setFilterTurmaId(Number(e.target.value) || null)}
-                                    style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '14px', fontWeight: '500' }}
                                 >
                                     <option value="">Todas as Salas</option>
                                     {turmas.map(t => (
@@ -358,13 +357,12 @@ export const Gabarito: React.FC = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="input-group" style={{ flex: 1, margin: 0, height: '45px' }}>
+                            <div className="input-group">
                                 <Layout size={18} color="#94a3b8" />
                                 <select
                                     className="filter-select"
                                     value={filterPeriodo || ''}
                                     onChange={(e) => setFilterPeriodo(Number(e.target.value) || null)}
-                                    style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '14px', fontWeight: '500' }}
                                 >
                                     <option value="">Todos Períodos</option>
                                     <option value="1">1º Período</option>
@@ -531,7 +529,6 @@ export const Gabarito: React.FC = () => {
                                         value={periodo}
                                         onChange={(e) => setPeriodo(parseInt(e.target.value))}
                                         className="period-select"
-                                        style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '14px' }}
                                     >
                                         <option value={1}>1º Período</option>
                                         <option value={2}>2º Período</option>
@@ -539,11 +536,11 @@ export const Gabarito: React.FC = () => {
                                         <option value={4}>4º Período</option>
                                     </select>
                                 </div>
-                                <div className="input-group" style={{ maxWidth: '120px' }}>
+                                <div className="input-group" style={{ maxWidth: '140px' }}>
                                     <CheckSquare size={20} />
                                     <input
                                         type="number"
-                                        placeholder="Qtd."
+                                        placeholder="Questões"
                                         value={numQuestions}
                                         title="Quantidade de Questões"
                                         onChange={(e) => {
