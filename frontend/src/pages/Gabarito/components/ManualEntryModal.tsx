@@ -70,8 +70,17 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
             };
 
             await api.addResultadoManual(payload);
+
+            // Recarregar dados para atualizar as notas na lista
+            await loadData();
+
+            // Voltar para lista de alunos em vez de fechar
+            setStep(1);
+            setSelectedAlunoId(null);
+            setManualNota('');
+
+            // Notificar sucesso sem fechar
             onSuccess();
-            onClose();
         } catch (error) {
             console.error('Erro ao salvar:', error);
             alert('Erro ao registrar resultado');
@@ -157,7 +166,9 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                             </div>
 
                             <div className="form-actions" style={{ marginTop: '20px' }}>
-                                <button className="reset-btn" onClick={onClose}>Cancelar</button>
+                                <button className="reset-btn" onClick={onClose} style={{ width: '100%', background: '#f1f5f9', color: '#1e293b' }}>
+                                    Fechar Janela
+                                </button>
                             </div>
                         </div>
                     ) : (

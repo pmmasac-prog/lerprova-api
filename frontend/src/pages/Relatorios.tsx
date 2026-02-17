@@ -181,39 +181,43 @@ export const Relatorios: React.FC = () => {
       </div>
 
       <div className="relatorios-content">
+        <RelatoriosSearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          selectedTurma={selectedTurma}
+          setSelectedTurma={setSelectedTurma}
+          turmas={turmas}
+          selectedGabarito={selectedGabarito}
+          setSelectedGabarito={setSelectedGabarito}
+          gabaritos={gabaritos}
+        />
+
         {activeTab === 'Turma' && (
-          <>
-            <div className="chip-scroll">
-              {turmas.map(t => (
-                <button key={t.id} className={`chip ${selectedTurma === t.id ? 'chip-active' : ''}`} onClick={() => setSelectedTurma(t.id)}>{t.nome}</button>
-              ))}
-            </div>
-            <RelatoriosSearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              sortOrder={sortOrder}
-              setSortOrder={setSortOrder}
-              selectedGabarito={selectedGabarito}
-              setSelectedGabarito={setSelectedGabarito}
-              gabaritos={gabaritos}
-            />
-            <RankingTurma turma={turmas.find(t => t.id === selectedTurma)} resultados={getFilteredRanking()} loading={loading} overallStats={overallStats} onEdit={handleEditClick} />
-          </>
+          <RankingTurma
+            turma={turmas.find(t => t.id === selectedTurma)}
+            resultados={getFilteredRanking()}
+            loading={loading}
+            overallStats={overallStats}
+            onEdit={handleEditClick}
+          />
         )}
 
-
         {activeTab === 'Questão' && (
-          <AnaliseQuestoes gabaritos={gabaritos} selectedGabarito={selectedGabarito} setSelectedGabarito={setSelectedGabarito} questaoStats={getQuestaoAnalysis()} loading={loading} hasResults={getResultadosByTurma().filter(r => r.gabarito_id === selectedGabarito).length > 0 || getQuestaoAnalysis().some(q => q.acertos > 0 || q.erros > 0)} />
+          <AnaliseQuestoes
+            gabaritos={gabaritos}
+            selectedGabarito={selectedGabarito}
+            setSelectedGabarito={setSelectedGabarito}
+            questaoStats={getQuestaoAnalysis()}
+            loading={loading}
+            hasResults={getResultadosByTurma().filter(r => r.gabarito_id === selectedGabarito).length > 0 || getQuestaoAnalysis().some(q => q.acertos > 0 || q.erros > 0)}
+          />
         )}
 
         {activeTab === 'Presença' && (
           <div className="tab-content">
-            <div className="chip-scroll">
-              {turmas.map(t => (
-                <button key={t.id} className={`chip ${selectedTurma === t.id ? 'chip-active' : ''}`} onClick={() => setSelectedTurma(t.id)}>{t.nome}</button>
-              ))}
-            </div>
-            {selectedTurma ? <FrequencyMatrix turmaId={selectedTurma} /> : <div className="empty-box"><p className="empty-text">Selecione uma turma</p></div>}
+            {selectedTurma ? <FrequencyMatrix turmaId={selectedTurma} /> : <div className="empty-box"><p className="empty-text">Selecione uma turma no filtro acima</p></div>}
           </div>
         )}
       </div>

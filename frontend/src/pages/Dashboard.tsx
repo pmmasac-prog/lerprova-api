@@ -18,7 +18,6 @@ export const Dashboard: React.FC = () => {
         total_gabaritos: 0,
         total_resultados: 0
     });
-    const [recentResults, setRecentResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -36,15 +35,8 @@ export const Dashboard: React.FC = () => {
 
     const loadStats = async () => {
         try {
-            setLoading(true);
-            const [statsData, resultsData] = await Promise.all([
-                api.getStats(),
-                api.getResultados()
-            ]);
+            const statsData = await api.getStats();
             setStats(statsData);
-            // Pegar os 5 últimos resultados
-            const sortedResults = [...resultsData].sort((a, b) => b.id - a.id).slice(0, 5);
-            setRecentResults(sortedResults);
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);
         } finally {
@@ -92,87 +84,83 @@ export const Dashboard: React.FC = () => {
                     {/* Quick Stats Cards */}
                     <div className="stats-grid">
                         <div className="stat-card">
-                            <div className="stat-icon-bg icon-blue">
-                                <BookOpen size={24} />
-                            </div>
-                            <div className="stat-info">
-                                <h3>Turmas</h3>
-                                <p>{stats.total_turmas}</p>
-                            </div>
-                        </div>
-
-                        <div className="stat-card">
-                            <div className="stat-icon-bg icon-purple">
-                                <Users size={24} />
-                            </div>
-                            <div className="stat-info">
-                                <h3>Alunos</h3>
-                                <p>{stats.total_alunos}</p>
-                            </div>
-                        </div>
-
-                        <div className="stat-card">
-                            <div className="stat-icon-bg icon-green">
-                                <ClipboardList size={24} />
-                            </div>
-                            <div className="stat-info">
-                                <h3>Gabaritos</h3>
-                                <p>{stats.total_gabaritos}</p>
-                            </div>
-                        </div>
-
-                        <div className="stat-card">
-                            <div className="stat-icon-bg icon-orange">
-                                <TrendingUp size={24} />
-                            </div>
-                            <div className="stat-info">
-                                <h3>Correções</h3>
-                                <p>{stats.total_resultados}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Recent Activity Section */}
-                    <div className="stats-grid" style={{ marginTop: '30px', gridTemplateColumns: '1fr' }}>
-                        <div className="stat-card" style={{ display: 'block', padding: '20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                                <div className="stat-icon-bg icon-blue" style={{ width: '40px', height: '40px' }}>
-                                    <TrendingUp size={20} />
+                            <div className="stat-top">
+                                <div className="stat-icon-bg icon-blue">
+                                    <BookOpen size={24} />
                                 </div>
-                                <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b' }}>Correções Recentes</h2>
-                            </div>
-
-                            {recentResults.length > 0 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {recentResults.map(r => (
-                                        <div key={r.id} style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            padding: '12px',
-                                            background: '#f8fafc',
-                                            borderRadius: '12px',
-                                            border: '1px solid #f1f5f9'
-                                        }}>
-                                            <div>
-                                                <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>{r.nome}</div>
-                                                <div style={{ fontSize: '12px', color: '#64748b' }}>{r.assunto} • {r.data || 'Agora'}</div>
-                                            </div>
-                                            <div style={{
-                                                padding: '4px 12px',
-                                                borderRadius: '8px',
-                                                background: r.nota > 5.9 ? '#dcfce7' : '#fee2e2',
-                                                color: r.nota > 5.9 ? '#166534' : '#991b1b',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                {parseFloat(r.nota).toFixed(1)}
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="stat-info">
+                                    <h3>Turmas</h3>
+                                    <p>{stats.total_turmas}</p>
                                 </div>
-                            ) : (
-                                <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>Nenhuma correção realizada ainda.</p>
-                            )}
+                            </div>
+                            <div className="stat-actions">
+                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/turmas')}>
+                                    Ver Todas
+                                </button>
+                                <button className="card-action-btn" onClick={() => navigate('/dashboard/turmas')}>
+                                    Nova Turma
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="stat-icon-bg icon-purple">
+                                    <Users size={24} />
+                                </div>
+                                <div className="stat-info">
+                                    <h3>Alunos</h3>
+                                    <p>{stats.total_alunos}</p>
+                                </div>
+                            </div>
+                            <div className="stat-actions">
+                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/relatorios')}>
+                                    Relatórios
+                                </button>
+                                <button className="card-action-btn" onClick={() => navigate('/dashboard/turmas')}>
+                                    Listar Alunos
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="stat-icon-bg icon-green">
+                                    <ClipboardList size={24} />
+                                </div>
+                                <div className="stat-info">
+                                    <h3>Gabaritos</h3>
+                                    <p>{stats.total_gabaritos}</p>
+                                </div>
+                            </div>
+                            <div className="stat-actions">
+                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/gabarito')}>
+                                    Gerenciar
+                                </button>
+                                <button className="card-action-btn" onClick={() => navigate('/dashboard/gabarito')}>
+                                    Criar Novo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="stat-icon-bg icon-orange">
+                                    <TrendingUp size={24} />
+                                </div>
+                                <div className="stat-info">
+                                    <h3>Correções</h3>
+                                    <p>{stats.total_resultados}</p>
+                                </div>
+                            </div>
+                            <div className="stat-actions">
+                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/relatorios')}>
+                                    Análise Geral
+                                </button>
+                                <button className="card-action-btn" onClick={() => navigate('/dashboard/gabarito')}>
+                                    Corrigir Prova
+                                </button>
+                            </div>
                         </div>
                     </div>
 
