@@ -107,8 +107,16 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.history-info {
+.history-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
     margin-bottom: 15px;
+}
+
+.history-info {
+    flex: 1;
 }
 
 .history-turma {
@@ -214,6 +222,69 @@
 
 .action-btn:hover {
     transform: translateY(-2px);
+}
+
+/* Redesigned Corrigir Button */
+.primary-scan-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    min-width: 160px;
+}
+
+.primary-scan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    filter: brightness(1.05);
+}
+
+.primary-scan-btn .icon-wrapper {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-scan-btn .btn-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+}
+
+.primary-scan-btn .btn-main {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.primary-scan-btn .btn-sub {
+    font-size: 10px;
+    opacity: 0.9;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .history-header-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .primary-scan-btn {
+        justify-content: center;
+        width: 100%;
+    }
 }
 
 .empty-history {

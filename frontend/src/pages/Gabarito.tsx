@@ -335,23 +335,35 @@ export const Gabarito: React.FC = () => {
                         ) : filteredGabaritos.length > 0 ? (
                             filteredGabaritos.map(g => (
                                 <div key={g.id} className="history-card">
-                                    <div className="history-info">
-                                        <h3 className="history-turma">{g.turma_nome || 'Todas as Turmas'}</h3>
-                                        <div className="history-meta">
-                                            <span>{g.assunto}</span>
-                                            {g.disciplina && (
-                                                <>
-                                                    <span className="dot">•</span>
-                                                    <span>{g.disciplina}</span>
-                                                </>
-                                            )}
+                                    <div className="history-header-row">
+                                        <div className="history-info">
+                                            <h3 className="history-turma">{g.titulo}</h3>
+                                            <div className="history-meta">
+                                                <span>{g.assunto}</span>
+                                                {g.disciplina && (
+                                                    <>
+                                                        <span className="dot">•</span>
+                                                        <span>{g.disciplina}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="history-meta">
+                                                <Calendar size={12} />
+                                                <span>{g.data}</span>
+                                                <span className="dot">•</span>
+                                                <span>{g.num_questoes} questões</span>
+                                            </div>
                                         </div>
-                                        <div className="history-meta">
-                                            <Calendar size={12} />
-                                            <span>{g.data}</span>
-                                            <span className="dot">•</span>
-                                            <span>{g.num_questoes} questões</span>
-                                        </div>
+
+                                        <button className="primary-scan-btn" onClick={() => setActiveScanner({ id: g.id, numQuestions: g.num_questoes })}>
+                                            <div className="icon-wrapper">
+                                                <Camera size={22} />
+                                            </div>
+                                            <div className="btn-text">
+                                                <span className="btn-main">Corrigir</span>
+                                                <span className="btn-sub">Iniciar Escaner</span>
+                                            </div>
+                                        </button>
                                     </div>
 
                                     <div className="history-divider"></div>
@@ -362,12 +374,6 @@ export const Gabarito: React.FC = () => {
                                                 <Edit3 size={18} />
                                             </div>
                                             <span>Editar</span>
-                                        </button>
-                                        <button className="action-btn scan" onClick={() => setActiveScanner({ id: g.id, numQuestions: g.num_questoes })}>
-                                            <div className="icon-bg icon-bg-sm icon-green">
-                                                <Camera size={18} />
-                                            </div>
-                                            <span>Corrigir</span>
                                         </button>
                                         <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)}>
                                             <div className="icon-bg icon-bg-sm icon-orange">
