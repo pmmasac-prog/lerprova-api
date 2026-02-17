@@ -197,36 +197,49 @@ async def login(data: dict, db: Session = Depends(get_db)):
 # --- Endpoints de Turmas (Banco de Dados) ---
 
 @app.get("/turmas")
-async def get_turmas(db: Session = Depends(get_db)):
-    return db.query(models.Turma).all()
+async def get_turmas(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role == "admin":
+        return db.query(models.Turma).all()
+    # Se for professor, retorna apenas as turmas dele
+    return db.query(models.Turma).filter(models.Turma.user_id == user.id).all()
 
 @app.post("/turmas")
-async def create_turma(data: dict, db: Session = Depends(get_db)):
+async def create_turma(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Validar se já existe? Por enquanto simplificado
     nova_turma = models.Turma(
         nome=data.get("nome"),
-        disciplina=data.get("disciplina")
+        disciplina=data.get("disciplina"),
+        user_id=user.id # Vincula a turma ao professor logado
     )
     db.add(nova_turma)
     db.commit()
     db.refresh(nova_turma)
-    print(f"Turma criada: {nova_turma.nome}")
+    print(f"Turma criada: {nova_turma.nome} pelo usuário {user.email}")
     return {"message": "Turma cadastrada com sucesso", "id": nova_turma.id}
 
 @app.delete("/turmas/{turma_id}")
-async def delete_turma(turma_id: int, db: Session = Depends(get_db)):
-    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    query = db.query(models.Turma).filter(models.Turma.id == turma_id)
+    
+    # Se não for admin, garante que só pode deletar suas próprias turmas
+    if user.role != "admin":
+        query = query.filter(models.Turma.user_id == user.id)
+        
+    turma = query.first()
+    
     if turma:
         db.delete(turma)
         db.commit()
         return {"message": "Turma excluída com sucesso"}
-    raise HTTPException(status_code=404, detail="Turma não encontrada")
+    
+    # Se não encontrou (seja porque não existe ou porque não pertence ao user)
+    raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
 
 
 # --- Endpoints de Alunos (Banco de Dados) ---
 
 @app.post("/alunos")
-async def create_aluno(data: dict, db: Session = Depends(get_db)):
+async def create_aluno(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     codigo = data.get("codigo")
     raw_turma_id = data.get("turma_id")
     nome = data.get("nome")
@@ -236,6 +249,12 @@ async def create_aluno(data: dict, db: Session = Depends(get_db)):
         turma_id = int(raw_turma_id) if raw_turma_id is not None and str(raw_turma_id).strip() != "" else None
     except (ValueError, TypeError):
         turma_id = None
+        
+    # Validar se o usuário tem permissão para adicionar nesta turma
+    if turma_id and user.role != "admin":
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+        if not turma:
+            raise HTTPException(status_code=403, detail="Você não tem permissão para adicionar alunos nesta turma")
     
     # 1. Tentar encontrar aluno existente pelo código
     aluno = db.query(models.Aluno).filter(models.Aluno.codigo == codigo).first()
@@ -279,32 +298,59 @@ async def create_aluno(data: dict, db: Session = Depends(get_db)):
     return {"message": "Aluno processado com sucesso", "id": aluno.id, "novo_cadastro": aluno.nome == nome}
 
 @app.get("/alunos")
-async def get_alunos(db: Session = Depends(get_db)):
-    return db.query(models.Aluno).all()
+async def get_alunos(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role == "admin":
+        return db.query(models.Aluno).all()
+    # Se professor, retorna apenas alunos das suas turmas
+    return db.query(models.Aluno).join(models.Turma, models.Aluno.turmas).filter(models.Turma.user_id == user.id).distinct().all()
 
 @app.get("/alunos/turma/{turma_id}")
-async def get_alunos_by_turma(turma_id: int, db: Session = Depends(get_db)):
-    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+async def get_alunos_by_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Validar acesso à turma
+    query = db.query(models.Turma).filter(models.Turma.id == turma_id)
+    if user.role != "admin":
+        query = query.filter(models.Turma.user_id == user.id)
+    
+    turma = query.first()
     if not turma:
-        raise HTTPException(status_code=404, detail="Turma não encontrada")
+        raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
     return turma.alunos
 
 @app.delete("/alunos/{aluno_id}")
-async def delete_aluno(aluno_id: int, db: Session = Depends(get_db)):
+async def delete_aluno(aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Se admin, pode deletar qualquer um. Se professor, apenas se o aluno estiver vinculado a alguma turma dele?
+    # Melhor: Professor pode remover aluno da SUA turma (unlink), mas deletar do sistema talvez so admin
+    # Mas o requisito diz "gerenciar". Vamos permitir professor deletar aluno se ele criou/estiver na turma dele.
+    
     aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
-    if aluno:
-        db.delete(aluno)
-        db.commit()
-        return {"message": "Aluno excluído com sucesso"}
-    raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    if user.role != "admin":
+        # Verifica se o aluno pertence a alguma turma do professor
+        pertence = any(t.user_id == user.id for t in aluno.turmas)
+        if not pertence:
+             raise HTTPException(status_code=403, detail="Você só pode excluir alunos das suas turmas")
+
+    db.delete(aluno)
+    db.commit()
+    return {"message": "Aluno excluído com sucesso"}
 
 @app.delete("/turmas/{turma_id}/alunos/{aluno_id}")
-async def unlink_aluno_from_turma(turma_id: int, aluno_id: int, db: Session = Depends(get_db)):
-    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+async def unlink_aluno_from_turma(turma_id: int, aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Validar acesso à turma
+    turma_query = db.query(models.Turma).filter(models.Turma.id == turma_id)
+    if user.role != "admin":
+        turma_query = turma_query.filter(models.Turma.user_id == user.id)
+        
+    turma = turma_query.first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
+
     aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
     
-    if not turma or not aluno:
-        raise HTTPException(status_code=404, detail="Turma ou Aluno não encontrado")
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
     
     if aluno in turma.alunos:
         turma.alunos.remove(aluno)
@@ -317,7 +363,7 @@ async def unlink_aluno_from_turma(turma_id: int, aluno_id: int, db: Session = De
 # --- Endpoints de Gabaritos (Banco de Dados) ---
 
 @app.post("/gabaritos")
-async def create_gabarito(data: dict, db: Session = Depends(get_db)):
+async def create_gabarito(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # O model espera JSON string em 'respostas_corretas'
     respostas = data.get("respostas")
     if isinstance(respostas, list):
@@ -332,6 +378,13 @@ async def create_gabarito(data: dict, db: Session = Depends(get_db)):
     turma_ids = data.get("turma_ids", [])
     if data.get("turma_id") and int(data.get("turma_id")) not in turma_ids:
         turma_ids.append(int(data.get("turma_id")))
+
+    # RBAC: Verificar se o usuário tem permissão para criar prova para estas turmas
+    if user.role != "admin" and turma_ids:
+        # Conta quantas dessas turmas pertencem ao usuário
+        user_turmas_count = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids), models.Turma.user_id == user.id).count()
+        if user_turmas_count != len(turma_ids):
+             raise HTTPException(status_code=403, detail="Você não tem permissão para criar provas para turmas que não são suas")
 
     novo_gabarito = models.Gabarito(
         turma_id=turma_ids[0] if turma_ids else None, # Compatibilidade
@@ -354,11 +407,19 @@ async def create_gabarito(data: dict, db: Session = Depends(get_db)):
     return {"message": "Gabarito criado com sucesso", "id": novo_gabarito.id}
 
 @app.put("/gabaritos/{gabarito_id}")
-async def update_gabarito(gabarito_id: int, data: dict, db: Session = Depends(get_db)):
+async def update_gabarito(gabarito_id: int, data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
     if not gabarito:
         raise HTTPException(status_code=404, detail="Gabarito não encontrado")
     
+    # RBAC: Verificar acesso
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in gabarito.turmas)
+        if not has_access and gabarito.turmas: # Se não tiver turmas, talvez seja orfão, admin lida. Se tiver, check
+             # Se o gabarito não tem turmas, vamos assumir que só quem criou ou admin (mas não salvamos criador).
+             # Se tem turmas, o user tem que ser dono de pelo menos uma.
+             raise HTTPException(status_code=403, detail="Acesso negado a este gabarito")
+
     # Update fields
     if "titulo" in data or "assunto" in data:
         gabarito.titulo = data.get("titulo", data.get("assunto"))
@@ -384,6 +445,13 @@ async def update_gabarito(gabarito_id: int, data: dict, db: Session = Depends(ge
 
     if "turma_ids" in data:
         turma_ids = data.get("turma_ids", [])
+        
+        # RBAC na atualização de turmas
+        if user.role != "admin" and turma_ids:
+             user_turmas_count = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids), models.Turma.user_id == user.id).count()
+             if user_turmas_count != len(turma_ids):
+                  raise HTTPException(status_code=403, detail="Você não pode vincular este gabarito a turmas que não são suas")
+
         turmas = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids)).all()
         gabarito.turmas = turmas
         if turma_ids:
@@ -393,9 +461,18 @@ async def update_gabarito(gabarito_id: int, data: dict, db: Session = Depends(ge
     return {"message": "Gabarito atualizado com sucesso"}
 
 @app.get("/gabaritos")
-async def get_gabaritos(db: Session = Depends(get_db)):
+async def get_gabaritos(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Usar joinedload para trazer as turmas vinculadas
-    gabaritos = db.query(models.Gabarito).options(joinedload(models.Gabarito.turmas)).all()
+    query = db.query(models.Gabarito).options(joinedload(models.Gabarito.turmas))
+    
+    if user.role != "admin":
+        # Retorna apenas gabaritos associados as turmas do professor
+        # Como é M-to-M, idealmente usaríamos .join(models.Gabarito.turmas), mas o joinedload já faz join?
+        # Vamos filtrar onde gabarito.turmas contem alguma turma do user.
+        # SQLAlchemy 'any':
+        query = query.filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id))
+
+    gabaritos = query.all()
     
     # Formatação para o front (incluindo nomes das turmas e contagem de resultados)
     result = []
@@ -429,24 +506,36 @@ async def get_disciplinas(db: Session = Depends(get_db)):
     return sorted(list(all_discs))
 
 @app.delete("/gabaritos/{gabarito_id}")
-async def delete_gabarito(gabarito_id: int, db: Session = Depends(get_db)):
+async def delete_gabarito(gabarito_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
-    if gabarito:
-        db.delete(gabarito)
-        db.commit()
-        return {"message": "Gabarito excluído com sucesso"}
-    raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+    if not gabarito:
+        raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in gabarito.turmas)
+        if not has_access and gabarito.turmas:
+             raise HTTPException(status_code=403, detail="Acesso negado para excluir este gabarito")
+
+    db.delete(gabarito)
+    db.commit()
+    return {"message": "Gabarito excluído com sucesso"}
 
 
 # --- Endpoints de Resultados (Banco de Dados) ---
 
 @app.get("/resultados")
-async def get_resultados(db: Session = Depends(get_db)):
+async def get_resultados(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # joinedload para otimizar
-    resultados = db.query(models.Resultado).options(
+    query = db.query(models.Resultado).options(
         joinedload(models.Resultado.aluno),
         joinedload(models.Resultado.gabarito).joinedload(models.Gabarito.turmas)
-    ).all()
+    )
+    
+    if user.role != "admin":
+        # Filtrar resultados cujos gabaritos estão ligados a turmas do professor
+        query = query.join(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id))
+
+    resultados = query.all()
     
     resp = []
     for r in resultados:
@@ -469,7 +558,13 @@ async def get_resultados(db: Session = Depends(get_db)):
     return resp
 
 @app.get("/resultados/turma/{turma_id}/aluno/{aluno_id}")
-async def get_resultados_aluno_turma(turma_id: int, aluno_id: int, db: Session = Depends(get_db)):
+async def get_resultados_aluno_turma(turma_id: int, aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Validar Acesso a Turma
+    if user.role != "admin":
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+        if not turma:
+            raise HTTPException(status_code=403, detail="Acesso negado a esta turma")
+
     # Filtra resultados de um aluno específico dentro de um gabarito que pertence a esta turma
     resultados = db.query(models.Resultado).join(models.Gabarito).filter(
         models.Resultado.aluno_id == aluno_id,
@@ -487,7 +582,13 @@ async def get_resultados_aluno_turma(turma_id: int, aluno_id: int, db: Session =
     return resp
 
 @app.get("/frequencia/turma/{turma_id}/aluno/{aluno_id}")
-async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, db: Session = Depends(get_db)):
+async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Validar Acesso a Turma
+    if user.role != "admin":
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+        if not turma:
+            raise HTTPException(status_code=403, detail="Acesso negado a esta turma")
+
     # Retorna estatísticas de frequência do aluno apenas nesta turma
     freqs = db.query(models.Frequencia).filter(
         models.Frequencia.turma_id == turma_id,
@@ -511,7 +612,13 @@ async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, db: Session =
     }
 
 @app.get("/resultados/turma/{turma_id}")
-async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
+async def get_resultados_by_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Validar Acesso a Turma
+    if user.role != "admin":
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+        if not turma:
+            raise HTTPException(status_code=403, detail="Acesso negado a esta turma")
+
     # Filtro agora baseado na associação do Gabarito com a Turma
     # Isso traz os resultados de todas as provas aplicadas para ESTA turma
     resultados = db.query(models.Resultado).join(models.Gabarito).filter(
@@ -538,7 +645,16 @@ async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
     return resp
 
 @app.get("/resultados/gabarito/{gabarito_id}")
-async def get_resultados_by_gabarito(gabarito_id: int, db: Session = Depends(get_db)):
+async def get_resultados_by_gabarito(gabarito_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
+    if not gabarito:
+        raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in gabarito.turmas)
+        if not has_access and gabarito.turmas:
+             raise HTTPException(status_code=403, detail="Acesso negado a este gabarito")
+
     resultados = db.query(models.Resultado).filter(models.Resultado.gabarito_id == gabarito_id).all()
     resp = []
     for r in resultados:
@@ -551,10 +667,15 @@ async def get_resultados_by_gabarito(gabarito_id: int, db: Session = Depends(get
     return resp
 
 @app.post("/resultados")
-async def create_resultado_manual(data: ResultadoCreate, db: Session = Depends(get_db)):
+async def create_resultado_manual(data: ResultadoCreate, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == data.gabarito_id).first()
     if not gabarito:
         raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in gabarito.turmas)
+        if not has_access and gabarito.turmas:
+             raise HTTPException(status_code=403, detail="Você não tem permissão para lançar resultados neste gabarito")
     
     nota = 0.0
     acertos = 0
@@ -614,7 +735,7 @@ async def create_resultado_manual(data: ResultadoCreate, db: Session = Depends(g
         return {"message": "Resultado registrado com sucesso", "id": novo_resultado.id, "nota": nota}
 
 @app.patch("/resultados/{resultado_id}")
-async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session = Depends(get_db)):
+async def update_resultado(resultado_id: int, data: ResultadoUpdate, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     resultado = db.query(models.Resultado).filter(models.Resultado.id == resultado_id).first()
     if not resultado:
         raise HTTPException(status_code=404, detail="Resultado não encontrado")
@@ -622,6 +743,11 @@ async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session
     gabarito = resultado.gabarito
     if not gabarito:
         raise HTTPException(status_code=400, detail="Gabarito associado não encontrado")
+
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in gabarito.turmas)
+        if not has_access and gabarito.turmas:
+             raise HTTPException(status_code=403, detail="Você não tem permissão para editar este resultado")
     
     if data.nota is not None:
         resultado.nota = data.nota
@@ -653,22 +779,36 @@ async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session
     return {"message": "Resultado atualizado com sucesso", "nota": resultado.nota, "acertos": resultado.acertos}
 
 @app.delete("/resultados/{resultado_id}")
-async def delete_resultado(resultado_id: int, db: Session = Depends(get_db)):
+async def delete_resultado(resultado_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     resultado = db.query(models.Resultado).filter(models.Resultado.id == resultado_id).first()
-    if resultado:
-        db.delete(resultado)
-        db.commit()
-        return {"message": "Resultado excluído com sucesso"}
-    raise HTTPException(status_code=404, detail="Resultado não encontrado")
+    if not resultado:
+        raise HTTPException(status_code=404, detail="Resultado não encontrado")
+
+    if user.role != "admin":
+        gabarito = resultado.gabarito
+        if gabarito:
+            has_access = any(t.user_id == user.id for t in gabarito.turmas)
+            if not has_access and gabarito.turmas:
+                raise HTTPException(status_code=403, detail="Acesso negado")
+
+    db.delete(resultado)
+    db.commit()
+    return {"message": "Resultado excluído com sucesso"}
 
 # --- Endpoints de Frequência ---
 
 @app.post("/frequencia")
-async def save_frequencia(data: dict, db: Session = Depends(get_db)):
+async def save_frequencia(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # data: { turma_id: 1, data: "2023-10-27", alunos: [{aluno_id: 1, presente: true}, ...] }
     turma_id = data.get("turma_id")
     data_frequencia = data.get("data")
     alunos_lista = data.get("alunos", [])
+
+    # RBAC
+    if user.role != "admin":
+         turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+         if not turma:
+              raise HTTPException(status_code=403, detail="Você não tem permissão para lançar frequência nesta turma")
 
     # Verificar se já existe frequência para esta data e turma, se sim, deletar (overwrite) ou atualizar
     # Vamos optar por deletar e recriar para simplificar atualização em lote
@@ -696,13 +836,23 @@ async def save_frequencia(data: dict, db: Session = Depends(get_db)):
     return {"message": "Frequência salva com sucesso", "registros": count}
 
 @app.get("/frequencia/turma/{turma_id}")
-async def get_frequencia_turma(turma_id: int, db: Session = Depends(get_db)):
+async def get_frequencia_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin":
+         turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+         if not turma:
+              raise HTTPException(status_code=403, detail="Acesso negado a esta turma")
     return db.query(models.Frequencia).filter(models.Frequencia.turma_id == turma_id).all()
 
 @app.get("/frequencia/aluno/{aluno_id}")
-async def get_frequencia_aluno(aluno_id: int, db: Session = Depends(get_db)):
+async def get_frequencia_aluno(aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     # Retorna estatísticas: total de aulas, total de presenças
-    freqs = db.query(models.Frequencia).filter(models.Frequencia.aluno_id == aluno_id).all()
+    query = db.query(models.Frequencia).filter(models.Frequencia.aluno_id == aluno_id)
+    
+    if user.role != "admin":
+        # Filtrar apenas frequências das turmas deste professor
+        query = query.join(models.Turma).filter(models.Turma.user_id == user.id)
+
+    freqs = query.all()
     total_aulas = len(freqs)
     total_presencas = len([f for f in freqs if f.presente])
     
@@ -718,7 +868,12 @@ async def get_frequencia_aluno(aluno_id: int, db: Session = Depends(get_db)):
     }
 
 @app.get("/frequencia/turma/{turma_id}/dates")
-async def get_frequencia_dates_turma(turma_id: int, db: Session = Depends(get_db)):
+async def get_frequencia_dates_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin":
+         turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+         if not turma:
+              raise HTTPException(status_code=403, detail="Acesso negado")
+              
     # Retorna lista de datas únicas que tem frequência registrada para a turma
     # Usar distinct
     dates = db.query(models.Frequencia.data).filter(models.Frequencia.turma_id == turma_id).distinct().all()
@@ -728,16 +883,35 @@ async def get_frequencia_dates_turma(turma_id: int, db: Session = Depends(get_db
 # --- Estatísticas ---
 
 @app.get("/stats")
-async def get_stats(db: Session = Depends(get_db)):
-    return {
-        "total_turmas": db.query(models.Turma).count(),
-        "total_alunos": db.query(models.Aluno).count(),
-        "total_gabaritos": db.query(models.Gabarito).count(),
-        "total_resultados": db.query(models.Resultado).count()
-    }
+async def get_stats(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role == "admin":
+        return {
+            "total_turmas": db.query(models.Turma).count(),
+            "total_alunos": db.query(models.Aluno).count(),
+            "total_gabaritos": db.query(models.Gabarito).count(),
+            "total_resultados": db.query(models.Resultado).count()
+        }
+    else:
+        # Estatísticas do Professor
+        my_turmas_count = db.query(models.Turma).filter(models.Turma.user_id == user.id).count()
+        my_alunos_count = db.query(models.Aluno).join(models.Turma, models.Aluno.turmas).filter(models.Turma.user_id == user.id).distinct().count()
+        my_gabaritos_count = db.query(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id)).count()
+        my_resultados_count = db.query(models.Resultado).join(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id)).count()
+        
+        return {
+            "total_turmas": my_turmas_count,
+            "total_alunos": my_alunos_count,
+            "total_gabaritos": my_gabaritos_count,
+            "total_resultados": my_resultados_count
+        }
 
 @app.get("/stats/turma/{turma_id}")
-async def get_stats_by_turma(turma_id: int, db: Session = Depends(get_db)):
+async def get_stats_by_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin":
+         turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
+         if not turma:
+              raise HTTPException(status_code=403, detail="Acesso negado a esta turma")
+
     total_alunos = db.query(models.Aluno).filter(models.Aluno.turmas.any(models.Turma.id == turma_id)).count()
     # Calcular media baseada nos resultados dos gabaritos vinculados a esta turma
     resultados = db.query(models.Resultado).join(models.Gabarito).filter(

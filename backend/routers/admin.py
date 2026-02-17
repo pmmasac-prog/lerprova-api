@@ -3,8 +3,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 import users_db
 import auth_utils
+import models
 from database import get_db
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -66,4 +67,38 @@ async def delete_user(user_id: int, admin_user = Depends(verify_admin), db: Sess
     db.delete(user)
     db.commit()
     return {"message": "Usuário removido com sucesso"}
+
+
+@router.get("/turmas")
+async def list_all_turmas(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    # Retorna todas as turmas com info do professor
+    turmas = db.query(models.Turma).options(joinedload(models.Turma.professor)).all()
+    
+    result = []
+    for t in turmas:
+        t_dict = {
+            "id": t.id,
+            "nome": t.nome,
+            "disciplina": t.disciplina,
+            "user_id": t.user_id,
+            "professor_nome": t.professor.nome if t.professor else "Sem Professor",
+            "professor_email": t.professor.email if t.professor else ""
+        }
+        result.append(t_dict)
+    return result
+
+@router.put("/turmas/{turma_id}/transfer/{user_id}")
+async def transfer_turma(turma_id: int, user_id: int, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada")
+    
+    new_prof = db.query(users_db.User).filter(users_db.User.id == user_id).first()
+    if not new_prof:
+         raise HTTPException(status_code=404, detail="Novo professor não encontrado")
+         
+    turma.user_id = user_id
+    db.commit()
+    
+    return {"message": f"Turma '{turma.nome}' transferida para {new_prof.nome}"}
 

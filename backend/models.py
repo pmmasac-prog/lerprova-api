@@ -12,6 +12,9 @@ class Turma(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    professor = relationship("User", back_populates="turmas")
+    
     alunos = relationship("Aluno", secondary="aluno_turma", back_populates="turmas")
     gabaritos = relationship("Gabarito", secondary="gabarito_turma", back_populates="turmas")
 

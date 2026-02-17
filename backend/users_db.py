@@ -24,6 +24,9 @@ class User(Base):
     plan_type = Column(String, default="free") # free, pro, school
     subscription_expires_at = Column(DateTime, nullable=True)
     total_corrections_used = Column(Integer, default=0)
+    
+    # Relacionamentos
+    turmas = relationship("Turma", back_populates="professor")
 
     def verify_password(self, password: str):
         return pwd_context.verify(password, self.hashed_password)
