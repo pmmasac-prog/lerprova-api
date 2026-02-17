@@ -293,9 +293,25 @@ export const api = {
         return response.json();
     },
 
+    async getPlano(id: number) {
+        const response = await fetch(`${API_URL}/planos/${id}`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
     async createPlano(data: { turma_id: number, titulo: string, disciplina?: string, data_inicio: string, aulas: any[], intervalo_dias?: number, dias_semana?: number[] }) {
         const response = await fetch(`${API_URL}/planos`, {
             method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    async updatePlano(id: number, data: { titulo?: string, disciplina?: string, aulas?: any[], dias_semana?: number[] }) {
+        const response = await fetch(`${API_URL}/planos/${id}`, {
+            method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data)
         });

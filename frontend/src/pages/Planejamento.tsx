@@ -1,7 +1,7 @@
 // Planejamento.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
+import { Plus, CheckCircle2, AlertCircle, BookOpen, Pencil } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
 import { PlanejamentoStudio } from './PlanejamentoStudio';
@@ -20,6 +20,7 @@ interface Plano {
     total_aulas: number;
     aulas_concluidas: number;
     progresso: number;
+    dias_semana?: number[];
 }
 
 type AulaStatus = 'pending' | 'done' | 'skipped' | 'canceled' | string;
@@ -31,6 +32,7 @@ interface Aula {
     scheduled_date: string;
     status: AulaStatus;
     registros?: unknown[];
+    conteudos?: string[];
 }
 
 const PERCEPCOES = [
@@ -73,6 +75,8 @@ export const Planejamento: React.FC = () => {
     const [showSugestaoReforco, setShowSugestaoReforco] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showNewPlanoModal, setShowNewPlanoModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingPlanoData, setEditingPlanoData] = useState<Plano | null>(null);
 
     const [loadingTurmas, setLoadingTurmas] = useState(false);
     const [loadingPlanos, setLoadingPlanos] = useState(false);
@@ -155,6 +159,23 @@ export const Planejamento: React.FC = () => {
             if (token === lastLoadToken.current) setLoadingAulas(false);
         }
     }, []);
+
+    const handleEditPlano = useCallback(async () => {
+        if (currentPlano && selectedPlanoId) {
+            let fullPlano = currentPlano;
+            // Fetch full details if needed (e.g. days)
+            try {
+                const p = await api.getPlano(selectedPlanoId);
+                fullPlano = { ...currentPlano, ...p };
+            } catch (e) {
+                console.error('Erro ao buscar plano full', e);
+            }
+
+            setEditingPlanoData(fullPlano);
+            setIsEditing(true);
+            setShowNewPlanoModal(true);
+        }
+    }, [currentPlano, selectedPlanoId]);
 
     useEffect(() => {
         loadTurmas();
@@ -257,7 +278,14 @@ export const Planejamento: React.FC = () => {
                 </div>
 
                 <div className="plan-highlights">
-                    <h1 className="plan-title">{currentPlano?.titulo || 'Sem Plano Ativo'}</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <h1 className="plan-title">{currentPlano?.titulo || 'Sem Plano Ativo'}</h1>
+                        {currentPlano && (
+                            <button className="btn-icon-subtle" onClick={handleEditPlano} title="Editar Planejamento">
+                                <Pencil size={18} />
+                            </button>
+                        )}
+                    </div>
                     <div className="plan-meta">
                         {loadingPlanos || loadingAulas ? (
                             <span className="meta-item">Carregando…</span>
@@ -379,14 +407,31 @@ export const Planejamento: React.FC = () => {
 
             {showNewPlanoModal && selectedTurmaId && selectedTurmaId > 0 && (
                 <PlanejamentoStudio
-                    onClose={() => setShowNewPlanoModal(false)}
+                    onClose={() => {
+                        setShowNewPlanoModal(false);
+                        setIsEditing(false);
+                        setEditingPlanoData(null);
+                    }}
                     onCreated={() => {
                         setShowNewPlanoModal(false);
+                        setIsEditing(false);
+                        setEditingPlanoData(null);
                         loadPlanos(selectedTurmaId);
+                        if (selectedPlanoId) loadPlanoDetails(selectedPlanoId);
                     }}
                     turmaId={selectedTurmaId}
                     turmaNome={turmas.find(t => t.id === selectedTurmaId)?.nome || ''}
                     disciplinaPre={turmas.find(t => t.id === selectedTurmaId)?.disciplina || ''}
+                    planoId={isEditing && editingPlanoData ? editingPlanoData.id : undefined}
+                    initialData={isEditing && editingPlanoData ? {
+                        titulo: editingPlanoData.titulo,
+                        data_inicio: editingPlanoData.data_inicio,
+                        dias_semana: editingPlanoData.dias_semana || [],
+                        aulas: aulas.map(a => ({
+                            titulo: a.titulo,
+                            conteudos: a.conteudos || []
+                        }))
+                    } : undefined}
                 />
             )}
         </div>

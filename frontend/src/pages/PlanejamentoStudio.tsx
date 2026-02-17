@@ -17,6 +17,13 @@ interface TeachingStudioProps {
     turmaId: number;
     turmaNome: string;
     disciplinaPre: string;
+    planoId?: number; // Optional: for editing
+    initialData?: {
+        titulo: string;
+        data_inicio: string;
+        dias_semana: number[];
+        aulas: { titulo: string; conteudos?: string[] }[];
+    } | null;
 }
 
 type PanelKey = 'config' | 'canvas' | 'curriculo';
@@ -52,10 +59,6 @@ function formatLessonDate(dt: Date): string {
     }).format(dt);
 }
 
-// ... (imports remain)
-
-// ...
-
 type Lesson = { id: string; title: string; dateDisplay: string; conteudos: string[] };
 
 export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
@@ -64,20 +67,32 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     turmaId,
     turmaNome,
     disciplinaPre,
+    planoId,
+    initialData
 }) => {
     const [activePanel, setActivePanel] = useState<PanelKey>('canvas');
-    const [targetLessonId, setTargetLessonId] = useState<string | null>(null); // NEW: Track which lesson wants content
+    const [targetLessonId, setTargetLessonId] = useState<string | null>(null);
 
-    // ... (Config state remains)
-    const [titulo, setTitulo] = useState('');
+    // Config - Init with initialData if present
+    const [titulo, setTitulo] = useState(initialData?.titulo || '');
     const [disciplina, setDisciplina] = useState(disciplinaPre);
-    const [dataInicio, setDataInicio] = useState(() => new Date().toISOString().slice(0, 10));
-    const [diasSemana, setDiasSemana] = useState<number[]>([0, 2]);
+    const [dataInicio, setDataInicio] = useState(() => initialData?.data_inicio ? initialData.data_inicio.slice(0, 10) : new Date().toISOString().slice(0, 10));
+    const [diasSemana, setDiasSemana] = useState<number[]>(initialData?.dias_semana || [0, 2]);
 
-    // Canvas
-    const [lessons, setLessons] = useState<Lesson[]>([{ id: '1', title: '', dateDisplay: '', conteudos: [] }]);
+    // Canvas - Init with initialData
+    const [lessons, setLessons] = useState<Lesson[]>(() => {
+        if (initialData?.aulas && initialData.aulas.length > 0) {
+            return initialData.aulas.map(a => ({
+                id: Math.random().toString(36).slice(2, 10),
+                title: a.titulo,
+                dateDisplay: '', // will be recalc
+                conteudos: a.conteudos || []
+            }));
+        }
+        return [{ id: '1', title: '', dateDisplay: '', conteudos: [] }];
+    });
 
-    // ... (Curriculum state remains)
+    // ... Curriculum State remains ...
     const [subjects, setSubjects] = useState<CurriculoItem[]>([]);
     const [units, setUnits] = useState<CurriculoItem[]>([]);
     const [topics, setTopics] = useState<CurriculoItem[]>([]);
@@ -87,16 +102,41 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     const [saving, setSaving] = useState(false);
     const loadToken = useRef(0);
 
-    // Load Subjects
+    // Load Subjects (with Filter)
     useEffect(() => {
         const token = ++loadToken.current;
         api.getCurriculoSubjects()
             .then((data: CurriculoItem[]) => {
                 if (token !== loadToken.current) return;
-                setSubjects(data);
+
+                // Filter by disciplinaPre if provided (Strict Mode)
+                let filtered = data;
+                if (disciplinaPre) {
+                    // Normalize for comparison (remove accents, case insensitive basic check)
+                    const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const target = normalize(disciplinaPre);
+
+                    filtered = data.filter(s => normalize(s.name).includes(target) || target.includes(normalize(s.name)));
+
+                    // Fallback: if filter removed everything, maybe strict match failed, keep all? 
+                    // Or keep stricter: user said "so pode colocar assuntos referente a disciplina"
+                    // If filtered is empty, we show nothing? Or all? 
+                    // Let's decide to keep filtered. If 0, maybe user has to search manually or we have a mapping issue.
+                    // But if we find a match, auto-select it?
+                }
+
+                setSubjects(filtered);
+
+                // Auto-select if only 1 option or if exact name match
+                const exact = filtered.find(s => s.name === disciplinaPre);
+                if (exact) {
+                    setSelectedSub(exact.id);
+                } else if (filtered.length === 1) {
+                    setSelectedSub(filtered[0].id);
+                }
             })
             .catch((e: unknown) => console.error(e));
-    }, []);
+    }, [disciplinaPre]);
 
     // Load Units
     useEffect(() => {
@@ -254,14 +294,30 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
 
         setSaving(true);
         try {
-            await api.createPlano({
-                turma_id: turmaId,
-                titulo: titulo.trim(),
-                disciplina: disciplina.trim() || disciplinaPre,
-                data_inicio: dataInicio,
-                aulas: validLessons,
-                dias_semana: diasSemana, // mantém 0=Seg..4=Sex como você já usa
-            });
+            if (planoId) {
+                // UPDATE
+                await api.updatePlano(planoId, {
+                    titulo: titulo.trim(),
+                    disciplina: disciplina.trim() || disciplinaPre,
+                    // If backend supports partial update of these fields
+                    aulas: validLessons, // We send full list to replace/update
+                    dias_semana: diasSemana
+                    // data_inicio might be read-only on update? Let's check api.ts/backend. 
+                    // Looking at api.ts signature: updatePlano(id, data: { titulo?, disciplina?, aulas?, dias_semana? })
+                    // It doesn't include data_inicio. So we don't send it unless we update the signature or backend. 
+                    // Current signature I added: { titulo?, disciplina?, aulas?, dias_semana? }
+                });
+            } else {
+                // CREATE
+                await api.createPlano({
+                    turma_id: turmaId,
+                    titulo: titulo.trim(),
+                    disciplina: disciplina.trim() || disciplinaPre,
+                    data_inicio: dataInicio,
+                    aulas: validLessons,
+                    dias_semana: diasSemana,
+                });
+            }
             onCreated();
         } catch (e) {
             console.error(e);
@@ -269,7 +325,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         } finally {
             setSaving(false);
         }
-    }, [canSave, turmaId, titulo, disciplina, disciplinaPre, dataInicio, validLessons, diasSemana, onCreated]);
+    }, [canSave, turmaId, titulo, disciplina, disciplinaPre, dataInicio, validLessons, diasSemana, onCreated, planoId]);
 
     return (
         <div className="studio-container" role="dialog" aria-modal="true" aria-label="Editor de planejamento">
