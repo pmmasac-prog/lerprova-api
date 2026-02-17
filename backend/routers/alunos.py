@@ -96,7 +96,15 @@ async def get_alunos_by_turma(turma_id: int, user: users_db.User = Depends(get_c
     turma = query.first()
     if not turma:
         raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
-    return turma.alunos
+    
+    return [
+        {
+            "id": a.id,
+            "nome": a.nome,
+            "codigo": a.codigo,
+            "qr_token": a.qr_token
+        } for a in turma.alunos
+    ]
 
 @router.delete("/alunos/{aluno_id}")
 async def delete_aluno(aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):

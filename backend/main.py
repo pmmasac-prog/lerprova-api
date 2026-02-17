@@ -68,7 +68,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={
             "detail": "Erro interno no servidor", 
-            "error": str(exc),
+            "error_message": str(exc),
             "trace": traceback.format_exc() if os.getenv("DEBUG") == "true" else "Trace oculto em produção"
         }
     )

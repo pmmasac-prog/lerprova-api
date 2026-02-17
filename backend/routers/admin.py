@@ -32,8 +32,20 @@ async def verify_admin(user = Depends(get_current_user)):
 @router.get("/users")
 async def list_users(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
     users = db.query(users_db.User).all()
-    # Retorna usuários sem o hash da senha
-    return users
+    # Retorna usuários sem o hash da senha e em formato dicionário simples
+    return [
+        {
+            "id": u.id,
+            "nome": u.nome,
+            "email": u.email,
+            "role": u.role,
+            "escola": u.escola,
+            "disciplina": u.disciplina,
+            "is_active": u.is_active,
+            "plan_type": u.plan_type,
+            "total_corrections_used": u.total_corrections_used
+        } for u in users
+    ]
 
 @router.post("/users")
 async def create_new_user(user: UserCreate, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
