@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, CheckCircle2, ChevronRight, AlertCircle } from 'lucide-react';
+import { X, Save, User, ChevronRight } from 'lucide-react';
 import { api } from '../../../services/api';
 
 interface ManualEntryModalProps {
@@ -13,22 +13,12 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     const [step, setStep] = useState(1);
     const [alunos, setAlunos] = useState<any[]>([]);
     const [selectedAlunoId, setSelectedAlunoId] = useState<number | null>(null);
-    const [entryMode, setEntryMode] = useState<'full' | 'quick'>('full');
     const [manualNota, setManualNota] = useState<string>('');
-    const [answers, setAnswers] = useState<string[]>([]);
-    const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchAluno, setSearchAluno] = useState('');
 
     useEffect(() => {
         loadAlunos();
-        try {
-            const parsedCorretas = JSON.parse(gabarito.respostas_corretas || '[]');
-            setCorrectAnswers(parsedCorretas);
-            setAnswers(new Array(parsedCorretas.length).fill(""));
-        } catch (e) {
-            console.error('Erro ao processar gabarito:', e);
-        }
     }, [gabarito]);
 
     const loadAlunos = async () => {
@@ -39,7 +29,6 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                 const data = await api.getAlunosByTurma(tId);
                 allAlunos = [...allAlunos, ...data];
             }
-            // Remover duplicatas se houver
             const uniqueAlunos = allAlunos.filter((a, index, self) =>
                 index === self.findIndex((t) => t.id === a.id)
             );
@@ -49,26 +38,24 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
         }
     };
 
-    const handleSelectOption = (idx: number, val: string) => {
-        const newAnswers = [...answers];
-        newAnswers[idx] = val;
-        setAnswers(newAnswers);
+    const handleSelectAluno = (id: number) => {
+        setSelectedAlunoId(id);
+        setStep(2);
     };
 
     const handleSave = async () => {
         if (!selectedAlunoId) return;
+        if (!manualNota) {
+            alert('Por favor, informe a nota.');
+            return;
+        }
         setLoading(true);
         try {
             const payload: any = {
                 aluno_id: selectedAlunoId,
                 gabarito_id: gabarito.id,
+                nota: parseFloat(manualNota.replace(',', '.')),
             };
-
-            if (entryMode === 'quick') {
-                payload.nota = parseFloat(manualNota.replace(',', '.'));
-            } else {
-                payload.respostas_aluno = answers;
-            }
 
             await api.addResultadoManual(payload);
             onSuccess();
@@ -81,28 +68,14 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
         }
     };
 
-    const calculatePreview = () => {
-        if (entryMode === 'quick') {
-            return { acertos: '-', nota: manualNota || '0.0' };
-        }
-        let acertos = 0;
-        const total = correctAnswers.length;
-        answers.forEach((ans, idx) => {
-            if (ans === correctAnswers[idx]) acertos++;
-        });
-        const nota = total > 0 ? (acertos / total) * 10 : 0;
-        return { acertos, nota: nota.toFixed(1) };
-    };
-
-    const { acertos, nota } = calculatePreview();
     const selectedAluno = alunos.find(a => a.id === selectedAlunoId);
 
     return (
         <div className="modal-overlay">
-            <div className="modal-container" style={{ maxWidth: '800px' }}>
+            <div className="modal-container" style={{ maxWidth: '600px' }}>
                 <div className="modal-header">
                     <div>
-                        <h2>Lançamento Manual</h2>
+                        <h2>Lançamento de Nota</h2>
                         <p className="admin-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} questões</p>
                     </div>
                     <button className="close-btn" onClick={onClose}><X /></button>
@@ -121,11 +94,11 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                     onChange={(e) => setSearchAluno(e.target.value)}
                                 />
                             </div>
-                            <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                            <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
                                 {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map(a => (
                                     <div
                                         key={a.id}
-                                        onClick={() => setSelectedAlunoId(a.id)}
+                                        onClick={() => handleSelectAluno(a.id)}
                                         style={{
                                             padding: '12px 15px',
                                             cursor: 'pointer',
@@ -133,141 +106,66 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
                                             borderBottom: '1px solid #f1f5f9',
-                                            background: selectedAlunoId === a.id ? '#eff6ff' : 'transparent',
                                             transition: 'all 0.2s'
                                         }}
+                                        className="student-item"
                                     >
                                         <div>
                                             <div style={{ fontWeight: 700, color: '#1e293b' }}>{a.nome}</div>
                                             <div style={{ fontSize: '11px', color: '#64748b' }}>Cód: {a.codigo}</div>
                                         </div>
-                                        {selectedAlunoId === a.id && <CheckCircle2 size={18} color="#3b82f6" />}
+                                        <ChevronRight size={18} color="#94a3b8" />
                                     </div>
                                 ))}
                                 {alunos.length === 0 && <p style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Nenhum aluno encontrado para as turmas deste gabarito.</p>}
                             </div>
 
-                            <div className="form-actions">
+                            <div className="form-actions" style={{ marginTop: '20px' }}>
                                 <button className="reset-btn" onClick={onClose}>Cancelar</button>
-                                <button
-                                    className="save-btn"
-                                    onClick={() => setStep(2)}
-                                    disabled={!selectedAlunoId}
-                                >
-                                    <span>Próximo: Escolha o Modo</span>
-                                    <ChevronRight size={18} />
-                                </button>
                             </div>
                         </div>
                     ) : (
                         <div className="step-answers">
-                            <div className="stats-row" style={{ marginBottom: '20px', background: '#f8fafc' }}>
+                            <div className="stats-row" style={{ marginBottom: '30px', background: '#f8fafc', padding: '20px' }}>
                                 <div className="mini-stat">
-                                    <div className="mini-stat-value">{selectedAluno?.nome}</div>
+                                    <div className="mini-stat-value" style={{ fontSize: '18px' }}>{selectedAluno?.nome}</div>
                                     <div className="mini-stat-label">Aluno Selecionado</div>
                                 </div>
-                                <div className="mini-stat">
-                                    <div className="mini-stat-value">{acertos}{entryMode === 'full' ? `/${correctAnswers.length}` : ''}</div>
-                                    <div className="mini-stat-label">Acertos {entryMode === 'full' ? 'Estimados' : ''}</div>
-                                </div>
-                                <div className="mini-stat">
-                                    <div className={`nota-badge ${parseFloat(nota) >= 7 ? 'success' : (parseFloat(nota) >= 5 ? 'warning' : 'danger')}`} style={{ fontSize: '20px', padding: '10px 20px' }}>
-                                        {nota}
-                                    </div>
-                                    <div className="mini-stat-label">Nota</div>
-                                </div>
                             </div>
 
-                            <div className="tab-container" style={{ marginBottom: '20px', padding: '5px', background: '#f1f5f9', borderRadius: '12px' }}>
-                                <button
-                                    className={`tab ${entryMode === 'full' ? 'active' : ''}`}
-                                    onClick={() => setEntryMode('full')}
-                                    style={{ padding: '10px', fontSize: '13px' }}
-                                >
-                                    Lançamento Completo
-                                </button>
-                                <button
-                                    className={`tab ${entryMode === 'quick' ? 'active' : ''}`}
-                                    onClick={() => setEntryMode('quick')}
-                                    style={{ padding: '10px', fontSize: '13px' }}
-                                >
-                                    Lançamento Rápido (Só Nota)
-                                </button>
+                            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                <label className="label" style={{ fontSize: '16px', marginBottom: '20px', display: 'block' }}>
+                                    Digite a Nota Final (0 a 10)
+                                </label>
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    inputMode="decimal"
+                                    placeholder="0.0"
+                                    value={manualNota}
+                                    onChange={(e) => setManualNota(e.target.value)}
+                                    style={{
+                                        width: '150px',
+                                        height: '80px',
+                                        fontSize: '48px',
+                                        textAlign: 'center',
+                                        border: '3px solid #3b82f6',
+                                        borderRadius: '20px',
+                                        fontWeight: '900',
+                                        color: '#1e293b',
+                                        boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.2)',
+                                        outline: 'none'
+                                    }}
+                                />
                             </div>
 
-                            <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
-                                {entryMode === 'quick' ? (
-                                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                                        <label className="label" style={{ fontSize: '16px', marginBottom: '15px' }}>Digite a Nota Final (0 a 10)</label>
-                                        <input
-                                            type="text"
-                                            inputMode="decimal"
-                                            placeholder="Ex: 8.5"
-                                            value={manualNota}
-                                            onChange={(e) => setManualNota(e.target.value)}
-                                            style={{
-                                                width: '120px',
-                                                height: '60px',
-                                                fontSize: '32px',
-                                                textAlign: 'center',
-                                                border: '2px solid #3b82f6',
-                                                borderRadius: '16px',
-                                                fontWeight: 'bold',
-                                                color: '#1e293b',
-                                                outline: 'none'
-                                            }}
-                                        />
-                                        <p style={{ marginTop: '15px', color: '#64748b', fontSize: '13px' }}>
-                                            Este modo não permite análise por questão, apenas registra o resultado final.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
-                                        {correctAnswers.map((_, idx) => (
-                                            <div key={idx} style={{
-                                                padding: '12px',
-                                                border: '1px solid #e2e8f0',
-                                                borderRadius: '16px',
-                                                background: answers[idx] === correctAnswers[idx] ? '#f0fdf4' : (answers[idx] ? '#fef2f2' : 'white')
-                                            }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', fontWeight: 800 }}>
-                                                    <span color="#64748b">Questão {idx + 1}</span>
-                                                    {answers[idx] === correctAnswers[idx] ? <CheckCircle2 size={14} color="#10b981" /> : (answers[idx] ? <AlertCircle size={14} color="#ef4444" /> : null)}
-                                                </div>
-                                                <div style={{ display: 'flex', gap: '4px' }}>
-                                                    {['A', 'B', 'C', 'D', 'E'].map(opt => (
-                                                        <button
-                                                            key={opt}
-                                                            onClick={() => handleSelectOption(idx, opt)}
-                                                            style={{
-                                                                width: '24px',
-                                                                height: '24px',
-                                                                borderRadius: '50%',
-                                                                border: '1px solid #e2e8f0',
-                                                                fontSize: '10px',
-                                                                fontWeight: 800,
-                                                                background: answers[idx] === opt ? (opt === correctAnswers[idx] ? '#10b981' : '#ef4444') : 'white',
-                                                                color: answers[idx] === opt ? 'white' : '#64748b',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                        >
-                                                            {opt}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="form-actions">
+                            <div className="form-actions" style={{ marginTop: '40px' }}>
                                 <button className="reset-btn" onClick={() => setStep(1)} style={{ background: '#f1f5f9', color: '#64748b' }}>
-                                    Voltar
+                                    Alterar Aluno
                                 </button>
-                                <button className="save-btn" onClick={handleSave} disabled={loading}>
-                                    <Save size={18} />
-                                    <span>{loading ? 'Salvando...' : 'Finalizar e Gravar Nota'}</span>
+                                <button className="save-btn" onClick={handleSave} disabled={loading} style={{ padding: '0 30px' }}>
+                                    <Save size={20} />
+                                    <span>{loading ? 'Salvando...' : 'Gravar Nota'}</span>
                                 </button>
                             </div>
                         </div>
