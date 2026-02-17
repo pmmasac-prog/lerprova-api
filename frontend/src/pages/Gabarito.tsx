@@ -416,23 +416,20 @@ export const Gabarito: React.FC = () => {
                                     <div className="history-divider"></div>
 
                                     <div className="history-actions">
-                                        <button className="action-btn edit" onClick={() => handleEdit(g)}>
+                                        <button className="action-btn edit" onClick={() => handleEdit(g)} title="Editar">
                                             <div className="icon-bg icon-bg-sm icon-blue">
                                                 <Edit3 size={18} />
                                             </div>
-                                            <span>Editar</span>
                                         </button>
-                                        <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)}>
+                                        <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)} title="Lançamento Manual">
                                             <div className="icon-bg icon-bg-sm icon-orange">
                                                 <Edit3 size={18} />
                                             </div>
-                                            <span>Manual</span>
                                         </button>
-                                        <button className="action-btn upload" onClick={() => fileInputRef.current?.click()}>
+                                        <button className="action-btn upload" onClick={() => fileInputRef.current?.click()} title="Envio em Lote">
                                             <div className="icon-bg icon-bg-sm icon-purple">
                                                 <Upload size={18} />
                                             </div>
-                                            <span>Lote</span>
                                             <input
                                                 type="file"
                                                 ref={fileInputRef}
@@ -442,17 +439,15 @@ export const Gabarito: React.FC = () => {
                                                 onChange={(e) => handleBatchUpload(e, g)}
                                             />
                                         </button>
-                                        <button className="action-btn download" onClick={() => handlePreparePrint(g)}>
+                                        <button className="action-btn download" onClick={() => handlePreparePrint(g)} title="Imprimir Cartões">
                                             <div className="icon-bg icon-bg-sm icon-indigo">
                                                 <Download size={18} />
                                             </div>
-                                            <span>Cartões</span>
                                         </button>
-                                        <button className="action-btn delete" onClick={() => handleDelete(g.id)}>
+                                        <button className="action-btn delete" onClick={() => handleDelete(g.id)} title="Excluir">
                                             <div className="icon-bg icon-bg-sm icon-red">
                                                 <Trash2 size={18} />
                                             </div>
-                                            <span>Excluir</span>
                                         </button>
                                     </div>
                                 </div>

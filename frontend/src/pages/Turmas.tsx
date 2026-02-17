@@ -69,9 +69,8 @@ export const Turmas: React.FC = () => {
                     <h1 className="turmas-title">Minhas Turmas</h1>
                     <p className="turmas-subtitle">Gerencie suas salas de aula</p>
                 </div>
-                <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                <button className="btn-primary" onClick={() => setShowAddModal(true)} title="Nova Turma">
                     <Plus size={20} />
-                    Nova Turma
                 </button>
             </div>
 

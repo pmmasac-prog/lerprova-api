@@ -175,15 +175,17 @@
 }
 
 .action-btn {
-    flex: 1;
+    flex: 0 0 auto;
+    /* Não crescer */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 12px 8px;
-    background: #fff;
-    border: 1px solid #f1f5f9;
+    gap: 0;
+    /* Remove gap sem texto */
+    padding: 4px;
+    background: transparent;
+    border: none;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
@@ -480,6 +482,8 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
+    padding-bottom: 200px;
+    /* Margem extra para não ficar abaixo do botão salvar */
 }
 
 .question-row {
@@ -554,10 +558,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 18px;
-    border-radius: 20px;
-    font-size: 18px;
+    gap: 8px;
+    padding: 12px;
+    /* Reduzido de 18px */
+    border-radius: 16px;
+    /* Reduzido de 20px */
+    font-size: 16px;
+    /* Reduzido de 18px */
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;

@@ -33,16 +33,10 @@
     background: #3b82f6;
     color: white;
     border: none;
-    padding: 8px 12px;
-    /* Menor */
-    border-radius: 8px;
-    /* Menor */
-    font-weight: 600;
-    font-size: 12px;
-    /* Fonte menor */
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    padding: 8px;
+    /* Ajustado de 8px 12px para icon-only */
+    gap: 0;
+    /* Removido gap sem texto */
     cursor: pointer;
     transition: all 0.2s;
     height: 36px;
