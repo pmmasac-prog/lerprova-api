@@ -18,10 +18,12 @@ logger = logging.getLogger("lerprova-api")
 import models
 import users_db
 from database import engine, SessionLocal
+from migrations import run_migrations
 from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports
 
-# Inicializar Banco de Dados (Um único comando para todos os modelos registrados no Base)
-models.Base.metadata.create_all(bind=engine)
+# Inicializar Banco de Dados
+run_migrations(engine)  # Garantir colunas novas
+models.Base.metadata.create_all(bind=engine) # Criar tabelas novas
 
 # Opcional: Popular com usuários iniciais se estiver vazio
 db = SessionLocal()
