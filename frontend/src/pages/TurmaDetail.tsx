@@ -25,6 +25,7 @@ export const TurmaDetail: React.FC = () => {
     const [turma, setTurma] = useState<Turma | null>(null);
     const [alunos, setAlunos] = useState<Aluno[]>([]);
     const [loading, setLoading] = useState(true);
+    const [gabaritos, setGabaritos] = useState<any[]>([]);
     const [showFrequenciaModal, setShowFrequenciaModal] = useState(false);
     const [showAlunoModal, setShowAlunoModal] = useState(false);
     const [showAddAlunoModal, setShowAddAlunoModal] = useState(false);
@@ -38,6 +39,7 @@ export const TurmaDetail: React.FC = () => {
     const [alunoFreqHistory, setAlunoFreqHistory] = useState<any[]>([]);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
+    const [selectedResultadoForCard, setSelectedResultadoForCard] = useState<any | null>(null);
 
     useEffect(() => {
         loadData();
@@ -51,8 +53,12 @@ export const TurmaDetail: React.FC = () => {
             setTurma(turmaData || null);
 
             if (id) {
-                const alunosData = await api.getAlunosByTurma(parseInt(id));
+                const [alunosData, gabaritosData] = await Promise.all([
+                    api.getAlunosByTurma(parseInt(id)),
+                    api.getGabaritos()
+                ]);
                 setAlunos(alunosData);
+                setGabaritos(gabaritosData);
             }
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
@@ -79,6 +85,11 @@ export const TurmaDetail: React.FC = () => {
             const allResultados = await api.getResultados();
             const resultadosDoAluno = allResultados.filter((r: any) => r.aluno_id === aluno.id);
             setAlunoResultados(resultadosDoAluno);
+            if (resultadosDoAluno.length > 0) {
+                setSelectedResultadoForCard(resultadosDoAluno[0]);
+            } else {
+                setSelectedResultadoForCard(null);
+            }
 
             // Carregar dados de frequência do aluno
             const freqData = await api.getFrequenciaAluno(aluno.id);
@@ -579,17 +590,90 @@ export const TurmaDetail: React.FC = () => {
 
                             {activeTab === 'cartao' && (
                                 <div className="cartao-content">
-                                    <div className="cartao-placeholder">
-                                        <ClipboardCheck size={48} color="#64748b" />
-                                        <p>Cartões de resposta</p>
-                                        <p className="empty-hint">Nenhum cartão disponível</p>
-                                    </div>
+                                    {alunoResultados.length > 0 ? (
+                                        <>
+                                            <div className="chip-scroll" style={{ marginBottom: '15px', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                                                {alunoResultados.map(res => (
+                                                    <button
+                                                        key={res.id}
+                                                        className={`chip ${selectedResultadoForCard?.id === res.id ? 'chip-active' : ''}`}
+                                                        onClick={() => setSelectedResultadoForCard(res)}
+                                                        style={{ fontSize: '11px', whiteSpace: 'nowrap' }}
+                                                    >
+                                                        {res.assunto || 'Prova'}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {selectedResultadoForCard && (
+                                                <div className="omr-grid-view" style={{ background: '#f8fafc', padding: '20px', borderRadius: '15px', border: '1px solid #e2e8f0' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
+                                                        <h4 style={{ fontSize: '14px', color: '#0f172a' }}>{selectedResultadoForCard.assunto}</h4>
+                                                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#3b82f6' }}>
+                                                            {selectedResultadoForCard.acertos} / {JSON.parse(selectedResultadoForCard.respostas_aluno || '[]').length} Acertos
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))', gap: '10px' }}>
+                                                        {(() => {
+                                                            try {
+                                                                const respAluno = JSON.parse(selectedResultadoForCard.respostas_aluno || '[]');
+                                                                const gabId = selectedResultadoForCard.gabarito_id;
+                                                                const gabData = gabaritos.find(g => g.id === gabId);
+                                                                const respCorretas = JSON.parse(gabData?.respostas_corretas || '[]');
+
+                                                                return respAluno.map((resp: string, idx: number) => {
+                                                                    const correta = respCorretas[idx];
+                                                                    const isCorrect = resp === correta;
+                                                                    return (
+                                                                        <div key={idx} style={{
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            alignItems: 'center',
+                                                                            gap: '4px'
+                                                                        }}>
+                                                                            <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>{idx + 1}</span>
+                                                                            <div style={{
+                                                                                width: '32px',
+                                                                                height: '32px',
+                                                                                borderRadius: '8px',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: 'bold',
+                                                                                background: isCorrect ? '#dcfce7' : '#fee2e2',
+                                                                                color: isCorrect ? '#166534' : '#991b1b',
+                                                                                border: `1px solid ${isCorrect ? '#10b981' : '#ef4444'}`
+                                                                            }}>
+                                                                                {resp}
+                                                                            </div>
+                                                                            {!isCorrect && (
+                                                                                <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 'bold' }}>→{correta}</span>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                });
+                                                            } catch (e) {
+                                                                return <div key="error">Erro ao processar cartão</div>;
+                                                            }
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="cartao-placeholder">
+                                            <ClipboardCheck size={48} color="#64748b" />
+                                            <p>Nenhum cartão disponível</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 };

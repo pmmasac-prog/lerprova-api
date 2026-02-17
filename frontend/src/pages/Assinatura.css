@@ -1,12 +1,13 @@
 .assinatura-container {
     flex: 1;
-    background-color: #0f172a;
+    background-color: #f8fafc;
     min-height: 100vh;
 }
 
 .assinatura-header {
     padding: 30px;
-    background: rgba(255, 255, 255, 0.02);
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .plan-badge {
@@ -33,7 +34,7 @@
 }
 
 .assinatura-title {
-    color: #fff;
+    color: #0f172a;
     font-size: 24px;
     font-weight: bold;
 }
@@ -47,17 +48,18 @@
 }
 
 .promo-title {
-    color: #fff;
+    color: #1e3a8a;
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 8px;
 }
 
 .promo-subtitle {
-    color: #94a3b8;
+    color: #1e40af;
     font-size: 14px;
     line-height: 20px;
     margin-bottom: 25px;
+    opacity: 0.8;
 }
 
 .features-list {
@@ -107,7 +109,7 @@
 }
 
 .section-title {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 14px;
     font-weight: bold;
     margin-bottom: 15px;
@@ -116,7 +118,8 @@
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: #fff;
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
     padding: 20px;
 }
@@ -134,7 +137,7 @@
 }
 
 .stat-value {
-    color: #fff;
+    color: #0f172a;
     font-size: 20px;
     font-weight: bold;
 }

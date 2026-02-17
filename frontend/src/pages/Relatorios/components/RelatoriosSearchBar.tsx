@@ -6,8 +6,9 @@ interface RelatoriosSearchBarProps {
     setSearchQuery: (query: string) => void;
     sortOrder: 'asc' | 'desc';
     setSortOrder: (order: 'asc' | 'desc') => void;
-    minNota: number | null;
-    setMinNota: (nota: number | null) => void;
+    selectedGabarito: number | null;
+    setSelectedGabarito: (id: number | null) => void;
+    gabaritos: any[];
 }
 
 export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
@@ -15,8 +16,9 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
     setSearchQuery,
     sortOrder,
     setSortOrder,
-    minNota,
-    setMinNota
+    selectedGabarito,
+    setSelectedGabarito,
+    gabaritos
 }) => {
     return (
         <div className="search-area">
@@ -40,14 +42,22 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                 </button>
             </div>
 
-            <div className="filter-row" style={{ marginTop: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                {[null, 5, 6, 7, 8].map(nota => (
+            <div className="filter-row" style={{ marginTop: '8px', overflowX: 'auto', paddingBottom: '10px', display: 'flex', gap: '8px' }}>
+                <button
+                    className={`chip ${selectedGabarito === null ? 'chip-active' : ''}`}
+                    onClick={() => setSelectedGabarito(null)}
+                    style={{ fontSize: '11px', whiteSpace: 'nowrap' }}
+                >
+                    Todas as Provas
+                </button>
+                {gabaritos.map(g => (
                     <button
-                        key={String(nota)}
-                        className={`nota-chip ${minNota === nota ? 'active' : ''}`}
-                        onClick={() => setMinNota(nota)}
+                        key={g.id}
+                        className={`chip ${selectedGabarito === g.id ? 'chip-active' : ''}`}
+                        onClick={() => setSelectedGabarito(g.id)}
+                        style={{ fontSize: '11px', whiteSpace: 'nowrap' }}
                     >
-                        {nota === null ? 'Todos' : `Nota ≥ ${nota}`}
+                        {g.titulo || g.assunto}
                     </button>
                 ))}
             </div>

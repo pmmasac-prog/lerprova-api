@@ -63,9 +63,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    /* Coladinhos */
-    max-width: 900px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
 }
 
 .turma-card {

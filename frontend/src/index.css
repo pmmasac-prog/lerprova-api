@@ -53,10 +53,20 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-primary);
-  color: var(--color-text);
+  background-color: #f8fafc;
+  /* Changed from dark to light light for fluidity */
+  color: var(--color-text-dark);
+  /* Default text to dark for light bg */
   min-height: 100vh;
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }

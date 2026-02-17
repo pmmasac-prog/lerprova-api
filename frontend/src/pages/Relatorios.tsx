@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Users, HelpCircle, Calendar, Download, FileText } from 'lucide-react';
+import { TrendingUp, HelpCircle, Calendar, Download, FileText } from 'lucide-react';
 import { api } from '../services/api';
 import './Relatorios.css';
 
@@ -7,7 +7,6 @@ import './Relatorios.css';
 import type { Turma, Resultado, Gabarito } from './Relatorios/types';
 import { FrequencyMatrix } from './Relatorios/components/FrequencyMatrix';
 import { RankingTurma } from './Relatorios/components/RankingTurma';
-import { RankingGlobal } from './Relatorios/components/RankingGlobal';
 import { AnaliseQuestoes } from './Relatorios/components/AnaliseQuestoes';
 import { RelatoriosSearchBar } from './Relatorios/components/RelatoriosSearchBar';
 import { handleExportCSV, handleExportPDF } from './Relatorios/utils/exportUtils';
@@ -17,7 +16,6 @@ export const Relatorios: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Turma');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [minNota, setMinNota] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   // States
@@ -34,7 +32,6 @@ export const Relatorios: React.FC = () => {
 
   const tabs = [
     { id: 'Turma', icon: TrendingUp, label: 'Turma' },
-    { id: 'Aluno', icon: Users, label: 'Aluno' },
     { id: 'Questão', icon: HelpCircle, label: 'Questão' },
     { id: 'Presença', icon: Calendar, label: 'Freq.' },
   ];
@@ -83,8 +80,8 @@ export const Relatorios: React.FC = () => {
     if (searchQuery.trim()) {
       list = list.filter((r: Resultado) => r.nome.toLowerCase().includes(searchQuery.toLowerCase()));
     }
-    if (minNota !== null) {
-      list = list.filter((r: Resultado) => r.nota >= minNota);
+    if (selectedGabarito !== null) {
+      list = list.filter((r: Resultado) => r.gabarito_id === selectedGabarito);
     }
     list.sort((a: Resultado, b: Resultado) => sortOrder === 'desc' ? b.nota - a.nota : a.nota - b.nota);
     return list;
@@ -130,7 +127,7 @@ export const Relatorios: React.FC = () => {
     resultados,
     selectedTurmaNome: turmas.find(t => t.id === selectedTurma)?.nome || 'Turma',
     searchQuery,
-    minNota,
+    minNota: null,
     sortOrder,
     selectedGabarito,
     gabaritos,
@@ -143,7 +140,7 @@ export const Relatorios: React.FC = () => {
     selectedTurmaNome: turmas.find(t => t.id === selectedTurma)?.nome || 'Turma',
     resultados,
     searchQuery,
-    minNota,
+    minNota: null,
     sortOrder,
     getFilteredRanking,
     calculateStatsForExport,
@@ -191,17 +188,19 @@ export const Relatorios: React.FC = () => {
                 <button key={t.id} className={`chip ${selectedTurma === t.id ? 'chip-active' : ''}`} onClick={() => setSelectedTurma(t.id)}>{t.nome}</button>
               ))}
             </div>
-            <RelatoriosSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortOrder={sortOrder} setSortOrder={setSortOrder} minNota={minNota} setMinNota={setMinNota} />
+            <RelatoriosSearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+              selectedGabarito={selectedGabarito}
+              setSelectedGabarito={setSelectedGabarito}
+              gabaritos={gabaritos}
+            />
             <RankingTurma turma={turmas.find(t => t.id === selectedTurma)} resultados={getFilteredRanking()} loading={loading} overallStats={overallStats} onEdit={handleEditClick} />
           </>
         )}
 
-        {activeTab === 'Aluno' && (
-          <>
-            <RelatoriosSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortOrder={sortOrder} setSortOrder={setSortOrder} minNota={minNota} setMinNota={setMinNota} />
-            <RankingGlobal resultados={resultados.filter(r => !searchQuery || r.nome.toLowerCase().includes(searchQuery.toLowerCase())).filter(r => minNota === null || r.nota >= minNota).sort((a, b) => sortOrder === 'desc' ? b.nota - a.nota : a.nota - b.nota)} loading={loading} onEdit={handleEditClick} />
-          </>
-        )}
 
         {activeTab === 'Questão' && (
           <AnaliseQuestoes gabaritos={gabaritos} selectedGabarito={selectedGabarito} setSelectedGabarito={setSelectedGabarito} questaoStats={getQuestaoAnalysis()} loading={loading} hasResults={getResultadosByTurma().filter(r => r.gabarito_id === selectedGabarito).length > 0 || getQuestaoAnalysis().some(q => q.acertos > 0 || q.erros > 0)} />
