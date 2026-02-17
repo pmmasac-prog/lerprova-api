@@ -83,83 +83,43 @@ export const Dashboard: React.FC = () => {
                 <>
                     {/* Quick Stats Cards */}
                     <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-top">
-                                <div className="stat-icon-bg icon-blue">
-                                    <BookOpen size={24} />
-                                </div>
-                                <div className="stat-info">
-                                    <h3>Turmas</h3>
-                                    <p>{stats.total_turmas}</p>
-                                </div>
+                        <div className="stat-card" onClick={() => navigate('/dashboard/turmas')}>
+                            <div className="stat-icon-bg icon-blue">
+                                <BookOpen size={24} />
                             </div>
-                            <div className="stat-actions">
-                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/turmas')}>
-                                    Ver Todas
-                                </button>
-                                <button className="card-action-btn" onClick={() => navigate('/dashboard/turmas')}>
-                                    Nova Turma
-                                </button>
+                            <div className="stat-info">
+                                <h3>Turmas</h3>
+                                <p>{stats.total_turmas}</p>
                             </div>
                         </div>
 
-                        <div className="stat-card">
-                            <div className="stat-top">
-                                <div className="stat-icon-bg icon-purple">
-                                    <Users size={24} />
-                                </div>
-                                <div className="stat-info">
-                                    <h3>Alunos</h3>
-                                    <p>{stats.total_alunos}</p>
-                                </div>
+                        <div className="stat-card" onClick={() => navigate('/dashboard/turmas')}>
+                            <div className="stat-icon-bg icon-purple">
+                                <Users size={24} />
                             </div>
-                            <div className="stat-actions">
-                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/relatorios')}>
-                                    Relatórios
-                                </button>
-                                <button className="card-action-btn" onClick={() => navigate('/dashboard/turmas')}>
-                                    Listar Alunos
-                                </button>
+                            <div className="stat-info">
+                                <h3>Alunos</h3>
+                                <p>{stats.total_alunos}</p>
                             </div>
                         </div>
 
-                        <div className="stat-card">
-                            <div className="stat-top">
-                                <div className="stat-icon-bg icon-green">
-                                    <ClipboardList size={24} />
-                                </div>
-                                <div className="stat-info">
-                                    <h3>Gabaritos</h3>
-                                    <p>{stats.total_gabaritos}</p>
-                                </div>
+                        <div className="stat-card" onClick={() => navigate('/dashboard/gabarito')}>
+                            <div className="stat-icon-bg icon-green">
+                                <ClipboardList size={24} />
                             </div>
-                            <div className="stat-actions">
-                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/gabarito')}>
-                                    Gerenciar
-                                </button>
-                                <button className="card-action-btn" onClick={() => navigate('/dashboard/gabarito')}>
-                                    Criar Novo
-                                </button>
+                            <div className="stat-info">
+                                <h3>Gabaritos</h3>
+                                <p>{stats.total_gabaritos}</p>
                             </div>
                         </div>
 
-                        <div className="stat-card">
-                            <div className="stat-top">
-                                <div className="stat-icon-bg icon-orange">
-                                    <TrendingUp size={24} />
-                                </div>
-                                <div className="stat-info">
-                                    <h3>Correções</h3>
-                                    <p>{stats.total_resultados}</p>
-                                </div>
+                        <div className="stat-card" onClick={() => navigate('/dashboard/relatorios')}>
+                            <div className="stat-icon-bg icon-orange">
+                                <TrendingUp size={24} />
                             </div>
-                            <div className="stat-actions">
-                                <button className="card-action-btn primary-action" onClick={() => navigate('/dashboard/relatorios')}>
-                                    Análise Geral
-                                </button>
-                                <button className="card-action-btn" onClick={() => navigate('/dashboard/gabarito')}>
-                                    Corrigir Prova
-                                </button>
+                            <div className="stat-info">
+                                <h3>Correções</h3>
+                                <p>{stats.total_resultados}</p>
                             </div>
                         </div>
                     </div>

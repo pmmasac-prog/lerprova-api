@@ -24,6 +24,7 @@ export const Relatorios: React.FC = () => {
   const [resultados, setResultados] = useState<Resultado[]>([]);
   const [gabaritos, setGabaritos] = useState<Gabarito[]>([]);
   const [selectedGabarito, setSelectedGabarito] = useState<number | null>(null);
+  const [selectedPeriodo, setSelectedPeriodo] = useState<number | null>(null);
   const [overallStats, setOverallStats] = useState({ media: '0.0', aprovacao: 0, total: 0 });
 
   // Modais de Edição
@@ -82,6 +83,9 @@ export const Relatorios: React.FC = () => {
     }
     if (selectedGabarito !== null) {
       list = list.filter((r: Resultado) => r.gabarito_id === selectedGabarito);
+    }
+    if (selectedPeriodo !== null) {
+      list = list.filter((r: Resultado) => r.periodo === selectedPeriodo);
     }
     list.sort((a: Resultado, b: Resultado) => sortOrder === 'desc' ? b.nota - a.nota : a.nota - b.nota);
     return list;
@@ -191,6 +195,8 @@ export const Relatorios: React.FC = () => {
           turmas={turmas}
           selectedGabarito={selectedGabarito}
           setSelectedGabarito={setSelectedGabarito}
+          selectedPeriodo={selectedPeriodo}
+          setSelectedPeriodo={setSelectedPeriodo}
           gabaritos={gabaritos}
         />
 

@@ -56,34 +56,40 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     };
 
     const handleSave = async () => {
-        if (!selectedAlunoId) return;
-        if (!manualNota) {
-            alert('Por favor, informe a nota.');
+        if (selectedAlunoId === null || manualNota === '') {
+            alert('Por favor, informe a nota e selecione um aluno.');
             return;
         }
+
         setLoading(true);
         try {
-            const payload: any = {
-                aluno_id: selectedAlunoId,
-                gabarito_id: gabarito.id,
-                nota: parseFloat(manualNota.replace(',', '.')),
-            };
+            const val = parseFloat(manualNota.replace(',', '.'));
+            const existingResult = resultados.find(r => r.aluno_id === selectedAlunoId);
 
-            await api.addResultadoManual(payload);
+            if (existingResult) {
+                // Se já existe, atualizamos
+                await api.updateResultado(existingResult.id, { nota: val });
+            } else {
+                // Se não existe, criamos novo
+                const payload = {
+                    aluno_id: selectedAlunoId,
+                    gabarito_id: gabarito.id, // Corrected from selectedGabaritoId to gabarito.id
+                    nota: val
+                };
+                await api.addResultadoManual(payload);
+            }
 
-            // Recarregar dados para atualizar as notas na lista
-            await loadData();
+            // Notificar sucesso e carregar dados
+            if (onSuccess) onSuccess();
+            await loadData(); // Ensure data is reloaded after save
 
-            // Voltar para lista de alunos em vez de fechar
+            // Voltar para a lista em vez de fechar, para permitir lançar para outro aluno
             setStep(1);
             setSelectedAlunoId(null);
             setManualNota('');
-
-            // Notificar sucesso sem fechar
-            onSuccess();
         } catch (error) {
-            console.error('Erro ao salvar:', error);
-            alert('Erro ao registrar resultado');
+            console.error('Erro ao salvar nota:', error);
+            alert('Erro ao salvar nota. Verifique os dados.');
         } finally {
             setLoading(false);
         }

@@ -14,6 +14,7 @@ export interface Resultado {
     nota: number;
     acertos: number;
     data: string;
+    periodo?: number;
     respostas_aluno?: string;
 }
 
@@ -23,4 +24,5 @@ export interface Gabarito {
     assunto: string;
     respostas_corretas: string;
     num_questoes: number;
+    periodo?: number;
 }

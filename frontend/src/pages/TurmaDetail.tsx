@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp } from 'lucide-react';
+import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3 } from 'lucide-react';
 import { api } from '../services/api';
+import { EditResultadoModal } from './Relatorios/components/EditResultadoModal';
 import './TurmaDetail.css';
 
 interface Turma {
@@ -40,6 +41,8 @@ export const TurmaDetail: React.FC = () => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
     const [selectedResultadoForCard, setSelectedResultadoForCard] = useState<any | null>(null);
+    const [editingResultado, setEditingResultado] = useState<any | null>(null);
+    const [editingGabarito, setEditingGabarito] = useState<any | null>(null);
 
     useEffect(() => {
         loadData();
@@ -80,6 +83,8 @@ export const TurmaDetail: React.FC = () => {
         setSelectedAluno(aluno);
         setShowAlunoModal(true);
         setActiveTab('desempenho');
+        setEditingResultado(null);
+        setEditingGabarito(null);
 
         try {
             const allResultados = await api.getResultados();
@@ -530,15 +535,34 @@ export const TurmaDetail: React.FC = () => {
                                                         <div style={{ fontWeight: '600', fontSize: '13px', color: '#0f172a' }}>{res.assunto || 'Avaliação'}</div>
                                                         <div style={{ fontSize: '11px', color: '#94a3b8' }}>{new Date(res.data).toLocaleDateString()} • {res.acertos} acertos</div>
                                                     </div>
-                                                    <div style={{
-                                                        fontWeight: 'bold',
-                                                        fontSize: '14px',
-                                                        color: res.nota >= 7 ? '#10b981' : res.nota >= 5 ? '#f59e0b' : '#ef4444',
-                                                        background: res.nota >= 7 ? '#ecfdf5' : res.nota >= 5 ? '#fffbeb' : '#fef2f2',
-                                                        padding: '4px 8px',
-                                                        borderRadius: '6px'
-                                                    }}>
-                                                        {res.nota.toFixed(1)}
+                                                    <div className="flex items-center gap-2">
+                                                        <div style={{
+                                                            fontWeight: 'bold',
+                                                            fontSize: '14px',
+                                                            color: res.nota >= 7 ? '#10b981' : res.nota >= 5 ? '#f59e0b' : '#ef4444',
+                                                            background: res.nota >= 7 ? '#ecfdf5' : res.nota >= 5 ? '#fffbeb' : '#fef2f2',
+                                                            padding: '4px 8px',
+                                                            borderRadius: '6px'
+                                                        }}>
+                                                            {res.nota.toFixed(1)}
+                                                        </div>
+                                                        <button
+                                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            title="Editar Nota"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const gab = gabaritos.find(g => g.id === res.gabarito_id);
+                                                                if (gab) {
+                                                                    setEditingGabarito(gab);
+                                                                    setEditingResultado({
+                                                                        ...res,
+                                                                        aluno: selectedAluno // Precisamos do objeto aluno para o modal
+                                                                    });
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Edit3 size={16} />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             ))}
@@ -673,6 +697,23 @@ export const TurmaDetail: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Edit Score Modal */}
+            {editingResultado && editingGabarito && (
+                <EditResultadoModal
+                    resultado={editingResultado}
+                    gabarito={editingGabarito}
+                    onClose={() => {
+                        setEditingResultado(null);
+                        setEditingGabarito(null);
+                    }}
+                    onSuccess={() => {
+                        if (selectedAluno) {
+                            handleAlunoClick(selectedAluno);
+                        }
+                    }}
+                />
             )}
         </div >
     );

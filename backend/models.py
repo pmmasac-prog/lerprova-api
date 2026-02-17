@@ -48,6 +48,7 @@ class Gabarito(Base):
     data_prova = Column(String, nullable=True) # Data da prova
     num_questoes = Column(Integer, default=10)
     respostas_corretas = Column(Text) # JSON string: ["A", "B", ...]
+    periodo = Column(Integer, nullable=True) # Bimestre/Trimestre (1 a 4)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos

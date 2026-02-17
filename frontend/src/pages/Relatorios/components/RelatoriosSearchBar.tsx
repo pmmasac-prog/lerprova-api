@@ -11,6 +11,8 @@ interface RelatoriosSearchBarProps {
     turmas: any[];
     selectedGabarito: number | null;
     setSelectedGabarito: (id: number | null) => void;
+    selectedPeriodo: number | null;
+    setSelectedPeriodo: (periodo: number | null) => void;
     gabaritos: any[];
 }
 
@@ -24,11 +26,13 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
     turmas,
     selectedGabarito,
     setSelectedGabarito,
+    selectedPeriodo,
+    setSelectedPeriodo,
     gabaritos
 }) => {
     return (
         <div className="search-area" style={{ padding: '15px', background: '#fff', borderRadius: '15px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                 <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                         <Users size={14} color="#94a3b8" />
@@ -82,6 +86,35 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                         {gabaritos.map(g => (
                             <option key={g.id} value={g.id}>{g.titulo || g.assunto}</option>
                         ))}
+                    </select>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                        <ArrowUpDown size={14} color="#94a3b8" />
+                    </div>
+                    <select
+                        className="filter-select"
+                        value={selectedPeriodo || ''}
+                        onChange={(e) => setSelectedPeriodo(Number(e.target.value) || null)}
+                        style={{
+                            width: '100%',
+                            padding: '10px 15px 10px 35px',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            appearance: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="">Todos Períodos</option>
+                        <option value="1">1º Período</option>
+                        <option value="2">2º Período</option>
+                        <option value="3">3º Período</option>
+                        <option value="4">4º Período</option>
                     </select>
                 </div>
             </div>

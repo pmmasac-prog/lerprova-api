@@ -275,7 +275,8 @@ async def create_gabarito(data: dict, db: Session = Depends(get_db)):
         disciplina=data.get("disciplina"),
         data_prova=data.get("data"), # Front manda 'data'
         num_questoes=int(data.get("questoes") or data.get("num_questoes") or 10),
-        respostas_corretas=respostas
+        respostas_corretas=respostas,
+        periodo=data.get("periodo")
     )
 
     if turma_ids:
@@ -313,6 +314,9 @@ async def update_gabarito(gabarito_id: int, data: dict, db: Session = Depends(ge
             respostas = json.dumps(respostas)
         gabarito.respostas_corretas = respostas
 
+    if "periodo" in data:
+        gabarito.periodo = data.get("periodo")
+
     if "turma_ids" in data:
         turma_ids = data.get("turma_ids", [])
         turmas = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids)).all()
@@ -343,6 +347,7 @@ async def get_gabaritos(db: Session = Depends(get_db)):
             "data": g.data_prova or "",
             "num_questoes": g.num_questoes,
             "respostas_corretas": g.respostas_corretas,
+            "periodo": g.periodo,
             "total_resultados": count
         }
         result.append(g_dict)
@@ -383,6 +388,7 @@ async def get_resultados(db: Session = Depends(get_db)):
             r_dict["aluno_codigo"] = r.aluno.codigo
         if r.gabarito:
             r_dict["assunto"] = r.gabarito.titulo or r.gabarito.assunto
+            r_dict["periodo"] = r.gabarito.periodo
         if r.data_correcao:
             r_dict["data"] = r.data_correcao.strftime("%Y-%m-%d %H:%M:%S")
         resp.append(r_dict)
@@ -402,6 +408,7 @@ async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
             r_dict["aluno_codigo"] = r.aluno.codigo
         if r.gabarito:
             r_dict["assunto"] = r.gabarito.titulo or r.gabarito.assunto
+            r_dict["periodo"] = r.gabarito.periodo
         if r.data_correcao:
             r_dict["data"] = r.data_correcao.strftime("%Y-%m-%d %H:%M:%S")
         resp.append(r_dict)
@@ -453,21 +460,35 @@ async def create_resultado_manual(data: ResultadoCreate, db: Session = Depends(g
                 acertos += 1
         
         nota = (acertos / total_gab) * 10 if total_gab > 0 else 0
+    # Verificar se já existe um resultado para este aluno nest prova
+    resultado_existente = db.query(models.Resultado).filter(
+        models.Resultado.aluno_id == data.aluno_id,
+        models.Resultado.gabarito_id == data.gabarito_id
+    ).first()
+
+    if resultado_existente:
+        # Atualizar existente
+        resultado_existente.acertos = acertos
+        resultado_existente.nota = nota
+        resultado_existente.respostas_aluno = json.dumps(data.respostas_aluno) if data.respostas_aluno else None
+        resultado_existente.data_correcao = datetime.utcnow()
+        db.commit()
+        db.refresh(resultado_existente)
+        return {"message": "Resultado atualizado com sucesso", "id": resultado_existente.id, "nota": nota}
     else:
-        raise HTTPException(status_code=400, detail="É necessário fornecer a nota ou as respostas do aluno")
-    
-    novo_resultado = models.Resultado(
-        aluno_id=data.aluno_id,
-        gabarito_id=data.gabarito_id,
-        acertos=acertos,
-        nota=nota,
-        respostas_aluno=json.dumps(data.respostas_aluno) if data.respostas_aluno else None,
-        data_correcao=datetime.utcnow()
-    )
-    db.add(novo_resultado)
-    db.commit()
-    db.refresh(novo_resultado)
-    return {"message": "Resultado registrado com sucesso", "id": novo_resultado.id, "nota": nota}
+        # Criar novo
+        novo_resultado = models.Resultado(
+            aluno_id=data.aluno_id,
+            gabarito_id=data.gabarito_id,
+            acertos=acertos,
+            nota=nota,
+            respostas_aluno=json.dumps(data.respostas_aluno) if data.respostas_aluno else None,
+            data_correcao=datetime.utcnow()
+        )
+        db.add(novo_resultado)
+        db.commit()
+        db.refresh(novo_resultado)
+        return {"message": "Resultado registrado com sucesso", "id": novo_resultado.id, "nota": nota}
 
 @app.patch("/resultados/{resultado_id}")
 async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session = Depends(get_db)):
@@ -773,18 +794,35 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
         if aluno_id:
             aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
             if aluno:
-                novo_resultado = models.Resultado(
-                    aluno_id=aluno.id,
-                    gabarito_id=gabarito.id,
-                    acertos=acertos,
-                    nota=nota,
-                    respostas_aluno=json.dumps(detectadas),
-                    data_correcao=datetime.utcnow()
-                )
-                db.add(novo_resultado)
-                db.commit()
-                db.refresh(novo_resultado)
-                resultado_id = novo_resultado.id
+                # Verificar se já existe resultado para este aluno nesta prova
+                resultado_existente = db.query(models.Resultado).filter(
+                    models.Resultado.aluno_id == aluno.id,
+                    models.Resultado.gabarito_id == gabarito.id
+                ).first()
+                
+                if resultado_existente:
+                    # Atualizar existente
+                    resultado_existente.acertos = acertos
+                    resultado_existente.nota = nota
+                    resultado_existente.respostas_aluno = json.dumps(detectadas)
+                    resultado_existente.data_correcao = datetime.utcnow()
+                    db.commit()
+                    db.refresh(resultado_existente)
+                    resultado_id = resultado_existente.id
+                else:
+                    # Criar novo
+                    novo_resultado = models.Resultado(
+                        aluno_id=aluno.id,
+                        gabarito_id=gabarito.id,
+                        acertos=acertos,
+                        nota=nota,
+                        respostas_aluno=json.dumps(detectadas),
+                        data_correcao=datetime.utcnow()
+                    )
+                    db.add(novo_resultado)
+                    db.commit()
+                    db.refresh(novo_resultado)
+                    resultado_id = novo_resultado.id
 
         # 6. Retornar Resumo
         return {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardList, Plus, Search, Download, Trash2, Save, Edit3, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload } from 'lucide-react';
+import { ClipboardList, Plus, Search, Download, Trash2, Save, Edit3, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload, Users } from 'lucide-react';
 import { api } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
@@ -22,6 +22,7 @@ interface Gabarito {
     data: string;
     num_questoes: number;
     respostas_corretas: string;
+    periodo?: number;
     turma_ids?: number[];
 }
 
@@ -40,7 +41,10 @@ export const Gabarito: React.FC = () => {
     const [assunto, setAssunto] = useState('');
     const [disciplina, setDisciplina] = useState('');
     const [data, setData] = useState(new Date().toLocaleDateString('pt-BR'));
+    const [periodo, setPeriodo] = useState<number>(1);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [filterTurmaId, setFilterTurmaId] = useState<number | null>(null);
+    const [filterPeriodo, setFilterPeriodo] = useState<number | null>(null);
 
     // Printing & Scanning
     const [printData, setPrintData] = useState<{
@@ -122,7 +126,8 @@ export const Gabarito: React.FC = () => {
                 disciplina,
                 data,
                 num_questoes: numQuestions,
-                respostas: gabaritoArray
+                respostas: gabaritoArray,
+                periodo
             };
 
             if (editingId) {
@@ -201,6 +206,7 @@ export const Gabarito: React.FC = () => {
         setData(new Date().toLocaleDateString('pt-BR'));
         setSelectedTurmaIds([]);
         setNumQuestions(10);
+        setPeriodo(1);
     };
 
     const handleEdit = (g: Gabarito) => {
@@ -209,6 +215,7 @@ export const Gabarito: React.FC = () => {
         setDisciplina(g.disciplina || '');
         setData(g.data);
         setNumQuestions(g.num_questoes);
+        setPeriodo(g.periodo || 1);
 
         try {
             const parsedRespostas = JSON.parse(g.respostas_corretas);
@@ -230,11 +237,16 @@ export const Gabarito: React.FC = () => {
         setViewMode('create');
     };
 
-    const filteredGabaritos = gabaritos.filter(g =>
-        (g.assunto?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-        (g.disciplina?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-        (g.turma_nome?.toLowerCase() || '').includes(searchText.toLowerCase())
-    );
+    const filteredGabaritos = gabaritos.filter(g => {
+        const matchesSearch = (g.assunto?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+            (g.disciplina?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+            (g.turma_nome?.toLowerCase() || '').includes(searchText.toLowerCase());
+
+        const matchesTurma = filterTurmaId ? (g.turma_ids?.includes(filterTurmaId) || g.turma_id === filterTurmaId) : true;
+        const matchesPeriodo = filterPeriodo ? g.periodo === filterPeriodo : true;
+
+        return matchesSearch && matchesTurma && matchesPeriodo;
+    });
 
     const renderOption = (qIdx: number, option: string) => {
         const isSelected = answers[qIdx] === option;
@@ -331,6 +343,38 @@ export const Gabarito: React.FC = () => {
                             />
                         </div>
 
+                        <div className="history-filters" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                            <div className="input-group" style={{ flex: 1, margin: 0, height: '45px' }}>
+                                <Users size={18} color="#94a3b8" />
+                                <select
+                                    className="filter-select"
+                                    value={filterTurmaId || ''}
+                                    onChange={(e) => setFilterTurmaId(Number(e.target.value) || null)}
+                                    style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '14px', fontWeight: '500' }}
+                                >
+                                    <option value="">Todas as Salas</option>
+                                    {turmas.map(t => (
+                                        <option key={t.id} value={t.id}>{t.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="input-group" style={{ flex: 1, margin: 0, height: '45px' }}>
+                                <Layout size={18} color="#94a3b8" />
+                                <select
+                                    className="filter-select"
+                                    value={filterPeriodo || ''}
+                                    onChange={(e) => setFilterPeriodo(Number(e.target.value) || null)}
+                                    style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '14px', fontWeight: '500' }}
+                                >
+                                    <option value="">Todos Períodos</option>
+                                    <option value="1">1º Período</option>
+                                    <option value="2">2º Período</option>
+                                    <option value="3">3º Período</option>
+                                    <option value="4">4º Período</option>
+                                </select>
+                            </div>
+                        </div>
+
                         {loading ? (
                             <p className="empty-text">Carregando...</p>
                         ) : filteredGabaritos.length > 0 ? (
@@ -351,6 +395,8 @@ export const Gabarito: React.FC = () => {
                                             <div className="history-meta">
                                                 <Calendar size={12} />
                                                 <span>{g.data}</span>
+                                                <span className="dot">•</span>
+                                                <span className="period-badge">{g.periodo}º Período</span>
                                                 <span className="dot">•</span>
                                                 <span>{g.num_questoes} questões</span>
                                                 <span className="dot">•</span>
@@ -480,11 +526,26 @@ export const Gabarito: React.FC = () => {
                                     />
                                 </div>
                                 <div className="input-group">
+                                    <Layout size={20} />
+                                    <select
+                                        value={periodo}
+                                        onChange={(e) => setPeriodo(parseInt(e.target.value))}
+                                        className="period-select"
+                                        style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', fontSize: '14px' }}
+                                    >
+                                        <option value={1}>1º Período</option>
+                                        <option value={2}>2º Período</option>
+                                        <option value={3}>3º Período</option>
+                                        <option value={4}>4º Período</option>
+                                    </select>
+                                </div>
+                                <div className="input-group" style={{ maxWidth: '120px' }}>
                                     <CheckSquare size={20} />
                                     <input
                                         type="number"
-                                        placeholder="Qtd. Questões"
+                                        placeholder="Qtd."
                                         value={numQuestions}
+                                        title="Quantidade de Questões"
                                         onChange={(e) => {
                                             const n = parseInt(e.target.value) || 0;
                                             setNumQuestions(Math.min(n, 100));
@@ -508,19 +569,21 @@ export const Gabarito: React.FC = () => {
                 )}
             </div>
 
-            {viewMode === 'create' && (
-                <div className="gabarito-footer">
-                    <button className="save-btn" onClick={handleSave}>
-                        <Save size={20} />
-                        <span>{editingId ? 'Atualizar Gabarito' : 'Salvar Gabarito'}</span>
-                    </button>
-                    {editingId && (
-                        <button className="reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#94a3b8' }}>
-                            <span>Cancelar Edição</span>
+            {
+                viewMode === 'create' && (
+                    <div className="gabarito-footer">
+                        <button className="save-btn" onClick={handleSave}>
+                            <Save size={20} />
+                            <span>{editingId ? 'Atualizar Gabarito' : 'Salvar Gabarito'}</span>
                         </button>
-                    )}
-                </div>
-            )}
+                        {editingId && (
+                            <button className="reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#94a3b8' }}>
+                                <span>Cancelar Edição</span>
+                            </button>
+                        )}
+                    </div>
+                )
+            }
 
             {/* Hidden Printable Area */}
             <div style={{ display: 'none' }}>
@@ -537,37 +600,43 @@ export const Gabarito: React.FC = () => {
             </div>
 
             {/* Scanner Modal */}
-            {activeScanner && (
-                <ScannerModal
-                    onClose={() => setActiveScanner(null)}
-                    gabaritoId={activeScanner.id}
-                    numQuestions={activeScanner.numQuestions}
-                    onSuccess={() => loadData()}
-                />
-            )}
+            {
+                activeScanner && (
+                    <ScannerModal
+                        onClose={() => setActiveScanner(null)}
+                        gabaritoId={activeScanner.id}
+                        numQuestions={activeScanner.numQuestions}
+                        onSuccess={() => loadData()}
+                    />
+                )
+            }
 
             {/* Manual Entry Modal */}
-            {manualEntryGabarito && (
-                <ManualEntryModal
-                    gabarito={manualEntryGabarito}
-                    turmas={turmas}
-                    onClose={() => setManualEntryGabarito(null)}
-                    onSuccess={() => {
-                        alert('Resultado gravado com sucesso!');
-                        loadData();
-                    }}
-                />
-            )}
+            {
+                manualEntryGabarito && (
+                    <ManualEntryModal
+                        gabarito={manualEntryGabarito}
+                        turmas={turmas}
+                        onClose={() => setManualEntryGabarito(null)}
+                        onSuccess={() => {
+                            alert('Resultado gravado com sucesso!');
+                            loadData();
+                        }}
+                    />
+                )
+            }
 
             {/* Batch Processing Overlay */}
-            {batchProcessing && (
-                <div className="batch-overlay">
-                    <div className="batch-loader">
-                        <div className="spinner"></div>
-                        <p>Processando lote de provas... Por favor, aguarde.</p>
+            {
+                batchProcessing && (
+                    <div className="batch-overlay">
+                        <div className="batch-loader">
+                            <div className="spinner"></div>
+                            <p>Processando lote de provas... Por favor, aguarde.</p>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
