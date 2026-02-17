@@ -72,13 +72,21 @@ class ResultadoCreate(BaseModel):
     nota: Optional[float] = None
     acertos: Optional[int] = None
 
-# Configuração de CORS (Temporariamente permitindo tudo para depuração de 500)
+# Configuração de CORS
+# Permitimos a URL do frontend do Render explicitamente para evitar bloqueios
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://lerprova-frontend-app.onrender.com",
+    "https://lerprova-frontend-app-vzbd.onrender.com", # Adicionando a URL específica vista no log
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False, # Credentials must be false for wildcard origin
+    allow_origins=["*"], # Mantendo * para facilitar, mas com allow_credentials=False
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,
 )
 
 @app.exception_handler(Exception)
@@ -215,8 +223,14 @@ async def delete_turma(turma_id: int, db: Session = Depends(get_db)):
 @app.post("/alunos")
 async def create_aluno(data: dict, db: Session = Depends(get_db)):
     codigo = data.get("codigo")
-    turma_id = int(data.get("turma_id"))
+    raw_turma_id = data.get("turma_id")
     nome = data.get("nome")
+    
+    # 1. Validar turma_id de forma segura
+    try:
+        turma_id = int(raw_turma_id) if raw_turma_id is not None and str(raw_turma_id).strip() != "" else None
+    except (ValueError, TypeError):
+        turma_id = None
     
     # 1. Tentar encontrar aluno existente pelo código
     aluno = db.query(models.Aluno).filter(models.Aluno.codigo == codigo).first()
@@ -236,10 +250,11 @@ async def create_aluno(data: dict, db: Session = Depends(get_db)):
         db.add(aluno)
         db.flush() # Para pegar o ID
     
-    # 3. Vincular à turma se ainda não estiver vinculado
-    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
-    if turma and turma not in aluno.turmas:
-        aluno.turmas.append(turma)
+    # 3. Vincular à turma se fornecido e se ainda não estiver vinculado
+    if turma_id:
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+        if turma and turma not in aluno.turmas:
+            aluno.turmas.append(turma)
     
     db.commit()
     db.refresh(aluno)
