@@ -13,6 +13,7 @@ interface ScannerModalProps {
 export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId, numQuestions = 10, onSuccess }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const [isCameraReady, setIsCameraReady] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [result, setResult] = useState<any>(null);
@@ -28,6 +29,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
             });
+            streamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 setIsCameraReady(true);
@@ -39,10 +41,14 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
     };
 
     const stopCamera = () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-            const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-            tracks.forEach(track => track.stop());
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
         }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        setIsCameraReady(false);
     };
 
     const captureAndProcess = async () => {
@@ -69,6 +75,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                 });
 
                 if (response.success) {
+                    stopCamera(); // Encerrar câmera após uso/sucesso
                     setResult(response);
                     if (onSuccess) onSuccess(response);
                 } else {
@@ -86,6 +93,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
     const handleReset = () => {
         setResult(null);
         setError(null);
+        startCamera(); // Reiniciar câmera para nova prova
     };
 
     return (

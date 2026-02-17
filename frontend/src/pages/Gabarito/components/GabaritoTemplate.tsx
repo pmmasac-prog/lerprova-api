@@ -9,6 +9,7 @@ interface GabaritoTemplateProps {
         disciplina?: string;
         data: string;
         num_questoes: number;
+        sala?: string;
     };
     turmaNome: string;
     aluno?: {
@@ -36,10 +37,15 @@ export const GabaritoTemplate: React.FC<GabaritoTemplateProps> = ({ gabarito, tu
                 <div className="header-text">
                     <h1 className="template-title">FOLHA DE RESPOSTAS - LERPROVA</h1>
                     <div className="exam-info">
-                        <p><strong>Prova:</strong> {gabarito.assunto}</p>
-                        <p><strong>Disciplina:</strong> {gabarito.disciplina || 'Geral'}</p>
-                        <p><strong>Turma:</strong> {turmaNome}</p>
-                        <p><strong>Data:</strong> {gabarito.data}</p>
+                        <div className="info-row">
+                            <p><strong>Prova:</strong> {gabarito.assunto}</p>
+                            {gabarito.sala && <p><strong>Sala:</strong> {gabarito.sala}</p>}
+                        </div>
+                        <div className="info-row">
+                            <p><strong>Disciplina:</strong> {gabarito.disciplina || 'Geral'}</p>
+                            <p><strong>Turma:</strong> {turmaNome}</p>
+                            <p><strong>Data:</strong> {gabarito.data}</p>
+                        </div>
                     </div>
                 </div>
                 <div className="qr-container">

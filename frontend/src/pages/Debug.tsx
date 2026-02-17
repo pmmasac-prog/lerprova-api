@@ -3,9 +3,28 @@ import { Shield, Trash2, ArrowLeft, Terminal, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 
+interface DebugStatus {
+    api?: string;
+    latency?: string;
+    token?: string;
+    apiUrl?: string;
+    env?: string;
+    user?: string;
+    error?: string;
+}
+
 export const Debug: React.FC = () => {
     const navigate = useNavigate();
-    const [status, setStatus] = useState<any>(null);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Restrição Admin
+    useEffect(() => {
+        if (user.role !== 'admin') {
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
+
+    const [status, setStatus] = useState<DebugStatus | null>(null);
     const [isChecking, setIsChecking] = useState(false);
 
     const checkSystem = async () => {

@@ -45,22 +45,27 @@ export const Dashboard: React.FC = () => {
         }
     };
 
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = user.role === 'admin';
+
     return (
         <div className="dashboard-container">
             {/* Header */}
             <div className="dashboard-header">
                 <div>
-                    <h1 className="dashboard-title">Olá, Professor(a)</h1>
+                    <h1 className="dashboard-title">Olá, {user.nome?.split(' ')[0] || 'Professor(a)'}</h1>
                     <p className="dashboard-subtitle">Bem-vindo(a) ao LerProva</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        className="p-2 text-slate-400 hover:text-blue-500 transition-colors"
-                        onClick={() => navigate('/dashboard/debug')}
-                        title="Diagnóstico"
-                    >
-                        <Settings size={22} />
-                    </button>
+                    {isAdmin && (
+                        <button
+                            className="p-2 text-slate-400 hover:text-blue-500 transition-colors"
+                            onClick={() => navigate('/dashboard/debug')}
+                            title="Diagnóstico"
+                        >
+                            <Settings size={22} />
+                        </button>
+                    )}
                     <button
                         className="p-2 text-slate-400 hover:text-red-500 transition-colors"
                         onClick={handleLogout}
@@ -133,6 +138,11 @@ export const Dashboard: React.FC = () => {
                                     <button className="action-button secondary" onClick={() => window.location.href = '/dashboard/gabarito'}>
                                         Novo Gabarito
                                     </button>
+                                    {isAdmin && (
+                                        <button className="action-button outline" onClick={() => navigate('/dashboard/admin')} style={{ border: '1px solid #e2e8f0', background: 'white' }}>
+                                            Painel Admin
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <div className="welcome-image">

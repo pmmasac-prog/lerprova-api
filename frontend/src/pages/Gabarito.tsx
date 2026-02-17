@@ -41,7 +41,10 @@ export const Gabarito: React.FC = () => {
     const [editingId, setEditingId] = useState<number | null>(null);
 
     // Printing & Scanning
-    const [printData, setPrintData] = useState<{ gabarito: Gabarito, turmaNome: string } | null>(null);
+    const [printData, setPrintData] = useState<{
+        gabarito: Gabarito,
+        items: { student: any, turmaNome: string }[]
+    } | null>(null);
     const [activeScanner, setActiveScanner] = useState<{ id: number, numQuestions: number } | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -243,6 +246,42 @@ export const Gabarito: React.FC = () => {
         );
     };
 
+    const handlePreparePrint = async (g: Gabarito) => {
+        try {
+            setLoading(true);
+            const items: { student: any, turmaNome: string }[] = [];
+
+            // Determinar quais turmas processar
+            const tIds = g.turma_ids || (g.turma_id ? [g.turma_id] : []);
+
+            if (tIds.length === 0) {
+                // Se não tiver turma, imprime um genérico
+                items.push({ student: null, turmaNome: 'Geral' });
+            } else {
+                for (const tId of tIds) {
+                    const turma = turmas.find(t => t.id === tId);
+                    const alunos = await api.getAlunosByTurma(tId);
+
+                    if (alunos && alunos.length > 0) {
+                        alunos.forEach((a: any) => {
+                            items.push({ student: a, turmaNome: turma?.nome || 'Turma' });
+                        });
+                    } else {
+                        // Se a turma estiver vazia, imprime pelo menos um genérico para ela
+                        items.push({ student: null, turmaNome: turma?.nome || 'Turma' });
+                    }
+                }
+            }
+
+            setPrintData({ gabarito: g, items });
+        } catch (error) {
+            console.error('Erro ao preparar impressão:', error);
+            alert('Erro ao carregar lista de alunos para impressão.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="gabarito-container">
             <div className="gabarito-header">
@@ -342,7 +381,7 @@ export const Gabarito: React.FC = () => {
                                                 onChange={(e) => handleBatchUpload(e, g)}
                                             />
                                         </button>
-                                        <button className="action-btn download" onClick={() => setPrintData({ gabarito: g, turmaNome: g.turma_nome || 'Todas as Turmas' })}>
+                                        <button className="action-btn download" onClick={() => handlePreparePrint(g)}>
                                             <div className="icon-bg icon-bg-sm icon-indigo">
                                                 <Download size={18} />
                                             </div>
@@ -469,12 +508,14 @@ export const Gabarito: React.FC = () => {
             {/* Hidden Printable Area */}
             <div style={{ display: 'none' }}>
                 <div ref={printRef}>
-                    {printData && (
+                    {printData && printData.items.map((item, idx) => (
                         <GabaritoTemplate
+                            key={idx}
                             gabarito={printData.gabarito}
-                            turmaNome={printData.turmaNome}
+                            turmaNome={item.turmaNome}
+                            aluno={item.student}
                         />
-                    )}
+                    ))}
                 </div>
             </div>
 

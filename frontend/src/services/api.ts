@@ -163,4 +163,43 @@ export const api = {
         });
         return response.json();
     },
+    // Admin Endpoints
+    admin: {
+        listUsers: async () => {
+            const res = await fetch(`${API_URL}/admin/users`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            return res.json();
+        },
+        getTurma: async (id: number) => {
+            const response = await fetch(`${API_URL}/turmas/${id}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            return response.json();
+        },
+        getAlunosTurma: async (turmaId: number) => {
+            const response = await fetch(`${API_URL}/alunos?turma_id=${turmaId}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            return response.json();
+        },
+        createUser: async (userData: any) => {
+            const res = await fetch(`${API_URL}/admin/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(userData)
+            });
+            return res.json();
+        },
+        deleteUser: async (userId: number) => {
+            const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            return res.json();
+        }
+    }
 };

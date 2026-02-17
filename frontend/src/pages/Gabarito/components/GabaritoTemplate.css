@@ -9,6 +9,7 @@
     box-sizing: border-box;
     font-family: Arial, sans-serif;
     color: #000;
+    page-break-after: always;
 }
 
 /* Marcadores Fiduciais */
