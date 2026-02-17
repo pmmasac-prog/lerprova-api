@@ -385,3 +385,63 @@
     background: #334155;
     border-radius: 3px;
 }
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+    .studio-container {
+        z-index: 9999;
+        /* Ensure it covers everything */
+    }
+
+    .studio-grid {
+        display: flex;
+        /* Stack vertically */
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .studio-panel.left,
+    .studio-panel.right {
+        width: 100%;
+        border-right: none;
+        border-left: none;
+        border-bottom: 1px solid #334155;
+        height: auto;
+        flex-shrink: 0;
+        /* Keep size based on content */
+        padding: 15px;
+    }
+
+    .studio-panel.center {
+        min-height: 500px;
+        /* Ensure canvas has space */
+        padding: 15px;
+        overflow: visible;
+        /* Let page scroll handle it */
+    }
+
+    .weekday-visual {
+        grid-template-columns: repeat(5, 1fr);
+        /* Keep 5 cols but smaller */
+        gap: 2px;
+    }
+
+    .weekday-btn {
+        font-size: 0.7rem;
+        padding: 4px;
+    }
+
+    .studio-header {
+        padding: 0 10px;
+        height: 50px;
+    }
+
+    .studio-title {
+        font-size: 0.9rem;
+    }
+
+    .btn-studio {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+}

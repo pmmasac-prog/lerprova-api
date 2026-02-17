@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3, UserMinus } from 'lucide-react';
+import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3, UserMinus, BookOpen } from 'lucide-react';
 import { api } from '../services/api';
 import { EditResultadoModal } from './Relatorios/components/EditResultadoModal';
 import './TurmaDetail.css';
@@ -332,6 +332,9 @@ export const TurmaDetail: React.FC = () => {
                     />
                     <button className="action-icon-btn calendar" onClick={() => setShowFrequenciaModal(true)} title="Frequência">
                         <Calendar size={18} />
+                    </button>
+                    <button className="action-icon-btn blue" onClick={() => navigate(`/dashboard/planejamento?turmaId=${id}`)} title="Planejamento">
+                        <BookOpen size={18} />
                     </button>
                     <button className="action-icon-btn add" onClick={() => setShowAddAlunoModal(true)} title="Adicionar Aluno">
                         <User size={18} />

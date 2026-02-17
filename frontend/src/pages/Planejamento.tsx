@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
@@ -44,6 +45,7 @@ export const Planejamento: React.FC = () => {
     const [aulas, setAulas] = useState<Aula[]>([]);
     const [aulaHoje, setAulaHoje] = useState<Aula | null>(null);
     const [proximaAula, setProximaAula] = useState<Aula | null>(null);
+    const [searchParams] = useSearchParams();
 
     const [percepcoesSelecionadas, setPercepcoesSelecionadas] = useState<Set<string>>(new Set());
     const [showSugestaoReforco, setShowSugestaoReforco] = useState(false);
@@ -70,7 +72,11 @@ export const Planejamento: React.FC = () => {
         try {
             const data = await api.getTurmas();
             setTurmas(data);
-            if (data.length > 0 && !selectedTurmaId) {
+
+            const urlTurmaId = searchParams.get('turmaId');
+            if (urlTurmaId) {
+                setSelectedTurmaId(Number(urlTurmaId));
+            } else if (data.length > 0 && !selectedTurmaId) {
                 setSelectedTurmaId(data[0].id);
             }
         } catch (error) {
@@ -175,10 +181,7 @@ export const Planejamento: React.FC = () => {
                 </div>
 
                 <div className="plan-highlights">
-                    <h1 className="plan-title">
-                        {currentPlano?.titulo || 'Sem Plano Ativo'}
-                        <span style={{ fontSize: '0.6rem', background: '#3b82f6', padding: '2px 6px', borderRadius: 4, marginLeft: 8, verticalAlign: 'middle' }}>V25 BETA</span>
-                    </h1>
+                    <h1 className="plan-title">{currentPlano?.titulo || 'Sem Plano Ativo'}</h1>
                     <div className="plan-meta">
                         {aulaHoje ? (
                             <>
