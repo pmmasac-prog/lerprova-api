@@ -16,6 +16,7 @@ interface Gabarito {
     id: number;
     turma_id: number;
     turma_nome?: string;
+    titulo?: string;
     assunto: string;
     disciplina?: string;
     data: string;
@@ -337,7 +338,7 @@ export const Gabarito: React.FC = () => {
                                 <div key={g.id} className="history-card">
                                     <div className="history-header-row">
                                         <div className="history-info">
-                                            <h3 className="history-turma">{g.titulo}</h3>
+                                            <h3 className="history-turma">{g.titulo || g.assunto || 'Sem Título'}</h3>
                                             <div className="history-meta">
                                                 <span>{g.assunto}</span>
                                                 {g.disciplina && (
