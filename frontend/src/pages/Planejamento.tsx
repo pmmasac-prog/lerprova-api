@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, CheckCircle2, AlertCircle, ChevronRight, BookOpen } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
 
@@ -28,15 +28,9 @@ interface Aula {
     registros?: any[];
 }
 
-interface HeatmapData {
-    data: string;
-    engajamento: number;
-    alerta: number;
-}
-
 const PERCEPCOES = [
-    { key: 'engajados', label: '🔥 Super Engajados', color: '#10b981' },
-    { key: 'duvida', label: '🤔 Dúvidas na Base', color: '#f59e0b' },
+    { key: 'engajados', label: '🔥 Engajados', color: '#10b981' },
+    { key: 'duvida', label: '🤔 Muita Dúvida', color: '#f59e0b' },
     { key: 'tempo', label: '⏳ Faltou Tempo', color: '#ef4444' },
     { key: 'lab', label: '🧪 Prática Lab', color: '#3b82f6' }
 ];
@@ -48,20 +42,12 @@ export const Planejamento: React.FC = () => {
     const [selectedPlanoId, setSelectedPlanoId] = useState<number | null>(null);
     const [aulas, setAulas] = useState<Aula[]>([]);
     const [aulaHoje, setAulaHoje] = useState<Aula | null>(null);
+    const [proximaAula, setProximaAula] = useState<Aula | null>(null);
 
     const [percepcoesSelecionadas, setPercepcoesSelecionadas] = useState<Set<string>>(new Set());
     const [showSugestaoReforco, setShowSugestaoReforco] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [heatmapData, setHeatmapData] = useState<HeatmapData[]>([]);
-
     const [showNewPlanoModal, setShowNewPlanoModal] = useState(false);
-    const [newPlanoData, setNewPlanoData] = useState({
-        titulo: '',
-        disciplina: '',
-        data_inicio: new Date().toISOString().split('T')[0],
-        aulas_raw: '',
-        intervalo: 2
-    });
 
     useEffect(() => {
         loadTurmas();
@@ -70,7 +56,6 @@ export const Planejamento: React.FC = () => {
     useEffect(() => {
         if (selectedTurmaId) {
             loadPlanos(selectedTurmaId);
-            loadHeatmap(selectedTurmaId);
         }
     }, [selectedTurmaId]);
 
@@ -84,7 +69,7 @@ export const Planejamento: React.FC = () => {
         try {
             const data = await api.getTurmas();
             setTurmas(data);
-            if (data.length > 0) {
+            if (data.length > 0 && !selectedTurmaId) {
                 setSelectedTurmaId(data[0].id);
             }
         } catch (error) {
@@ -110,59 +95,18 @@ export const Planejamento: React.FC = () => {
 
     const loadPlanoDetails = async (planoId: number) => {
         try {
-            // Carregar aula de hoje/próxima
-            const todayData = await api.getAulaHoje(planoId);
-            if (todayData && !todayData.message) {
-                setAulaHoje(todayData);
-            } else {
-                setAulaHoje(null);
-            }
-
-            // Carregar todas as aulas (Timeline)
             const allAulas = await api.getPlanoAulas(planoId);
             setAulas(allAulas);
+
+            // Aula de hoje: primeira pending
+            const hoje = allAulas.find((a: Aula) => a.status === 'pending');
+            setAulaHoje(hoje || null);
+
+            // Próxima aula: segunda pending
+            const pendentes = allAulas.filter((a: Aula) => a.status === 'pending');
+            setProximaAula(pendentes.length > 1 ? pendentes[1] : null);
         } catch (error) {
             console.error('Erro ao carregar detalhes do plano:', error);
-        }
-    };
-
-    const loadHeatmap = async (turmaId: number) => {
-        try {
-            const heatmap = await api.getHeatmap(turmaId);
-            setHeatmapData(heatmap);
-        } catch (error) {
-            console.error('Erro ao carregar heatmap:', error);
-        }
-    };
-
-    const handleCreatePlano = async () => {
-        if (!selectedTurmaId || !newPlanoData.titulo || !newPlanoData.aulas_raw) return;
-
-        setSaving(true);
-        try {
-            const aulas_list = newPlanoData.aulas_raw.split('\n')
-                .filter(line => line.trim() !== '')
-                .map((line, index) => ({
-                    ordem: index + 1,
-                    titulo: line.trim()
-                }));
-
-            await api.createPlano({
-                turma_id: selectedTurmaId,
-                titulo: newPlanoData.titulo,
-                disciplina: newPlanoData.disciplina,
-                data_inicio: newPlanoData.data_inicio,
-                aulas: aulas_list,
-                intervalo_dias: newPlanoData.intervalo
-            });
-
-            setShowNewPlanoModal(false);
-            loadPlanos(selectedTurmaId);
-        } catch (error) {
-            console.error('Erro ao criar plano:', error);
-            alert('Erro ao criar plano');
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -188,245 +132,193 @@ export const Planejamento: React.FC = () => {
                 observacoes: null
             });
 
-            alert(`✅ Aula concluída!${response.ajustes_feitos?.datas_recalculadas ? `\n📅 ${response.ajustes_feitos.datas_recalculadas} datas recalculadas` : ''}`);
+            if (response.ajustes_feitos?.avaliação_adiada) {
+                alert(`📢 Inteligência Pedagógica:\nDevido às dúvidas constantes, adiei a '${response.ajustes_feitos.avaliação_adiada}' em 7 dias p/ reforço.`);
+            }
 
             setPercepcoesSelecionadas(new Set());
             setShowSugestaoReforco(false);
             if (selectedPlanoId) loadPlanoDetails(selectedPlanoId);
         } catch (error) {
             console.error('Erro ao concluir aula:', error);
-            alert('Erro ao concluir aula');
         } finally {
             setSaving(false);
         }
     };
 
-    const handleInserirReforco = async () => {
-        if (!aulaHoje) return;
-
-        try {
-            const response = await api.inserirReforco(aulaHoje.id);
-            alert(`✅ Reforço inserido!\n📅 ${response.ajustes_feitos.datas_recalculadas} datas recalculadas`);
-            setShowSugestaoReforco(false);
-            if (selectedPlanoId) loadPlanoDetails(selectedPlanoId);
-        } catch (error) {
-            console.error('Erro ao inserir reforço:', error);
-            alert('Erro ao inserir reforço');
-        }
-    };
-
-    const formatDate = (dateStr: string) => {
+    const formatDateShort = (dateStr: string) => {
         const date = new Date(dateStr + 'T00:00:00');
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     };
 
     const currentPlano = planos.find(p => p.id === selectedPlanoId);
+    const currentTurma = turmas.find(t => t.id === selectedTurmaId);
+    const dataHoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
     return (
-        <div className="planejamento-container">
-            <header className="planejamento-header">
-                <div>
-                    <h1 className="planejamento-title">Sequências Didáticas</h1>
-                    <div className="selectors-row">
+        <div className="planejamento-momento">
+            {/* ZONA 1: CABEÇALHO (Contexto Automático) */}
+            <header className="zona-orientacao">
+                <div className="context-top">
+                    <div className="class-info">
                         <select
                             value={selectedTurmaId || ''}
                             onChange={(e) => setSelectedTurmaId(Number(e.target.value))}
-                            className="nav-select"
+                            className="minimal-select"
                         >
-                            {turmas.map(t => (
-                                <option key={t.id} value={t.id}>{t.nome}</option>
-                            ))}
+                            {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
                         </select>
+                        <span className="disciplina-tag">{currentTurma?.disciplina || 'Pedagógico'}</span>
+                    </div>
+                    <div className="date-pill">HOJE, {dataHoje}</div>
+                </div>
 
-                        {planos.length > 0 && (
-                            <select
-                                value={selectedPlanoId || ''}
-                                onChange={(e) => setSelectedPlanoId(Number(e.target.value))}
-                                className="nav-select plan-select"
-                            >
-                                {planos.map(p => (
-                                    <option key={p.id} value={p.id}>{p.titulo}</option>
-                                ))}
-                            </select>
+                <div className="plan-highlights">
+                    <h1 className="plan-title">{currentPlano?.titulo || 'Sem Plano Ativo'}</h1>
+                    <div className="plan-meta">
+                        {aulaHoje ? (
+                            <>
+                                <span className="meta-item"><BookOpen size={14} /> Aula {aulaHoje.ordem}/{currentPlano?.total_aulas}</span>
+                                {proximaAula && <span className="meta-item next">Próxima: {proximaAula.titulo}</span>}
+                            </>
+                        ) : (
+                            <span className="meta-item done">Sequência concluída 🎉</span>
                         )}
-
-                        <button className="btn-add-plano" onClick={() => setShowNewPlanoModal(true)}>
-                            <Plus size={16} /> Novo
-                        </button>
                     </div>
                 </div>
+
                 {currentPlano && (
-                    <div className="progress-badge">
-                        <div className="progress-label">{currentPlano.progresso}% Concluído</div>
-                        <div className="progress-bar-container">
+                    <div className="progress-container">
+                        <div className="progress-bar-bg">
                             <div className="progress-bar-fill" style={{ width: `${currentPlano.progresso}%` }} />
                         </div>
+                        <span className="progress-text">{currentPlano.progresso}%</span>
                     </div>
                 )}
             </header>
 
-            {aulaHoje ? (
-                <div className="action-card highlight-card">
-                    <div className="card-header-row">
-                        <div>
-                            <div className="tag-today">AULA DE HOJE</div>
-                            <h2 className="card-title">{aulaHoje.titulo}</h2>
-                            <div className="subline">Pilar: {currentPlano?.disciplina || 'Pedagógico'}</div>
-                        </div>
-                        <div className="meta-pill-large">
-                            <Calendar size={18} />
-                            {formatDate(aulaHoje.scheduled_date)}
-                        </div>
-                    </div>
+            {/* ZONA 2: DECISÃO (Ação Humana) */}
+            <main className="zona-decisao">
+                {aulaHoje ? (
+                    <div className="registro-hoje">
+                        <div className="label-percepcao">Conteúdo: <b>{aulaHoje.titulo}</b></div>
+                        <p className="hint-percepcao">Como foi o clima da turma nesta aula?</p>
 
-                    <div className="percepcao-grid">
-                        {PERCEPCOES.map(p => (
-                            <button
-                                key={p.key}
-                                className={`chip-btn ${percepcoesSelecionadas.has(p.key) ? 'active' : ''}`}
-                                onClick={() => togglePercepcao(p.key)}
-                                style={percepcoesSelecionadas.has(p.key) ? {
-                                    background: p.color,
-                                    borderColor: p.color,
-                                    color: '#fff'
-                                } : {}}
-                            >
-                                {p.label}
-                            </button>
-                        ))}
-                    </div>
+                        <div className="chips-grid">
+                            {PERCEPCOES.map(p => (
+                                <button
+                                    key={p.key}
+                                    className={`percepcao-chip ${percepcoesSelecionadas.has(p.key) ? 'active' : ''}`}
+                                    onClick={() => togglePercepcao(p.key)}
+                                    style={percepcoesSelecionadas.has(p.key) ? { backgroundColor: p.color } : {}}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
 
-                    {showSugestaoReforco && (
-                        <div className="suggest-box">
-                            <div className="suggest-text">
+                        {showSugestaoReforco && (
+                            <div className="intel-alert">
                                 <AlertCircle size={18} />
-                                <span><b>Sugestão:</b> Deseja inserir uma aula de reforço antes de prosseguir?</span>
+                                <span><b>Sugestão:</b> Inserir reforço agora?</span>
+                                <button onClick={() => api.inserirReforco(aulaHoje.id).then(() => loadPlanoDetails(selectedPlanoId!))}>Sim</button>
                             </div>
-                            <button className="btn-reforco" onClick={handleInserirReforco}>Sim, ajustar datas</button>
+                        )}
+                    </div>
+                ) : (
+                    <div className="empty-plan-state">
+                        <CheckCircle2 size={48} color="var(--success-color)" />
+                        <h3>Tudo em dia!</h3>
+                        <p>Crie um novo planejamento para continuar evoluindo com esta turma.</p>
+                        <button className="btn-create-floating" onClick={() => setShowNewPlanoModal(true)}>
+                            <Plus size={20} /> Novo Planejamento
+                        </button>
+                    </div>
+                )}
+            </main>
+
+            {/* ZONA 3: SEQUÊNCIA (Confiança) */}
+            <section className="zona-sequencia">
+                <h3 className="section-label">SEQUÊNCIA DIDÁTICA</h3>
+                <div className="timeline-horizontal">
+                    {aulas.map((aula) => (
+                        <div
+                            key={aula.id}
+                            className={`step-bubble ${aula.status} ${aula.id === aulaHoje?.id ? 'active' : ''}`}
+                            title={aula.titulo}
+                        >
+                            <div className="bubble-icon">
+                                {aula.status === 'done' ? <CheckCircle2 size={12} /> : <span>{aula.ordem}</span>}
+                            </div>
+                            <span className="bubble-date">{formatDateShort(aula.scheduled_date)}</span>
+                            {aula.id === aulaHoje?.id && <div className="current-marker" />}
                         </div>
+                    ))}
+                    {planos.length > 0 && (
+                        <button className="btn-add-step" onClick={() => setShowNewPlanoModal(true)}>
+                            <Plus size={16} />
+                        </button>
                     )}
+                </div>
+            </section>
 
-                    <div
-                        className={`btn-main-action ${saving ? 'loading' : ''}`}
+            {/* ZONA 4: CONCLUSÃO (Fechamento Cognitivo) */}
+            <footer className="zona-conclusao">
+                {aulaHoje && (
+                    <button
+                        className={`btn-concluir-momento ${saving ? 'loading' : ''}`}
                         onClick={handleConcluirAula}
+                        disabled={saving}
                     >
-                        {saving ? 'Registrando...' : 'CONCLUIR AULA (1 TOQUE)'}
-                    </div>
-                </div>
-            ) : (
-                <div className="action-card empty-state">
-                    <CheckCircle2 size={40} color="var(--success-color)" />
-                    <h3>Excelente!</h3>
-                    <p>Você concluiu todas as aulas planejadas para esta sequência ou não há planos ativos.</p>
-                </div>
-            )}
+                        {saving ? 'SALVANDO...' : 'CONCLUIR REGISTRO'}
+                    </button>
+                )}
+            </footer>
 
-            <div className="grid-panels">
-                <div className="action-card panel-timeline">
-                    <h3 className="panel-title">Linha do Tempo</h3>
-                    <div className="timeline-list">
-                        {aulas.map((aula, idx) => (
-                            <div key={aula.id} className={`timeline-item ${aula.status} ${aula.id === aulaHoje?.id ? 'current' : ''}`}>
-                                <div className="timeline-marker">
-                                    {aula.status === 'done' ? <CheckCircle2 size={16} /> : <span>{idx + 1}</span>}
-                                </div>
-                                <div className="timeline-content">
-                                    <div className="timeline-header">
-                                        <span className="timeline-titulo">{aula.titulo}</span>
-                                        <span className="timeline-date">{formatDate(aula.scheduled_date)}</span>
-                                    </div>
-                                    {aula.registros && aula.registros.length > 0 && (
-                                        <div className="timeline-tags">
-                                            {aula.registros[0].percepcoes.map((tag: string) => (
-                                                <span key={tag} className="mini-tag">{tag}</span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            {showNewPlanoModal && <NewPlanoModal onClose={() => setShowNewPlanoModal(false)} onCreated={() => loadPlanos(selectedTurmaId!)} turmaId={selectedTurmaId!} />}
+        </div>
+    );
+};
 
-                <div className="action-card panel-insights">
-                    <h3 className="panel-title">Insights da Turma</h3>
-                    <div className="heatmap-container">
-                        <div className="heatmap-label">Engajamento (Últimos 15 dias)</div>
-                        <div className="heatmap-grid">
-                            {Array.from({ length: 15 }).map((_, i) => {
-                                const dataPoint = heatmapData[i];
-                                const intensity = dataPoint ? Math.max(dataPoint.engajamento, dataPoint.alerta * 0.5) : 0;
-                                return (
-                                    <div
-                                        key={i}
-                                        className="heat-cell"
-                                        style={{ opacity: 0.2 + (intensity * 0.8), background: intensity > 0 ? (dataPoint?.alerta > 0.5 ? 'var(--error-color)' : 'var(--primary-color)') : 'rgba(255,255,255,0.05)' }}
-                                        title={dataPoint ? `${dataPoint.data}` : ''}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                    <div className="insights-metrics">
-                        <div className="metric-item">
-                            <div className="metric-label">CLIMA</div>
-                            <div className="metric-value">😊 Estável</div>
-                        </div>
-                        <div className="metric-item">
-                            <div className="metric-label">RITMO</div>
-                            <div className="metric-value">⚡ Normal</div>
-                        </div>
+const NewPlanoModal: React.FC<{ onClose: () => void, onCreated: () => void, turmaId: number }> = ({ onClose, onCreated, turmaId }) => {
+    const [data, setData] = useState({ titulo: '', disciplina: '', aulas_raw: '', data_inicio: new Date().toISOString().split('T')[0], intervalo: 2 });
+    const [loading, setLoading] = useState(false);
+
+    const handleCreate = async () => {
+        if (!data.titulo || !data.aulas_raw) return;
+        setLoading(true);
+        try {
+            const aulas_list = data.aulas_raw.split('\n').filter(l => l.trim() !== '').map((l, i) => ({ ordem: i + 1, titulo: l.trim() }));
+            await api.createPlano({ ...data, turma_id: turmaId, aulas: aulas_list, intervalo_dias: data.intervalo });
+            onCreated();
+            onClose();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="modal-pedagogical">
+            <div className="modal-content-ped">
+                <header className="modal-header-ped">
+                    <h2>Novo Planejamento</h2>
+                    <button onClick={onClose}>&times;</button>
+                </header>
+                <div className="modal-body-ped">
+                    <input type="text" placeholder="Título da Sequência (ex: 1º Bimestre)" value={data.titulo} onChange={e => setData({ ...data, titulo: e.target.value })} className="ped-input" />
+                    <textarea placeholder="Conteúdos das aulas (um por linha)&#10;Ex: Frações&#10;Porcentagem&#10;Prova Mensal" value={data.aulas_raw} onChange={e => setData({ ...data, aulas_raw: e.target.value })} className="ped-area" />
+                    <div className="row">
+                        <input type="date" value={data.data_inicio} onChange={e => setData({ ...data, data_inicio: e.target.value })} className="ped-input" />
+                        <input type="number" placeholder="Duração/Intervalo" value={data.intervalo} onChange={e => setData({ ...data, intervalo: Number(e.target.value) })} className="ped-input" />
                     </div>
                 </div>
+                <footer className="modal-footer-ped">
+                    <button className="btn-cancel-ped" onClick={onClose}>Cancelar</button>
+                    <button className="btn-save-ped" onClick={handleCreate} disabled={loading}>{loading ? 'Criando...' : 'Gerar Planejamento'}</button>
+                </footer>
             </div>
-
-            {showNewPlanoModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2 className="modal-title">Novo Planejamento</h2>
-                        <div className="form-group">
-                            <label>Nome da Sequência</label>
-                            <input
-                                type="text"
-                                placeholder="Ex: Fotossíntese e Respiração Celular"
-                                value={newPlanoData.titulo}
-                                onChange={(e) => setNewPlanoData({ ...newPlanoData, titulo: e.target.value })}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Tópicos das Aulas (um por linha)</label>
-                            <textarea
-                                rows={5}
-                                placeholder="Tema da aula 1&#10;Tema da aula 2&#10;..."
-                                value={newPlanoData.aulas_raw}
-                                onChange={(e) => setNewPlanoData({ ...newPlanoData, aulas_raw: e.target.value })}
-                            />
-                        </div>
-                        <div className="grid2">
-                            <div className="form-group">
-                                <label>Intervalo (dias)</label>
-                                <input
-                                    type="number"
-                                    value={newPlanoData.intervalo}
-                                    onChange={(e) => setNewPlanoData({ ...newPlanoData, intervalo: Number(e.target.value) })}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Data de Início</label>
-                                <input
-                                    type="date"
-                                    value={newPlanoData.data_inicio}
-                                    onChange={(e) => setNewPlanoData({ ...newPlanoData, data_inicio: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="modal-actions">
-                            <button className="btn-cancel" onClick={() => setShowNewPlanoModal(false)}>Cancelar</button>
-                            <button className="btn-save" onClick={handleCreatePlano}>Criar Planejamento</button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

@@ -181,12 +181,60 @@ async def concluir_aula(aula_id: int, data: RegistroAulaCreate, user: users_db.U
     if "duvida" in percepcoes or "tempo" in percepcoes:
         analytics.alerta_score = 0.6
     
+    # INTELIGÊNCIA PEDAGÓGICA: Detecção de Dúvidas Acumuladas
+    # Se houver dúvida nesta aula, verificar as anteriores
+    if "duvida" in percepcoes:
+        ultimos_registros = db.query(models.RegistroAula).join(models.AulaPlanejada).filter(
+            models.AulaPlanejada.plano_id == plano.id,
+            models.AulaPlanejada.ordem <= aula.ordem
+        ).order_by(models.AulaPlanejada.ordem.desc()).limit(3).all()
+        
+        duvidas_consecutivas = 0
+        for reg in ultimos_registros:
+            perc = json.loads(reg.percepcoes) if reg.percepcoes else []
+            if "duvida" in perc:
+                duvidas_consecutivas += 1
+            else:
+                break
+        
+        if duvidas_consecutivas >= 3:
+            # Encontrar a próxima "Avaliação" ou "Prova"
+            proxima_prova = db.query(models.AulaPlanejada).filter(
+                models.AulaPlanejada.plano_id == plano.id,
+                models.AulaPlanejada.ordem > aula.ordem,
+                models.AulaPlanejada.status == "pending",
+                (models.AulaPlanejada.titulo.ilike("%avaliação%") | models.AulaPlanejada.titulo.ilike("%prova%"))
+            ).order_by(models.AulaPlanejada.ordem.asc()).first()
+            
+            if proxima_prova:
+                # Adiar a prova em 7 dias
+                old_date = datetime.strptime(proxima_prova.scheduled_date, "%Y-%m-%d").date()
+                proxima_prova.scheduled_date = (old_date + timedelta(days=7)).isoformat()
+                ajustes["avaliação_adiada"] = proxima_prova.titulo
+                
+                # Re-sincronizar todas as aulas após a prova também? Geralmente sim
+                aulas_depois_da_prova = db.query(models.AulaPlanejada).filter(
+                    models.AulaPlanejada.plano_id == plano.id,
+                    models.AulaPlanejada.ordem > proxima_prova.ordem,
+                    models.AulaPlanejada.status == "pending"
+                ).all()
+                for ap in aulas_depois_da_prova:
+                    adate = datetime.strptime(ap.scheduled_date, "%Y-%m-%d").date()
+                    ap.scheduled_date = (adate + timedelta(days=7)).isoformat()
+                
+                ajustes["sequencia_reordenada_pos_prova"] = len(aulas_depois_da_prova)
+
     db.commit()
     
+    # Retornar o novo estado completo do plano para o frontend "redesenhar"
     return {
         "message": "Aula concluída com sucesso",
         "ajustes_feitos": ajustes,
-        "sugestao_reforco": sugestao_reforco
+        "sugestao_reforco": sugestao_reforco,
+        "updated_plan_state": {
+            "id": plano.id,
+            "progresso": int((len([a for a in plano.aulas if a.status == "done"]) / len(plano.aulas)) * 100) if plano.aulas else 0
+        }
     }
 
 @router.post("/aulas/{aula_id}/inserir-reforco")
