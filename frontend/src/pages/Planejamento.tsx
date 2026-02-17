@@ -60,7 +60,6 @@ export const Planejamento: React.FC = () => {
 
                 if (planosData.length > 0) {
                     const firstPlano = planosData[0];
-                    setPlanoId(firstPlano.id);
 
                     // Carregar aula de hoje
                     const aulaData = await api.getAulaHoje(firstPlano.id);
