@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, TrendingUp, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
 
@@ -22,13 +21,6 @@ interface AulaHoje {
     status: string;
 }
 
-interface Aula {
-    id: number;
-    ordem: number;
-    titulo: string;
-    scheduled_date: string;
-    status: string;
-}
 
 interface HeatmapData {
     data: string;
@@ -44,9 +36,6 @@ const PERCEPCOES = [
 ];
 
 export const Planejamento: React.FC = () => {
-    const navigate = useNavigate();
-    const [turmaId, setTurmaId] = useState<number | null>(null);
-    const [planoId, setPlanoId] = useState<number | null>(null);
     const [aulaHoje, setAulaHoje] = useState<AulaHoje | null>(null);
     const [percepcoesSelecionadas, setPercepcoesSelecionadas] = useState<Set<string>>(new Set());
     const [showSugestaoReforco, setShowSugestaoReforco] = useState(false);
@@ -64,7 +53,6 @@ export const Planejamento: React.FC = () => {
             const turmas = await api.getTurmas();
             if (turmas.length > 0) {
                 const firstTurma = turmas[0];
-                setTurmaId(firstTurma.id);
 
                 // Carregar planos da turma
                 const planosData = await api.getPlanosturma(firstTurma.id);
