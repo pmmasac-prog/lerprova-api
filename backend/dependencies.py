@@ -5,6 +5,9 @@ import users_db
 import auth_utils
 import models
 
+import logging
+logger = logging.getLogger("lerprova-api")
+
 async def get_current_user(authorization: str = Header(None), db: Session = Depends(get_db)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token ausente ou inválido")
@@ -18,4 +21,8 @@ async def get_current_user(authorization: str = Header(None), db: Session = Depe
     user = db.query(users_db.User).filter(users_db.User.email == payload.get("sub")).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # Log de depuração (remover se ficar muito ruidoso)
+    # logger.info(f"AUTH: user={user.email} role={user.role} id={user.id}")
+    
     return user

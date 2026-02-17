@@ -227,10 +227,21 @@ async def login(data: dict, db: Session = Depends(get_db)):
 
 @app.get("/turmas")
 async def get_turmas(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role == "admin":
-        return db.query(models.Turma).all()
-    # Se for professor, retorna apenas as turmas dele
-    return db.query(models.Turma).filter(models.Turma.user_id == user.id).all()
+    query = db.query(models.Turma)
+    if user.role != "admin":
+        query = query.filter(models.Turma.user_id == user.id)
+    
+    turmas = query.all()
+    # Retornar dicionários simples para evitar recursão de serialização
+    return [
+        {
+            "id": t.id,
+            "nome": t.nome,
+            "disciplina": t.disciplina,
+            "user_id": t.user_id,
+            "created_at": t.created_at.isoformat() if t.created_at else None
+        } for t in turmas
+    ]
 
 @app.post("/turmas")
 async def create_turma(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -329,9 +340,20 @@ async def create_aluno(data: dict, user: users_db.User = Depends(get_current_use
 @app.get("/alunos")
 async def get_alunos(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role == "admin":
-        return db.query(models.Aluno).all()
-    # Se professor, retorna apenas alunos das suas turmas
-    return db.query(models.Aluno).join(models.Turma, models.Aluno.turmas).filter(models.Turma.user_id == user.id).distinct().all()
+        alunos = db.query(models.Aluno).all()
+    else:
+        # Se professor, retorna apenas alunos das suas turmas
+        alunos = db.query(models.Aluno).join(models.Turma, models.Aluno.turmas).filter(models.Turma.user_id == user.id).distinct().all()
+    
+    return [
+        {
+            "id": a.id,
+            "nome": a.nome,
+            "codigo": a.codigo,
+            "qr_token": a.qr_token,
+            "turmas_nomes": [t.nome for t in a.turmas]
+        } for a in alunos
+    ]
 
 @app.get("/alunos/turma/{turma_id}")
 async def get_alunos_by_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -554,37 +576,32 @@ async def delete_gabarito(gabarito_id: int, user: users_db.User = Depends(get_cu
 
 @app.get("/resultados")
 async def get_resultados(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    # joinedload para otimizar
     query = db.query(models.Resultado).options(
         joinedload(models.Resultado.aluno),
         joinedload(models.Resultado.gabarito).joinedload(models.Gabarito.turmas)
     )
     
     if user.role != "admin":
-        # Filtrar resultados cujos gabaritos estão ligados a turmas do professor
         query = query.join(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id))
 
     resultados = query.all()
     
-    resp = []
-    for r in resultados:
-        r_dict = r.__dict__.copy()
-        if "_sa_instance_state" in r_dict: del r_dict["_sa_instance_state"]
-        
-        if r.aluno:
-            r_dict["nome"] = r.aluno.nome
-            r_dict["aluno_codigo"] = r.aluno.codigo
-            
-        if r.gabarito:
-            r_dict["assunto"] = r.gabarito.titulo or r.gabarito.assunto
-            r_dict["periodo"] = r.gabarito.periodo
-            # Retornar o ID da primeira turma associada para compatibilidade
-            r_dict["turma_id"] = r.gabarito.turmas[0].id if r.gabarito.turmas else None
-
-        if r.data_correcao:
-            r_dict["data"] = r.data_correcao.strftime("%Y-%m-%d %H:%M:%S")
-        resp.append(r_dict)
-    return resp
+    return [
+        {
+            "id": r.id,
+            "aluno_id": r.aluno_id,
+            "gabarito_id": r.gabarito_id,
+            "acertos": r.acertos,
+            "nota": r.nota,
+            "respostas_aluno": r.respostas_aluno,
+            "data": r.data_correcao.strftime("%Y-%m-%d %H:%M:%S") if r.data_correcao else None,
+            "nome": r.aluno.nome if r.aluno else "N/A",
+            "aluno_codigo": r.aluno.codigo if r.aluno else "N/A",
+            "assunto": r.gabarito.titulo or r.gabarito.assunto if r.gabarito else "N/A",
+            "periodo": r.gabarito.periodo if r.gabarito else None,
+            "turma_id": r.gabarito.turmas[0].id if r.gabarito and r.gabarito.turmas else None
+        } for r in resultados
+    ]
 
 @app.get("/resultados/turma/{turma_id}/aluno/{aluno_id}")
 async def get_resultados_aluno_turma(turma_id: int, aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
