@@ -255,5 +255,65 @@ export const api = {
             });
             return res.json();
         }
+    },
+
+    // Planejamento (Sequências Didáticas)
+    async getPlanosturma(turmaId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/planos/turma/${turmaId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        return response.json();
+    },
+
+    async createPlano(data: { turma_id: number, titulo: string, disciplina?: string, data_inicio: string, aulas: any[], intervalo_dias?: number }) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/planos`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    async getAulaHoje(planoId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/planos/${planoId}/hoje`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        return response.json();
+    },
+
+    async concluirAula(aulaId: number, data: { percepcoes?: string[], observacoes?: string | null }) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/aulas/${aulaId}/concluir`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    },
+
+    async inserirReforco(aulaId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/aulas/${aulaId}/inserir-reforco`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        return response.json();
+    },
+
+    async getHeatmap(turmaId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/analytics/turma/${turmaId}/heatmap`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        return response.json();
     }
 };

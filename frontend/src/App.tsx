@@ -9,6 +9,7 @@ import { TurmaDetail } from './pages/TurmaDetail';
 import { Debug } from './pages/Debug';
 import { TabNavigation } from './components/TabNavigation';
 import { Admin } from './pages/Admin';
+import { Planejamento } from './pages/Planejamento';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -40,6 +41,12 @@ function App() {
           <PrivateRoute>
             <TabNavigation />
             <Gabarito />
+          </PrivateRoute>
+        } />
+        <Route path="/dashboard/planejamento" element={
+          <PrivateRoute>
+            <TabNavigation />
+            <Planejamento />
           </PrivateRoute>
         } />
         <Route path="/dashboard/assinatura" element={
