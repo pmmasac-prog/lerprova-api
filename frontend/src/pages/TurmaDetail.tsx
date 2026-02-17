@@ -504,7 +504,7 @@ export const TurmaDetail: React.FC = () => {
                                     <p className="aluno-code-modal">Nº {selectedAluno.codigo}</p>
                                 </div>
                             </div>
-                            <div className="header-actions" style={{ marginTop: '4px' }}>
+                            <div className="header-actions" style={{ marginTop: '4px', marginRight: '30px' }}>
                                 <button
                                     className="action-icon-btn"
                                     onClick={handleUnlinkAluno}

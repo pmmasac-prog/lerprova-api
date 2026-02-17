@@ -346,6 +346,7 @@
     padding-bottom: 30px;
     background: rgba(248, 250, 252, 0.95);
     backdrop-filter: blur(10px);
+    z-index: 900;
 }
 
 .export-btn {
