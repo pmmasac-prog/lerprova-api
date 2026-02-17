@@ -96,3 +96,60 @@ class Frequencia(Base):
     # Relacionamentos
     turma = relationship("Turma")
     aluno = relationship("Aluno")
+
+class Plano(Base):
+    __tablename__ = "planos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    turma_id = Column(Integer, ForeignKey("turmas.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    titulo = Column(String)
+    disciplina = Column(String, nullable=True)
+    data_inicio = Column(String)  # YYYY-MM-DD
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relacionamentos
+    turma = relationship("Turma")
+    aulas = relationship("AulaPlanejada", back_populates="plano", cascade="all, delete-orphan")
+
+class AulaPlanejada(Base):
+    __tablename__ = "aulas_planejadas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    plano_id = Column(Integer, ForeignKey("planos.id"))
+    ordem = Column(Integer)
+    titulo = Column(String)
+    scheduled_date = Column(String)  # YYYY-MM-DD
+    status = Column(String, default="pending")  # pending, done, skipped
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relacionamentos
+    plano = relationship("Plano", back_populates="aulas")
+    registros = relationship("RegistroAula", back_populates="aula", cascade="all, delete-orphan")
+
+class RegistroAula(Base):
+    __tablename__ = "registros_aula"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aula_id = Column(Integer, ForeignKey("aulas_planejadas.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    data_registro = Column(DateTime, default=datetime.utcnow)
+    percepcoes = Column(Text, nullable=True)  # JSON: ["engajados", "duvida"]
+    observacoes = Column(Text, nullable=True)
+    ajustes_feitos = Column(Text, nullable=True)  # JSON: {"reforco_inserido": true, "datas_recalculadas": 3}
+
+    # Relacionamentos
+    aula = relationship("AulaPlanejada", back_populates="registros")
+
+class AnalyticsDaily(Base):
+    __tablename__ = "analytics_daily"
+
+    id = Column(Integer, primary_key=True, index=True)
+    turma_id = Column(Integer, ForeignKey("turmas.id"))
+    data = Column(String)  # YYYY-MM-DD
+    engajamento_score = Column(Float, default=0.0)  # 0-1
+    alerta_score = Column(Float, default=0.0)  # 0-1
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relacionamentos
+    turma = relationship("Turma")
