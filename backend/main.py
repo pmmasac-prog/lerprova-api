@@ -15,13 +15,12 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("lerprova-api")
 
-import users_db
 import models
+import users_db
 from database import engine, SessionLocal
 from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports
 
-# Inicializar Banco de Dados
-users_db.Base.metadata.create_all(bind=engine)
+# Inicializar Banco de Dados (Um único comando para todos os modelos registrados no Base)
 models.Base.metadata.create_all(bind=engine)
 
 # Opcional: Popular com usuários iniciais se estiver vazio

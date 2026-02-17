@@ -16,8 +16,9 @@ async def get_stats(user: users_db.User = Depends(get_current_user), db: Session
     # Filtros baseados no papel do usuário
     if user.role != "admin":
         turmas_count = db.query(models.Turma).filter(models.Turma.user_id == user.id).count()
-        alunos_count = db.query(models.Aluno).join(models.Turma, models.Aluno.turmas).filter(models.Turma.user_id == user.id).distinct().count()
-        provas_count = db.query(models.Resultado).join(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id)).count()
+        # Explicit JOINS for many-to-many counts
+        alunos_count = db.query(models.Aluno).join(models.aluno_turma).join(models.Turma).filter(models.Turma.user_id == user.id).distinct().count()
+        provas_count = db.query(models.Resultado).join(models.Gabarito).join(models.gabarito_turma).join(models.Turma).filter(models.Turma.user_id == user.id).count()
     else:
         turmas_count = db.query(models.Turma).count()
         alunos_count = db.query(models.Aluno).count()

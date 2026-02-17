@@ -2,6 +2,34 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, F
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
+from passlib.context import CryptContext
+
+# Configuração de criptografia de senha
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    role = Column(String, default="professor")
+    escola = Column(String, nullable=True)
+    disciplina = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Novos campos para monetização
+    plan_type = Column(String, default="free") 
+    subscription_expires_at = Column(DateTime, nullable=True)
+    total_corrections_used = Column(Integer, default=0)
+    
+    # Relacionamentos
+    turmas = relationship("Turma", back_populates="professor")
+
+    def verify_password(self, password: str):
+        return pwd_context.verify(password, self.hashed_password)
 
 class Turma(Base):
     __tablename__ = "turmas"
