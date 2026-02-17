@@ -52,7 +52,11 @@ function formatLessonDate(dt: Date): string {
     }).format(dt);
 }
 
-type Lesson = { id: string; title: string; dateDisplay: string };
+// ... (imports remain)
+
+// ...
+
+type Lesson = { id: string; title: string; dateDisplay: string; conteudos: string[] };
 
 export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     onClose,
@@ -62,17 +66,18 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     disciplinaPre,
 }) => {
     const [activePanel, setActivePanel] = useState<PanelKey>('canvas');
+    const [targetLessonId, setTargetLessonId] = useState<string | null>(null); // NEW: Track which lesson wants content
 
-    // Config
+    // ... (Config state remains)
     const [titulo, setTitulo] = useState('');
     const [disciplina, setDisciplina] = useState(disciplinaPre);
     const [dataInicio, setDataInicio] = useState(() => new Date().toISOString().slice(0, 10));
-    const [diasSemana, setDiasSemana] = useState<number[]>([0, 2]); // Seg, Qua
+    const [diasSemana, setDiasSemana] = useState<number[]>([0, 2]);
 
     // Canvas
-    const [lessons, setLessons] = useState<Lesson[]>([{ id: '1', title: '', dateDisplay: '' }]);
+    const [lessons, setLessons] = useState<Lesson[]>([{ id: '1', title: '', dateDisplay: '', conteudos: [] }]);
 
-    // Curriculum
+    // ... (Curriculum state remains)
     const [subjects, setSubjects] = useState<CurriculoItem[]>([]);
     const [units, setUnits] = useState<CurriculoItem[]>([]);
     const [topics, setTopics] = useState<CurriculoItem[]>([]);
@@ -80,7 +85,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
 
     const [saving, setSaving] = useState(false);
-
     const loadToken = useRef(0);
 
     // Load Subjects
@@ -173,18 +177,19 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         setLessons(prev => {
             const next: Lesson[] = [
                 ...prev,
-                { id: Math.random().toString(36).slice(2, 10), title, dateDisplay: '' },
+                { id: Math.random().toString(36).slice(2, 10), title, dateDisplay: '', conteudos: [] },
             ];
             return reconcileDates(dataInicio, diasSemana, next);
         });
         setActivePanel('canvas');
+        setTargetLessonId(null);
     }, [dataInicio, diasSemana, reconcileDates]);
 
     const removeLesson = useCallback((index: number) => {
         setLessons(prev => {
             const next = prev.slice();
             next.splice(index, 1);
-            const safe = next.length === 0 ? [{ id: '1', title: '', dateDisplay: '' }] : next;
+            const safe = next.length === 0 ? [{ id: '1', title: '', dateDisplay: '', conteudos: [] }] : next;
             return reconcileDates(dataInicio, diasSemana, safe);
         });
     }, [dataInicio, diasSemana, reconcileDates]);
@@ -196,11 +201,48 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         });
     }, []);
 
+    const handleAddTopic = useCallback((topicName: string) => {
+        if (targetLessonId) {
+            // Add to specific lesson
+            setLessons(prev => prev.map(l => {
+                if (l.id === targetLessonId) {
+                    return { ...l, conteudos: [...(l.conteudos || []), topicName] };
+                }
+                return l;
+            }));
+            setActivePanel('canvas'); // Go back to canvas
+            setTargetLessonId(null); // Clear target
+        } else {
+            // Create new lesson with this topic as title
+            addLesson(topicName);
+        }
+    }, [targetLessonId, addLesson]);
+
+    const requestContentFor = useCallback((lessonId: string) => {
+        setTargetLessonId(lessonId);
+        setActivePanel('curriculo');
+    }, []);
+
+    const removeContent = useCallback((lessonId: string, contentIndex: number) => {
+        setLessons(prev => prev.map(l => {
+            if (l.id === lessonId) {
+                const newC = [...(l.conteudos || [])];
+                newC.splice(contentIndex, 1);
+                return { ...l, conteudos: newC };
+            }
+            return l;
+        }));
+    }, []);
+
+
     const validLessons = useMemo(() => {
         return lessons
-            .map(l => l.title.trim())
-            .filter(Boolean)
-            .map((t, i) => ({ ordem: i + 1, titulo: t }));
+            .filter(l => l.title.trim() || (l.conteudos && l.conteudos.length > 0))
+            .map((t, i) => ({
+                ordem: i + 1,
+                titulo: t.title || t.conteudos[0] || 'Aula sem título',
+                conteudos: t.conteudos // Pass this to backend if supported, or just use title
+            }));
     }, [lessons]);
 
     const canSave = useMemo(() => {
@@ -372,6 +414,28 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
+
+                                <div className="lesson-contents">
+                                    {lesson.conteudos?.map((c, i) => (
+                                        <div key={i} className="content-tag">
+                                            <span>{c}</span>
+                                            <button
+                                                className="btn-remove-content"
+                                                onClick={() => removeContent(lesson.id, i)}
+                                                type="button"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        className="btn-add-content-small"
+                                        onClick={() => requestContentFor(lesson.id)}
+                                        type="button"
+                                    >
+                                        + Conteúdo
+                                    </button>
+                                </div>
                             </div>
                         ))}
 
@@ -426,7 +490,12 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                     {topics.map(t => (
                                         <div key={t.id} className="curr-topic">
                                             <span>{t.name}</span>
-                                            <button type="button" className="btn-add-topic" onClick={() => addLesson(t.name)} aria-label="Adicionar tópico como aula">
+                                            <button
+                                                type="button"
+                                                className="btn-add-topic"
+                                                onClick={() => handleAddTopic(t.name)}
+                                                aria-label={targetLessonId ? "Adicionar à aula selecionada" : "Criar aula com este tópico"}
+                                            >
                                                 <Plus size={16} />
                                             </button>
                                         </div>

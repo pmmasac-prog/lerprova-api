@@ -239,7 +239,7 @@ export const Planejamento: React.FC = () => {
                             onChange={(e) => setSelectedTurmaId(Number(e.target.value))}
                             className="minimal-select"
                             aria-label="Selecionar turma"
-                            disabled={loadingTurmas}
+                            disabled={loadingTurmas || !!searchParams.get('turmaId')}
                         >
                             {turmas.map(t => (
                                 <option key={t.id} value={t.id}>

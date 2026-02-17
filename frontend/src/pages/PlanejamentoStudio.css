@@ -47,6 +47,10 @@
     padding: 0 14px;
     gap: 12px;
     box-shadow: 0 8px 18px rgba(0, 0, 0, .22);
+    /* Allow wrapping for small screens */
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 62px;
 }
 
 .studio-title {
@@ -57,12 +61,67 @@
     align-items: center;
     gap: 10px;
     min-width: 180px;
+    /* Allow title to shrink */
+    flex: 1;
+    min-width: auto;
 }
 
 .studio-actions {
     display: flex;
     gap: 10px;
     align-items: center;
+    /* Prevent shrinking */
+    flex-shrink: 0;
+}
+
+/* ... New Styles for Content Integration ... */
+.lesson-contents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.content-tag {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #cfe3ff;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-remove-content {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 2px;
+}
+
+.btn-remove-content:hover {
+    color: #fff;
+}
+
+.btn-add-content-small {
+    background: transparent;
+    border: 1px dashed rgba(148, 163, 184, 0.4);
+    color: #94a3b8;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.btn-add-content-small:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
 }
 
 .btn-studio {
