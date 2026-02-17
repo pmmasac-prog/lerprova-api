@@ -11,6 +11,7 @@ import { RankingGlobal } from './Relatorios/components/RankingGlobal';
 import { AnaliseQuestoes } from './Relatorios/components/AnaliseQuestoes';
 import { RelatoriosSearchBar } from './Relatorios/components/RelatoriosSearchBar';
 import { handleExportCSV, handleExportPDF } from './Relatorios/utils/exportUtils';
+import { EditResultadoModal } from './Relatorios/components/EditResultadoModal';
 
 export const Relatorios: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Turma');
@@ -26,6 +27,10 @@ export const Relatorios: React.FC = () => {
   const [gabaritos, setGabaritos] = useState<Gabarito[]>([]);
   const [selectedGabarito, setSelectedGabarito] = useState<number | null>(null);
   const [overallStats, setOverallStats] = useState({ media: '0.0', aprovacao: 0, total: 0 });
+
+  // Modais de Edição
+  const [editingResultado, setEditingResultado] = useState<Resultado | null>(null);
+  const [editingGabarito, setEditingGabarito] = useState<Gabarito | null>(null);
 
   const tabs = [
     { id: 'Turma', icon: TrendingUp, label: 'Turma' },
@@ -145,6 +150,14 @@ export const Relatorios: React.FC = () => {
     setLoading
   });
 
+  const handleEditClick = (resultado: Resultado) => {
+    const gab = gabaritos.find(g => g.id === resultado.gabarito_id);
+    if (gab) {
+      setEditingResultado(resultado);
+      setEditingGabarito(gab);
+    }
+  };
+
   return (
     <div className="relatorios-container">
       <div className="relatorios-header">
@@ -179,14 +192,14 @@ export const Relatorios: React.FC = () => {
               ))}
             </div>
             <RelatoriosSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortOrder={sortOrder} setSortOrder={setSortOrder} minNota={minNota} setMinNota={setMinNota} />
-            <RankingTurma turma={turmas.find(t => t.id === selectedTurma)} resultados={getFilteredRanking()} loading={loading} overallStats={overallStats} />
+            <RankingTurma turma={turmas.find(t => t.id === selectedTurma)} resultados={getFilteredRanking()} loading={loading} overallStats={overallStats} onEdit={handleEditClick} />
           </>
         )}
 
         {activeTab === 'Aluno' && (
           <>
             <RelatoriosSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortOrder={sortOrder} setSortOrder={setSortOrder} minNota={minNota} setMinNota={setMinNota} />
-            <RankingGlobal resultados={resultados.filter(r => !searchQuery || r.nome.toLowerCase().includes(searchQuery.toLowerCase())).filter(r => minNota === null || r.nota >= minNota).sort((a, b) => sortOrder === 'desc' ? b.nota - a.nota : a.nota - b.nota)} loading={loading} />
+            <RankingGlobal resultados={resultados.filter(r => !searchQuery || r.nome.toLowerCase().includes(searchQuery.toLowerCase())).filter(r => minNota === null || r.nota >= minNota).sort((a, b) => sortOrder === 'desc' ? b.nota - a.nota : a.nota - b.nota)} loading={loading} onEdit={handleEditClick} />
           </>
         )}
 
@@ -210,6 +223,20 @@ export const Relatorios: React.FC = () => {
         <button className="export-btn export-btn-dark" onClick={onExportCSV}><Download size={16} /><span>CSV</span></button>
         <button className="export-btn export-btn-blue" onClick={onExportPDF}><FileText size={16} /><span>PDF</span></button>
       </div>
+
+      {editingResultado && editingGabarito && (
+        <EditResultadoModal
+          resultado={editingResultado}
+          gabarito={editingGabarito}
+          onClose={() => {
+            setEditingResultado(null);
+            setEditingGabarito(null);
+          }}
+          onSuccess={() => {
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 };

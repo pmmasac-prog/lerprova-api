@@ -1,14 +1,17 @@
 import React from 'react';
 import type { Turma, Resultado } from '../types';
+import { Edit3 } from 'lucide-react';
 
 interface RankingTurmaProps {
     turma: Turma | undefined;
     resultados: Resultado[];
     loading: boolean;
     overallStats: { media: string; total: number };
+    onEdit?: (resultado: Resultado) => void;
 }
 
-export const RankingTurma: React.FC<RankingTurmaProps> = ({ turma, resultados, loading, overallStats }) => {
+export const RankingTurma: React.FC<RankingTurmaProps> = (props) => {
+    const { turma, resultados, loading, overallStats } = props;
     return (
         <div className="tab-content">
             {/* Stats compactos */}
@@ -42,9 +45,19 @@ export const RankingTurma: React.FC<RankingTurmaProps> = ({ turma, resultados, l
                         <div key={r.id} className="rank-row">
                             <span className="rank-pos">{idx + 1}</span>
                             <span className="rank-name">{r.nome}</span>
-                            <span className="rank-acertos">{r.acertos}ac</span>
-                            <div className={`nota-badge ${r.nota >= 7 ? 'success' : r.nota >= 5 ? 'warning' : 'danger'}`}>
-                                {r.nota.toFixed(1)}
+                            <div className="flex items-center gap-4 ml-auto">
+                                <span className="rank-acertos">{r.acertos}ac</span>
+                                <div className={`nota-badge ${r.nota >= 7 ? 'success' : r.nota >= 5 ? 'warning' : 'danger'}`}>
+                                    {r.nota.toFixed(1)}
+                                </div>
+                                <button
+                                    className="icon-btn"
+                                    style={{ padding: '4px' }}
+                                    title="Editar Manualmente"
+                                    onClick={() => props.onEdit?.(r)}
+                                >
+                                    <Edit3 size={14} />
+                                </button>
                             </div>
                         </div>
                     ))

@@ -204,6 +204,14 @@
     color: #ef4444;
 }
 
+.action-btn.manual {
+    background: #fff7ed;
+}
+
+.action-btn.manual span {
+    color: #f97316;
+}
+
 .action-btn:hover {
     transform: translateY(-2px);
 }

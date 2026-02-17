@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
 import { ScannerModal } from './Gabarito/components/ScannerModal';
+import { ManualEntryModal } from './Gabarito/components/ManualEntryModal';
 import './Gabarito.css';
 
 interface Turma {
@@ -46,6 +47,7 @@ export const Gabarito: React.FC = () => {
         items: { student: any, turmaNome: string }[]
     } | null>(null);
     const [activeScanner, setActiveScanner] = useState<{ id: number, numQuestions: number } | null>(null);
+    const [manualEntryGabarito, setManualEntryGabarito] = useState<Gabarito | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [batchProcessing, setBatchProcessing] = useState(false);
@@ -367,6 +369,12 @@ export const Gabarito: React.FC = () => {
                                             </div>
                                             <span>Corrigir</span>
                                         </button>
+                                        <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)}>
+                                            <div className="icon-bg icon-bg-sm icon-orange">
+                                                <Edit3 size={18} />
+                                            </div>
+                                            <span>Manual</span>
+                                        </button>
                                         <button className="action-btn upload" onClick={() => fileInputRef.current?.click()}>
                                             <div className="icon-bg icon-bg-sm icon-purple">
                                                 <Upload size={18} />
@@ -526,6 +534,19 @@ export const Gabarito: React.FC = () => {
                     gabaritoId={activeScanner.id}
                     numQuestions={activeScanner.numQuestions}
                     onSuccess={() => loadData()}
+                />
+            )}
+
+            {/* Manual Entry Modal */}
+            {manualEntryGabarito && (
+                <ManualEntryModal
+                    gabarito={manualEntryGabarito}
+                    turmas={turmas}
+                    onClose={() => setManualEntryGabarito(null)}
+                    onSuccess={() => {
+                        alert('Resultado gravado com sucesso!');
+                        loadData();
+                    }}
                 />
             )}
 

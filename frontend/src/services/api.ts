@@ -66,6 +66,43 @@ export const api = {
         return response.json();
     },
 
+    async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno: string[] }) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/resultados`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+        });
+        return response.json();
+    },
+
+    async updateResultado(id: number, data: { respostas_aluno: string[] }) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/resultados/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(data),
+        });
+        return response.json();
+    },
+
+    async deleteResultado(id: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/resultados/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.json();
+    },
+
     // Estatísticas
     async getStats() {
         const response = await fetch(`${API_URL}/stats`);

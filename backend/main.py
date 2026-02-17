@@ -57,6 +57,14 @@ class ProcessRequest(BaseModel):
     gabarito_id: Optional[int] = None
     aluno_id: Optional[int] = None
 
+class ResultadoUpdate(BaseModel):
+    respostas_aluno: List[str]
+
+class ResultadoCreate(BaseModel):
+    aluno_id: int
+    gabarito_id: int
+    respostas_aluno: List[str]
+
 # Configuração de CORS restrita
 app.add_middleware(
     CORSMiddleware,
@@ -374,6 +382,8 @@ async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
 
 @app.get("/resultados/gabarito/{gabarito_id}")
 async def get_resultados_by_gabarito(gabarito_id: int, db: Session = Depends(get_db)):
+    resultados = db.query(models.Resultado).filter(models.Resultado.id == gabarito_id).all()
+    # ... logic above was a bit messy, let's fix it while we are at it
     resultados = db.query(models.Resultado).filter(models.Resultado.gabarito_id == gabarito_id).all()
     resp = []
     for r in resultados:
@@ -382,14 +392,78 @@ async def get_resultados_by_gabarito(gabarito_id: int, db: Session = Depends(get
             r_dict["nome"] = r.aluno.nome
         if "_sa_instance_state" in r_dict:
             del r_dict["_sa_instance_state"]
-    for r in resultados:
-        r_dict = r.__dict__.copy()
-        if r.aluno:
-            r_dict["nome"] = r.aluno.nome
-        if "_sa_instance_state" in r_dict:
-            del r_dict["_sa_instance_state"]
         resp.append(r_dict)
     return resp
+
+@app.post("/resultados")
+async def create_resultado_manual(data: ResultadoCreate, db: Session = Depends(get_db)):
+    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == data.gabarito_id).first()
+    if not gabarito:
+        raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+    
+    corretas = json.loads(gabarito.respostas_corretas)
+    detectadas = data.respostas_aluno
+    
+    acertos = 0
+    total = len(corretas)
+    # Comparar apenas até o limite de questões do gabarito
+    for i in range(min(total, len(detectadas))):
+        if detectadas[i] == corretas[i]:
+            acertos += 1
+            
+    nota = (acertos / total) * 10 if total > 0 else 0
+    
+    novo_resultado = models.Resultado(
+        aluno_id=data.aluno_id,
+        gabarito_id=data.gabarito_id,
+        acertos=acertos,
+        nota=nota,
+        respostas_aluno=json.dumps(detectadas),
+        data_correcao=datetime.utcnow()
+    )
+    db.add(novo_resultado)
+    db.commit()
+    db.refresh(novo_resultado)
+    return {"message": "Resultado registrado manualmente", "id": novo_resultado.id, "nota": nota}
+
+@app.patch("/resultados/{resultado_id}")
+async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session = Depends(get_db)):
+    resultado = db.query(models.Resultado).filter(models.Resultado.id == resultado_id).first()
+    if not resultado:
+        raise HTTPException(status_code=404, detail="Resultado não encontrado")
+    
+    gabarito = resultado.gabarito
+    if not gabarito:
+        raise HTTPException(status_code=400, detail="Gabarito associado não encontrado")
+    
+    # Atualizar respostas
+    resultado.respostas_aluno = json.dumps(data.respostas_aluno)
+    
+    # Recalcular nota
+    corretas = json.loads(gabarito.respostas_corretas)
+    detectadas = data.respostas_aluno
+    
+    acertos = 0
+    total = len(corretas)
+    for i in range(min(total, len(detectadas))):
+        if detectadas[i] == corretas[i]:
+            acertos += 1
+            
+    resultado.acertos = acertos
+    resultado.nota = (acertos / total) * 10 if total > 0 else 0
+    
+    db.commit()
+    db.refresh(resultado)
+    return {"message": "Resultado atualizado com sucesso", "nota": resultado.nota, "acertos": resultado.acertos}
+
+@app.delete("/resultados/{resultado_id}")
+async def delete_resultado(resultado_id: int, db: Session = Depends(get_db)):
+    resultado = db.query(models.Resultado).filter(models.Resultado.id == resultado_id).first()
+    if resultado:
+        db.delete(resultado)
+        db.commit()
+        return {"message": "Resultado excluído com sucesso"}
+    raise HTTPException(status_code=404, detail="Resultado não encontrado")
 
 # --- Endpoints de Frequência ---
 
