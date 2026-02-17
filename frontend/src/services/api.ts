@@ -283,6 +283,10 @@ export const api = {
 
     // Planejamento (Sequências Didáticas)
     async getPlanosturma(turmaId: number) {
+        if (!turmaId || isNaN(turmaId)) {
+            console.warn('api.getPlanosturma: ID inválido', turmaId);
+            return [];
+        }
         const response = await fetch(`${API_URL}/planos/turma/${turmaId}`, {
             headers: getAuthHeaders()
         });
@@ -299,6 +303,7 @@ export const api = {
     },
 
     async getAulaHoje(planoId: number) {
+        if (!planoId || isNaN(planoId)) return { message: 'ID inválido' };
         const response = await fetch(`${API_URL}/planos/${planoId}/hoje`, {
             headers: getAuthHeaders()
         });

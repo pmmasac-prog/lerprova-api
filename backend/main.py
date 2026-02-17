@@ -6,6 +6,7 @@ import json
 import os
 import traceback
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
 
 # Carregar variáveis de ambiente do arquivo .env
@@ -60,6 +61,18 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=False,
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    try:
+        body = await request.body()
+        logger.error(f"VALERRO 422: {exc.errors()} | PATH: {request.url.path} | BODY: {body.decode()}")
+    except:
+        logger.error(f"VALERRO 422: {exc.errors()} (Body unreadable)")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()}
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

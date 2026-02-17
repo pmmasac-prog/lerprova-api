@@ -123,7 +123,7 @@ export const Planejamento: React.FC = () => {
     };
 
     const handleConcluirAula = async () => {
-        if (!aulaHoje) return;
+        if (!aulaHoje || !aulaHoje.id || isNaN(aulaHoje.id)) return;
 
         setSaving(true);
         try {
@@ -275,7 +275,13 @@ export const Planejamento: React.FC = () => {
                 )}
             </footer>
 
-            {showNewPlanoModal && <NewPlanoModal onClose={() => setShowNewPlanoModal(false)} onCreated={() => loadPlanos(selectedTurmaId!)} turmaId={selectedTurmaId!} />}
+            {showNewPlanoModal && selectedTurmaId && selectedTurmaId > 0 && (
+                <NewPlanoModal
+                    onClose={() => setShowNewPlanoModal(false)}
+                    onCreated={() => loadPlanos(selectedTurmaId)}
+                    turmaId={selectedTurmaId}
+                />
+            )}
         </div>
     );
 };
