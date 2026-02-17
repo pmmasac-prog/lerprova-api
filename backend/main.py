@@ -135,20 +135,47 @@ async def verify_api_key(x_api_key: str = Header(None)):
         raise HTTPException(status_code=403, detail="Chave de API inválida ou ausente")
     return x_api_key
 
-async def get_current_user(authorization: str = Header(None), db: Session = Depends(get_db)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token ausente ou inválido")
+
+@app.get("/stats")
+async def get_stats(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Filtros baseados no papel do usuário
+    if user.role != "admin":
+        turmas_count = db.query(models.Turma).filter(models.Turma.user_id == user.id).count()
+        alunos_count = db.query(models.Aluno).join(models.Turma, models.Aluno.turmas).filter(models.Turma.user_id == user.id).distinct().count()
+        provas_count = db.query(models.Resultado).join(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id)).count()
+    else:
+        turmas_count = db.query(models.Turma).count()
+        alunos_count = db.query(models.Aluno).count()
+        provas_count = db.query(models.Resultado).count()
+        
+    return {
+        "turmas": turmas_count,
+        "alunos": alunos_count,
+        "provas_corrigidas": provas_count,
+        "professor": user.nome
+    }
+
+@app.get("/stats/turma/{turma_id}")
+async def get_stats_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Validar Acesso à Turma (RBAC)
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada")
     
-    token = authorization.split(" ")[1]
-    payload = auth_utils.decode_access_token(token)
+    if user.role != "admin" and turma.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+        
+    resultados = db.query(models.Resultado).join(models.Gabarito).filter(models.Gabarito.turmas.any(models.Turma.id == turma_id)).all()
     
-    if not payload:
-        raise HTTPException(status_code=401, detail="Sessão expirada ou inválida")
+    total_provas = len(resultados)
+    media_geral = sum(r.nota for r in resultados) / total_provas if total_provas > 0 else 0
     
-    user = db.query(users_db.User).filter(users_db.User.email == payload.get("sub")).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    return user
+    return {
+        "turma": turma.nome,
+        "total_provas": total_provas,
+        "media_geral": round(media_geral, 1),
+        "alunos_count": len(turma.alunos)
+    }
 
 @app.get("/billing/status")
 async def get_billing_status(user: users_db.User = Depends(get_current_user)):
