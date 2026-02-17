@@ -182,7 +182,6 @@ export const TurmaDetail: React.FC = () => {
                 alunos: alunosPresenca
             });
 
-            alert('Frequência salva com sucesso!');
             setShowFrequenciaModal(false);
 
             if (selectedAluno) {
@@ -242,7 +241,9 @@ export const TurmaDetail: React.FC = () => {
                     }
                 }
 
-                alert(`Importação concluída!\nSucesso: ${successCount}\nErros: ${errorCount}`);
+                if (errorCount > 0) {
+                    alert(`Importação concluída com erros.\nSucesso: ${successCount}\nErros: ${errorCount}`);
+                }
                 loadData();
             } catch (err) {
                 console.error('Erro ao processar CSV:', err);

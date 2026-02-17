@@ -61,7 +61,6 @@ export const Debug: React.FC = () => {
     const resetSystem = () => {
         if (confirm('ATENÇÃO: Isso irá limpar todos os dados salvos no navegador (Token, Login, etc). Você precisará logar novamente. Continuar?')) {
             localStorage.clear();
-            alert('Sistema resetado com sucesso.');
             window.location.href = '/login';
         }
     };

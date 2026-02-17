@@ -60,7 +60,6 @@ export const Admin: React.FC = () => {
         try {
             const res = await api.admin.createUser(newUser);
             if (res.user) {
-                alert('Professor cadastrado com sucesso!');
                 setShowAddModal(false);
                 setNewUser({
                     nome: '',

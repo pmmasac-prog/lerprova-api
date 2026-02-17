@@ -10,7 +10,6 @@ export const Assinatura: React.FC = () => {
     const handleUpgrade = () => {
         setIsUpgrading(true);
         setTimeout(() => {
-            alert('Upgrade realizado com sucesso!');
             setIsPro(true);
             setIsUpgrading(false);
         }, 1500);

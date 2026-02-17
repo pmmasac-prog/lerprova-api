@@ -132,10 +132,8 @@ export const Gabarito: React.FC = () => {
 
             if (editingId) {
                 await api.updateGabarito(editingId, payload);
-                alert('Gabarito atualizado com sucesso!');
             } else {
                 await api.addGabarito(payload);
-                alert('Gabarito salvo com sucesso!');
             }
 
             loadData();
@@ -193,7 +191,9 @@ export const Gabarito: React.FC = () => {
         }
 
         setBatchProcessing(false);
-        alert(`Processamento em Lote concluído!\nSucesso: ${successCount}\nFalhas: ${failCount}`);
+        if (failCount > 0) {
+            alert(`Processamento em Lote concluído com falhas.\nSucesso: ${successCount}\nFalhas: ${failCount}`);
+        }
         loadData();
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
@@ -611,7 +611,6 @@ export const Gabarito: React.FC = () => {
                         turmas={turmas}
                         onClose={() => setManualEntryGabarito(null)}
                         onSuccess={() => {
-                            alert('Resultado gravado com sucesso!');
                             loadData();
                         }}
                     />
