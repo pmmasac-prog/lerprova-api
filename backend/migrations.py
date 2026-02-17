@@ -43,3 +43,11 @@ def run_migrations(engine):
             logger.info("Migração: Coluna 'disciplina' garantida")
         except Exception as e:
             logger.warning(f"Migração (disciplina): {e}")
+
+        # 5. Garantir dias_semana em planos
+        try:
+            connection.execute(text("ALTER TABLE planos ADD COLUMN IF NOT EXISTS dias_semana TEXT"))
+            connection.commit()
+            logger.info("Migração: Coluna 'dias_semana' garantida na tabela 'planos'")
+        except Exception as e:
+            logger.warning(f"Migração (dias_semana): {e}")

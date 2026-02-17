@@ -18,7 +18,8 @@ class PlanoCreate(BaseModel):
     disciplina: Optional[str] = None
     data_inicio: str  # YYYY-MM-DD
     aulas: List[dict]  # [{"ordem": 1, "titulo": "Intro"}, ...]
-    intervalo_dias: int = 2
+    dias_semana: List[int] = [0, 1, 2, 3, 4] # 0=Segunda, 4=Sexta
+    intervalo_dias: int = 1
 
 class RegistroAulaCreate(BaseModel):
     percepcoes: Optional[List[str]] = []
@@ -38,20 +39,30 @@ async def create_plano(data: PlanoCreate, user: users_db.User = Depends(get_curr
         user_id=user.id,
         titulo=data.titulo,
         disciplina=data.disciplina,
-        data_inicio=data.data_inicio
+        data_inicio=data.data_inicio,
+        dias_semana=json.dumps(data.dias_semana)
     )
     db.add(novo_plano)
     db.flush()
     
-    # Calcular datas e criar aulas
-    start_date = datetime.strptime(data.data_inicio, "%Y-%m-%d").date()
+    # Calcular datas baseadas nos dias da semana (0=Segunda, 6=Domingo)
+    current_date = datetime.strptime(data.data_inicio, "%Y-%m-%d").date()
+    # Se a data de início não for um dia de aula, encontrar o próximo dia válido
+    while current_date.weekday() not in data.dias_semana:
+        current_date += timedelta(days=1)
+
     for i, aula_data in enumerate(data.aulas):
-        scheduled = start_date + timedelta(days=i * data.intervalo_dias)
+        if i > 0:
+            # Encontrar o próximo dia útil baseado nos dias da semana
+            current_date += timedelta(days=1)
+            while current_date.weekday() not in data.dias_semana:
+                current_date += timedelta(days=1)
+        
         nova_aula = models.AulaPlanejada(
             plano_id=novo_plano.id,
             ordem=aula_data.get("ordem", i + 1),
             titulo=aula_data["titulo"],
-            scheduled_date=scheduled.isoformat()
+            scheduled_date=current_date.isoformat()
         )
         db.add(nova_aula)
     

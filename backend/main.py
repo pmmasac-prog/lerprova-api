@@ -20,7 +20,7 @@ import models
 import users_db
 from database import engine, SessionLocal
 from migrations import run_migrations
-from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports
+from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo
 
 # Inicializar Banco de Dados
 run_migrations(engine)  # Garantir colunas novas
@@ -44,6 +44,7 @@ app.include_router(provas.router)
 app.include_router(reports.router)
 app.include_router(admin.router)
 app.include_router(planejamento.router)
+app.include_router(curriculo.router)
 
 @app.get("/health")
 async def health_check():

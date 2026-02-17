@@ -1,0 +1,15 @@
+id,code,name,area
+1,LP,Língua Portuguesa,Linguagens
+2,LIT,Literatura,Linguagens
+3,RED,Redação,Linguagens
+4,ING,Língua Inglesa,Linguagens
+5,ART,Artes,Linguagens
+6,EF,Educação Física,Linguagens
+7,MAT,Matemática,Matemática
+8,FIS,Física,Ciências da Natureza
+9,QUI,Química,Ciências da Natureza
+10,BIO,Biologia,Ciências da Natureza
+11,HIS,História,Ciências Humanas
+12,GEO,Geografia,Ciências Humanas
+13,FIL,Filosofia,Ciências Humanas
+14,SOC,Sociologia,Ciências Humanas

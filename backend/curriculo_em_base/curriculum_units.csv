@@ -1,0 +1,79 @@
+id,subject_id,grade,title
+1,1,1EM,Leitura e Interpretação
+2,1,1EM,Gramática em uso
+3,1,2EM,Produção de texto
+4,1,2EM,Linguagem e sociedade
+5,1,3EM,Revisão ENEM
+6,2,1EM,Introdução e Clássicos
+7,2,2EM,Literatura Brasileira
+8,2,3EM,Modernidade e Contemporaneidade
+9,3,1EM,Fundamentos
+10,3,2EM,Aprofundamento
+11,3,3EM,Prática Intensiva
+12,4,1EM,Compreensão Leitora
+13,4,2EM,Língua e Cultura
+14,4,3EM,ENEM e Projetos
+15,5,1EM,Artes Visuais
+16,5,2EM,Música e Teatro
+17,5,3EM,Cinema e Cultura
+18,6,1EM,Esporte e Saúde
+19,6,2EM,"Corpo, Cultura e Lazer"
+20,6,3EM,Projetos e Avaliação Física
+21,7,1EM,Números e Álgebra
+22,7,1EM,Geometria e Medidas
+23,7,1EM,Probabilidade e Estatística
+24,7,2EM,Funções e Modelagem
+25,7,2EM,Geometria Analítica
+26,7,2EM,Trigonometria
+27,7,3EM,Análise Combinatória e Probabilidade
+28,7,3EM,Geometria Espacial e Métricas
+29,7,3EM,Revisão e Resolução de Problemas
+30,8,1EM,Cinemática
+31,8,1EM,Dinâmica
+32,8,1EM,Gravitação e Estática
+33,8,2EM,Termologia
+34,8,2EM,Ondulatória e Óptica
+35,8,2EM,Fluidos (noções)
+36,8,3EM,Eletrostática
+37,8,3EM,Eletrodinâmica
+38,8,3EM,Eletromagnetismo e Física Moderna (noções)
+39,9,1EM,Matéria e Transformações
+40,9,1EM,Ligações e Interações
+41,9,1EM,Cálculos Químicos
+42,9,2EM,Físico-Química
+43,9,2EM,Química Inorgânica
+44,9,3EM,Química Orgânica
+45,9,3EM,Revisão e ENEM
+46,10,1EM,Citologia e Bioquímica
+47,10,1EM,Genética Básica
+48,10,1EM,Ecologia
+49,10,2EM,Botânica e Fisiologia Vegetal
+50,10,2EM,Zoologia (noções)
+51,10,2EM,Microbiologia e Saúde
+52,10,3EM,Fisiologia Humana
+53,10,3EM,Evolução e Biotecnologia
+54,10,3EM,Revisão e ENEM
+55,11,1EM,História Antiga e Medieval
+56,11,1EM,Formação do Mundo Moderno
+57,11,2EM,Revoluções e Mundo Contemporâneo
+58,11,2EM,Brasil: Colônia ao Império
+59,11,3EM,Brasil República
+60,11,3EM,Guerras e Geopolítica
+61,12,1EM,Cartografia e Natureza
+62,12,1EM,População e Urbanização
+63,12,2EM,Economia e Globalização
+64,12,2EM,Brasil: território e regionalização
+65,12,3EM,Geopolítica e Atualidades
+66,12,3EM,Revisão e ENEM
+67,13,1EM,Introdução à Filosofia
+68,13,1EM,Filosofia Antiga
+69,13,2EM,Filosofia Moderna
+70,13,2EM,Ética e Política
+71,13,3EM,Filosofia Contemporânea
+72,13,3EM,Revisão e Projetos
+73,14,1EM,Introdução à Sociologia
+74,14,1EM,Cultura e Identidade
+75,14,2EM,Trabalho e Economia
+76,14,2EM,Política e Estado
+77,14,3EM,Temas Contemporâneos
+78,14,3EM,Revisão e Projetos

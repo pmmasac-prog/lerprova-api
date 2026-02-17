@@ -134,6 +134,7 @@ class Plano(Base):
     titulo = Column(String)
     disciplina = Column(String, nullable=True)
     data_inicio = Column(String)  # YYYY-MM-DD
+    dias_semana = Column(String, nullable=True) # JSON: [0, 2, 4] (Seg, Qua, Sex)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
