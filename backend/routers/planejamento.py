@@ -261,3 +261,32 @@ async def get_heatmap(turma_id: int, user: users_db.User = Depends(get_current_u
         })
     
     return result
+
+@router.get("/{plano_id}/aulas")
+async def get_plano_aulas(plano_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    plano = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    
+    # RBAC
+    if user.role != "admin" and plano.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    aulas = db.query(models.AulaPlanejada).filter(models.AulaPlanejada.plano_id == plano_id).order_by(models.AulaPlanejada.ordem).all()
+    
+    return [
+        {
+            "id": a.id,
+            "titulo": a.titulo,
+            "ordem": a.ordem,
+            "scheduled_date": a.scheduled_date,
+            "status": a.status,
+            "registros": [
+                {
+                    "percepcoes": json.loads(r.percepcoes) if r.percepcoes else [],
+                    "observacoes": r.observacoes,
+                    "data": r.data_registro.isoformat() if r.data_registro else None
+                } for r in a.registros
+            ]
+        } for a in aulas
+    ]

@@ -327,5 +327,12 @@ export const api = {
             headers: getAuthHeaders()
         });
         return response.json();
+    },
+
+    async getPlanoAulas(planoId: number) {
+        const response = await fetch(`${API_URL}/planos/${planoId}/aulas`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
     }
 };
