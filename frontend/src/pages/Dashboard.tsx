@@ -18,6 +18,7 @@ export const Dashboard: React.FC = () => {
         total_gabaritos: 0,
         total_resultados: 0
     });
+    const [recentResults, setRecentResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -36,8 +37,14 @@ export const Dashboard: React.FC = () => {
     const loadStats = async () => {
         try {
             setLoading(true);
-            const data = await api.getStats();
-            setStats(data);
+            const [statsData, resultsData] = await Promise.all([
+                api.getStats(),
+                api.getResultados()
+            ]);
+            setStats(statsData);
+            // Pegar os 5 últimos resultados
+            const sortedResults = [...resultsData].sort((a, b) => b.id - a.id).slice(0, 5);
+            setRecentResults(sortedResults);
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);
         } finally {
@@ -125,7 +132,51 @@ export const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Recent Activity or Welcome Section */}
+                    {/* Recent Activity Section */}
+                    <div className="stats-grid" style={{ marginTop: '30px', gridTemplateColumns: '1fr' }}>
+                        <div className="stat-card" style={{ display: 'block', padding: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                <div className="stat-icon-bg icon-blue" style={{ width: '40px', height: '40px' }}>
+                                    <TrendingUp size={20} />
+                                </div>
+                                <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b' }}>Correções Recentes</h2>
+                            </div>
+
+                            {recentResults.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {recentResults.map(r => (
+                                        <div key={r.id} style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            padding: '12px',
+                                            background: '#f8fafc',
+                                            borderRadius: '12px',
+                                            border: '1px solid #f1f5f9'
+                                        }}>
+                                            <div>
+                                                <div style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>{r.nome}</div>
+                                                <div style={{ fontSize: '12px', color: '#64748b' }}>{r.assunto} • {r.data || 'Agora'}</div>
+                                            </div>
+                                            <div style={{
+                                                padding: '4px 12px',
+                                                borderRadius: '8px',
+                                                background: r.nota > 5.9 ? '#dcfce7' : '#fee2e2',
+                                                color: r.nota > 5.9 ? '#166534' : '#991b1b',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                {parseFloat(r.nota).toFixed(1)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>Nenhuma correção realizada ainda.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Quick Actions banner */}
                     <div className="section-container" style={{ marginTop: '30px' }}>
                         <div className="welcome-banner">
                             <div className="welcome-content">

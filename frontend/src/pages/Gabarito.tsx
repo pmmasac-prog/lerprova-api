@@ -353,6 +353,8 @@ export const Gabarito: React.FC = () => {
                                                 <span>{g.data}</span>
                                                 <span className="dot">•</span>
                                                 <span>{g.num_questoes} questões</span>
+                                                <span className="dot">•</span>
+                                                <span style={{ fontWeight: 'bold', color: '#10b981' }}>{(g as any).total_resultados || 0} correções</span>
                                             </div>
                                         </div>
 

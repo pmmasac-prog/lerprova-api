@@ -12,34 +12,46 @@ interface ManualEntryModalProps {
 export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, onClose, onSuccess }) => {
     const [step, setStep] = useState(1);
     const [alunos, setAlunos] = useState<any[]>([]);
+    const [resultados, setResultados] = useState<any[]>([]);
     const [selectedAlunoId, setSelectedAlunoId] = useState<number | null>(null);
     const [manualNota, setManualNota] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [searchAluno, setSearchAluno] = useState('');
 
     useEffect(() => {
-        loadAlunos();
+        loadData();
     }, [gabarito]);
 
-    const loadAlunos = async () => {
+    const loadData = async () => {
         try {
+            setLoading(true);
             const tIds = gabarito.turma_ids || (gabarito.turma_id ? [gabarito.turma_id] : []);
-            let allAlunos: any[] = [];
-            for (const tId of tIds) {
-                const data = await api.getAlunosByTurma(tId);
-                allAlunos = [...allAlunos, ...data];
-            }
+
+            // Carregar alunos e resultados em paralelo
+            const [alunosArrays, resultsData] = await Promise.all([
+                Promise.all(tIds.map((tId: number) => api.getAlunosByTurma(tId))),
+                api.getResultadosByGabarito(gabarito.id)
+            ]);
+
+            // Achatar lista de alunos e remover duplicatas
+            const allAlunos = alunosArrays.flat();
             const uniqueAlunos = allAlunos.filter((a, index, self) =>
                 index === self.findIndex((t) => t.id === a.id)
             );
+
             setAlunos(uniqueAlunos);
+            setResultados(resultsData);
         } catch (err) {
-            console.error('Erro ao carregar alunos:', err);
+            console.error('Erro ao carregar dados:', err);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSelectAluno = (id: number) => {
+        const existingResult = resultados.find(r => r.aluno_id === id);
         setSelectedAlunoId(id);
+        setManualNota(existingResult ? existingResult.nota.toString() : '');
         setStep(2);
     };
 
@@ -95,28 +107,52 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                 />
                             </div>
                             <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map(a => (
-                                    <div
-                                        key={a.id}
-                                        onClick={() => handleSelectAluno(a.id)}
-                                        style={{
-                                            padding: '12px 15px',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            borderBottom: '1px solid #f1f5f9',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        className="student-item"
-                                    >
-                                        <div>
-                                            <div style={{ fontWeight: 700, color: '#1e293b' }}>{a.nome}</div>
-                                            <div style={{ fontSize: '11px', color: '#64748b' }}>Cód: {a.codigo}</div>
+                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map(a => {
+                                    const resultado = resultados.find(r => r.aluno_id === a.id);
+                                    const hasNota = resultado !== undefined;
+                                    const notaValue = hasNota ? parseFloat(resultado.nota) : 0;
+                                    const notaColor = notaValue > 5.9 ? '#2563eb' : '#dc2626'; // Azul ou Vermelho
+
+                                    return (
+                                        <div
+                                            key={a.id}
+                                            onClick={() => handleSelectAluno(a.id)}
+                                            style={{
+                                                padding: '12px 15px',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                borderBottom: '1px solid #f1f5f9',
+                                                transition: 'all 0.2s',
+                                                background: hasNota ? '#f8fafc' : 'transparent'
+                                            }}
+                                            className="student-item"
+                                        >
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 700, color: '#1e293b' }}>{a.nome}</div>
+                                                <div style={{ fontSize: '11px', color: '#64748b' }}>Cód: {a.codigo}</div>
+                                            </div>
+
+                                            {hasNota && (
+                                                <div style={{
+                                                    marginRight: '15px',
+                                                    padding: '4px 10px',
+                                                    borderRadius: '8px',
+                                                    background: 'white',
+                                                    border: `1px solid ${notaColor}`,
+                                                    color: notaColor,
+                                                    fontWeight: '800',
+                                                    fontSize: '14px'
+                                                }}>
+                                                    {notaValue.toFixed(1)}
+                                                </div>
+                                            )}
+
+                                            <ChevronRight size={18} color="#94a3b8" />
                                         </div>
-                                        <ChevronRight size={18} color="#94a3b8" />
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {alunos.length === 0 && <p style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Nenhum aluno encontrado para as turmas deste gabarito.</p>}
                             </div>
 

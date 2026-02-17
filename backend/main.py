@@ -328,9 +328,10 @@ async def get_gabaritos(db: Session = Depends(get_db)):
     # Usar joinedload para trazer as turmas vinculadas
     gabaritos = db.query(models.Gabarito).options(joinedload(models.Gabarito.turmas)).all()
     
-    # Formatação para o front (incluindo nomes das turmas)
+    # Formatação para o front (incluindo nomes das turmas e contagem de resultados)
     result = []
     for g in gabaritos:
+        count = db.query(models.Resultado).filter(models.Resultado.gabarito_id == g.id).count()
         g_dict = {
             "id": g.id,
             "turma_id": g.turma_id,
@@ -341,7 +342,8 @@ async def get_gabaritos(db: Session = Depends(get_db)):
             "disciplina": g.disciplina,
             "data": g.data_prova or "",
             "num_questoes": g.num_questoes,
-            "respostas_corretas": g.respostas_corretas
+            "respostas_corretas": g.respostas_corretas,
+            "total_resultados": count
         }
         result.append(g_dict)
     
@@ -407,8 +409,6 @@ async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
 
 @app.get("/resultados/gabarito/{gabarito_id}")
 async def get_resultados_by_gabarito(gabarito_id: int, db: Session = Depends(get_db)):
-    resultados = db.query(models.Resultado).filter(models.Resultado.id == gabarito_id).all()
-    # ... logic above was a bit messy, let's fix it while we are at it
     resultados = db.query(models.Resultado).filter(models.Resultado.gabarito_id == gabarito_id).all()
     resp = []
     for r in resultados:
