@@ -86,9 +86,11 @@ export const TurmaDetail: React.FC = () => {
         setEditingResultado(null);
         setEditingGabarito(null);
 
+        const turmaId = parseInt(id || '0');
+
         try {
-            const allResultados = await api.getResultados();
-            const resultadosDoAluno = allResultados.filter((r: any) => r.aluno_id === aluno.id);
+            // 1. Carregar resultados do aluno apenas NESTA turma
+            const resultadosDoAluno = await api.getResultadosAlunoTurma(turmaId, aluno.id);
             setAlunoResultados(resultadosDoAluno);
             if (resultadosDoAluno.length > 0) {
                 setSelectedResultadoForCard(resultadosDoAluno[0]);
@@ -96,16 +98,12 @@ export const TurmaDetail: React.FC = () => {
                 setSelectedResultadoForCard(null);
             }
 
-            // Carregar dados de frequência do aluno
-            const freqData = await api.getFrequenciaAluno(aluno.id);
-            // freqData: { total_aulas, total_presencas, percentual }
+            // 2. Carregar estatísticas de frequência do aluno apenas NESTA turma
+            const freqData = await api.getFrequenciaAlunoTurma(turmaId, aluno.id);
+            // freqData: { total_aulas, total_presencas, percentual, historico: [...] }
 
-            // Se tiver endpoint de histórico detalhado, usaríamos aqui. 
-            // Como não temos GET /frequencia/aluno/{id}/history, vamos simular ou deixar estatístico por enquanto
-            // Carregar histórico real
-            const allFreqs = await api.getFrequenciaTurma(parseInt(id || '0'));
-            const studentHistory = allFreqs.filter((f: any) => f.aluno_id === aluno.id)
-                .sort((a: any, b: any) => b.data.localeCompare(a.data));
+            // Usar o histórico retornado pelo novo endpoint (já filtrado por aluno e turma)
+            const studentHistory = (freqData.historico || []).sort((a: any, b: any) => b.data.localeCompare(a.data));
             setAlunoFreqHistory(studentHistory);
 
             setSelectedAlunoStats({
@@ -115,7 +113,7 @@ export const TurmaDetail: React.FC = () => {
             });
 
         } catch (error) {
-            console.error('Erro ao carregar stats do aluno', error);
+            console.error('Erro ao carregar stats do aluno para esta turma', error);
         }
     };
 

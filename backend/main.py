@@ -468,6 +468,48 @@ async def get_resultados(db: Session = Depends(get_db)):
         resp.append(r_dict)
     return resp
 
+@app.get("/resultados/turma/{turma_id}/aluno/{aluno_id}")
+async def get_resultados_aluno_turma(turma_id: int, aluno_id: int, db: Session = Depends(get_db)):
+    # Filtra resultados de um aluno específico dentro de um gabarito que pertence a esta turma
+    resultados = db.query(models.Resultado).join(models.Gabarito).filter(
+        models.Resultado.aluno_id == aluno_id,
+        models.Gabarito.turmas.any(models.Turma.id == turma_id)
+    ).all()
+    
+    resp = []
+    for r in resultados:
+        r_dict = r.__dict__.copy()
+        if "_sa_instance_state" in r_dict: del r_dict["_sa_instance_state"]
+        if r.gabarito:
+            r_dict["assunto"] = r.gabarito.titulo or r.gabarito.assunto
+            r_dict["data"] = r.data_correcao.strftime("%Y-%m-%d %H:%M:%S") if r.data_correcao else None
+        resp.append(r_dict)
+    return resp
+
+@app.get("/frequencia/turma/{turma_id}/aluno/{aluno_id}")
+async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, db: Session = Depends(get_db)):
+    # Retorna estatísticas de frequência do aluno apenas nesta turma
+    freqs = db.query(models.Frequencia).filter(
+        models.Frequencia.turma_id == turma_id,
+        models.Frequencia.aluno_id == aluno_id
+    ).all()
+    
+    total_aulas = len(freqs)
+    total_presencas = len([f for f in freqs if f.presente])
+    
+    percentage = 0
+    if total_aulas > 0:
+        percentage = int((total_presencas / total_aulas) * 100)
+        
+    return {
+        "aluno_id": aluno_id,
+        "turma_id": turma_id,
+        "total_aulas": total_aulas,
+        "total_presencas": total_presencas,
+        "percentual": f"{percentage}%",
+        "historico": freqs # Opcional: retornar histórico se quiser mostrar lista
+    }
+
 @app.get("/resultados/turma/{turma_id}")
 async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
     # Filtro agora baseado na associação do Gabarito com a Turma

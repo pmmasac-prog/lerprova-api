@@ -66,6 +66,11 @@ export const api = {
         return response.json();
     },
 
+    async getResultadosAlunoTurma(turmaId: number, alunoId: number) {
+        const response = await fetch(`${API_URL}/resultados/turma/${turmaId}/aluno/${alunoId}`);
+        return response.json();
+    },
+
     async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno?: string[], nota?: number }) {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/resultados`, {
@@ -186,6 +191,11 @@ export const api = {
 
     async getFrequenciaAluno(alunoId: number) {
         const response = await fetch(`${API_URL}/frequencia/aluno/${alunoId}`);
+        return response.json();
+    },
+
+    async getFrequenciaAlunoTurma(turmaId: number, alunoId: number) {
+        const response = await fetch(`${API_URL}/frequencia/turma/${turmaId}/aluno/${alunoId}`);
         return response.json();
     },
 
