@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Header, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 import users_db
-import auth_utils
 import models
 from database import get_db
 from sqlalchemy.orm import Session, joinedload
+from dependencies import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -24,20 +24,9 @@ class UserUpdate(BaseModel):
     disciplina: Optional[str] = None
 
 # Dependência para verificar se o usuário é admin via JWT
-async def verify_admin(authorization: str = Header(None), db: Session = Depends(get_db)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token ausente ou inválido")
-    
-    token = authorization.split(" ")[1]
-    payload = auth_utils.decode_access_token(token)
-    
-    if not payload:
-        raise HTTPException(status_code=401, detail="Sessão expirada ou inválida")
-    
-    user = users_db.get_user_by_email(db, payload.get("sub"))
-    if not user or user.role != "admin":
+async def verify_admin(user = Depends(get_current_user)):
+    if user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
-    
     return user
 
 @router.get("/users")
@@ -101,4 +90,3 @@ async def transfer_turma(turma_id: int, user_id: int, admin_user = Depends(verif
     db.commit()
     
     return {"message": f"Turma '{turma.nome}' transferida para {new_prof.nome}"}
-

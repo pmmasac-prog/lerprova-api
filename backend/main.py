@@ -24,6 +24,7 @@ import models # Importar os novos modelos
 import auth_utils
 from database import get_db, engine, SessionLocal
 from sqlalchemy.orm import Session, joinedload
+from dependencies import get_current_user
 
 # Inicializar Banco de Dados (Cria todas as tabelas: users, turmas, alunos, etc.)
 users_db.Base.metadata.create_all(bind=engine)
@@ -34,12 +35,13 @@ db = SessionLocal()
 users_db.init_default_users(db)
 db.close()
 
-from routers import admin
+from routers import admin, planejamento
 
 app = FastAPI(title="LERPROVA API", version="1.2.0")
 omr = OMREngine()
 
 app.include_router(admin.router)
+app.include_router(planejamento.router)
 
 @app.get("/health")
 async def health_check():
@@ -1140,8 +1142,3 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
     except Exception as e:
         logger.error(f"Erro no processamento de prova: {e}")
         return {"success": False, "error": f"Erro interno: {str(e)}"}
-
-        return {"success": False, "error": f"Erro interno: {str(e)}"}
-
-from routers import planejamento
-app.include_router(planejamento.router)
