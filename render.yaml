@@ -11,7 +11,9 @@ services:
       - key: API_KEY_SECRET
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite:///./lerprova_server.db
+        fromDatabase:
+          name: lerprova-db
+          property: connectionString
 
   # Frontend (React + Vite)
   - type: web
@@ -29,3 +31,7 @@ services:
         value: 22.14.0
       - key: VITE_API_URL
         value: https://lerprova-api-app.onrender.com
+
+databases:
+  - name: lerprova-db
+    plan: free
