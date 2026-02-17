@@ -93,7 +93,7 @@ app.add_middleware(
 async def global_exception_handler(request: Request, exc: Exception):
     err_msg = f"Erro Global: {str(exc)}\n{traceback.format_exc()}"
     logger.error(err_msg)
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
         content={
             "detail": "Erro interno no servidor", 
@@ -101,6 +101,11 @@ async def global_exception_handler(request: Request, exc: Exception):
             "trace": traceback.format_exc() if os.getenv("DEBUG") == "true" else "Trace oculto em produção"
         }
     )
+    # Adicionando CORS manual pois exception handlers pulam o middleware em alguns casos
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -252,12 +257,25 @@ async def create_aluno(data: dict, db: Session = Depends(get_db)):
     
     # 3. Vincular à turma se fornecido e se ainda não estiver vinculado
     if turma_id:
-        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
-        if turma and turma not in aluno.turmas:
-            aluno.turmas.append(turma)
+        try:
+            turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+            if not turma:
+                 logger.warning(f"Tentativa de vincular a turma inexistente: {turma_id}")
+            elif turma not in aluno.turmas:
+                logger.info(f"Vinculando aluno {aluno.id} à turma {turma_id}")
+                aluno.turmas.append(turma)
+        except Exception as e:
+            logger.error(f"Erro ao vincular aluno à turma: {e}")
+            # Não falha o processo todo se for apenas erro de vínculo (ex: já existe)
     
-    db.commit()
-    db.refresh(aluno)
+    try:
+        db.commit()
+        db.refresh(aluno)
+    except Exception as e:
+        logger.error(f"Erro no commit de criação de aluno: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar aluno: {str(e)}")
+
     return {"message": "Aluno processado com sucesso", "id": aluno.id, "novo_cadastro": aluno.nome == nome}
 
 @app.get("/alunos")
