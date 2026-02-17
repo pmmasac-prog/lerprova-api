@@ -18,7 +18,7 @@ services:
     name: lerprova-frontend-app
     runtime: static
     rootDir: frontend
-    buildCommand: npm ci && npm rebuild && npm run build
+    buildCommand: rm -rf node_modules && npm cache clean --force && npm install && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
