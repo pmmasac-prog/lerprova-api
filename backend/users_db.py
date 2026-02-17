@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy.orm import relationship
 from database import Base, engine
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
