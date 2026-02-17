@@ -12,7 +12,7 @@ class Turma(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
-    alunos = relationship("Aluno", back_populates="turma", cascade="all, delete-orphan")
+    alunos = relationship("Aluno", secondary="aluno_turma", back_populates="turmas")
     gabaritos = relationship("Gabarito", secondary="gabarito_turma", back_populates="turmas")
 
 # Tabela de associação para Gabarito e Turma (Muitos-para-Muitos)
@@ -20,6 +20,14 @@ gabarito_turma = Table(
     "gabarito_turma",
     Base.metadata,
     Column("gabarito_id", Integer, ForeignKey("gabaritos.id"), primary_key=True),
+    Column("turma_id", Integer, ForeignKey("turmas.id"), primary_key=True),
+)
+
+# Tabela de associação para Aluno e Turma (Muitos-para-Muitos)
+aluno_turma = Table(
+    "aluno_turma",
+    Base.metadata,
+    Column("aluno_id", Integer, ForeignKey("alunos.id"), primary_key=True),
     Column("turma_id", Integer, ForeignKey("turmas.id"), primary_key=True),
 )
 
@@ -34,7 +42,8 @@ class Aluno(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
-    turma = relationship("Turma", back_populates="alunos")
+    turmas = relationship("Turma", secondary="aluno_turma", back_populates="alunos")
+    # turma = relationship("Turma", back_populates="alunos") # Deprecated
     resultados = relationship("Resultado", back_populates="aluno", cascade="all, delete-orphan")
 
 class Gabarito(Base):

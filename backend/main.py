@@ -214,22 +214,36 @@ async def delete_turma(turma_id: int, db: Session = Depends(get_db)):
 
 @app.post("/alunos")
 async def create_aluno(data: dict, db: Session = Depends(get_db)):
-    # Gerar token QR se não vier (usando timestamp ou uuid simples)
-    import uuid
-    token = data.get("qr_token")
-    if not token:
-        token = f"ALUNO-{uuid.uuid4().hex[:8].upper()}"
+    codigo = data.get("codigo")
+    turma_id = int(data.get("turma_id"))
+    nome = data.get("nome")
+    
+    # 1. Tentar encontrar aluno existente pelo código
+    aluno = db.query(models.Aluno).filter(models.Aluno.codigo == codigo).first()
+    
+    if not aluno:
+        # 2. Se não existir, criar novo
+        import uuid
+        token = data.get("qr_token")
+        if not token:
+            token = f"ALUNO-{uuid.uuid4().hex[:8].upper()}"
 
-    novo_aluno = models.Aluno(
-        nome=data.get("nome"),
-        codigo=data.get("codigo"),
-        turma_id=int(data.get("turma_id")),
-        qr_token=token
-    )
-    db.add(novo_aluno)
+        aluno = models.Aluno(
+            nome=nome,
+            codigo=codigo,
+            qr_token=token
+        )
+        db.add(aluno)
+        db.flush() # Para pegar o ID
+    
+    # 3. Vincular à turma se ainda não estiver vinculado
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    if turma and turma not in aluno.turmas:
+        aluno.turmas.append(turma)
+    
     db.commit()
-    db.refresh(novo_aluno)
-    return {"message": "Aluno cadastrado com sucesso", "id": novo_aluno.id}
+    db.refresh(aluno)
+    return {"message": "Aluno processado com sucesso", "id": aluno.id, "novo_cadastro": aluno.nome == nome}
 
 @app.get("/alunos")
 async def get_alunos(db: Session = Depends(get_db)):
@@ -237,7 +251,10 @@ async def get_alunos(db: Session = Depends(get_db)):
 
 @app.get("/alunos/turma/{turma_id}")
 async def get_alunos_by_turma(turma_id: int, db: Session = Depends(get_db)):
-    return db.query(models.Aluno).filter(models.Aluno.turma_id == turma_id).all()
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada")
+    return turma.alunos
 
 @app.delete("/alunos/{aluno_id}")
 async def delete_aluno(aluno_id: int, db: Session = Depends(get_db)):
@@ -377,18 +394,27 @@ async def delete_gabarito(gabarito_id: int, db: Session = Depends(get_db)):
 
 @app.get("/resultados")
 async def get_resultados(db: Session = Depends(get_db)):
-    resultados = db.query(models.Resultado).all()
+    # joinedload para otimizar
+    resultados = db.query(models.Resultado).options(
+        joinedload(models.Resultado.aluno),
+        joinedload(models.Resultado.gabarito).joinedload(models.Gabarito.turmas)
+    ).all()
+    
     resp = []
     for r in resultados:
         r_dict = r.__dict__.copy()
         if "_sa_instance_state" in r_dict: del r_dict["_sa_instance_state"]
+        
         if r.aluno:
             r_dict["nome"] = r.aluno.nome
-            r_dict["turma_id"] = r.aluno.turma_id
             r_dict["aluno_codigo"] = r.aluno.codigo
+            
         if r.gabarito:
             r_dict["assunto"] = r.gabarito.titulo or r.gabarito.assunto
             r_dict["periodo"] = r.gabarito.periodo
+            # Retornar o ID da primeira turma associada para compatibilidade
+            r_dict["turma_id"] = r.gabarito.turmas[0].id if r.gabarito.turmas else None
+
         if r.data_correcao:
             r_dict["data"] = r.data_correcao.strftime("%Y-%m-%d %H:%M:%S")
         resp.append(r_dict)
@@ -396,19 +422,26 @@ async def get_resultados(db: Session = Depends(get_db)):
 
 @app.get("/resultados/turma/{turma_id}")
 async def get_resultados_by_turma(turma_id: int, db: Session = Depends(get_db)):
-    # Join com Aluno para filtrar por turma
-    resultados = db.query(models.Resultado).join(models.Aluno).filter(models.Aluno.turma_id == turma_id).all()
+    # Filtro agora baseado na associação do Gabarito com a Turma
+    # Isso traz os resultados de todas as provas aplicadas para ESTA turma
+    resultados = db.query(models.Resultado).join(models.Gabarito).filter(
+        models.Gabarito.turmas.any(models.Turma.id == turma_id)
+    ).options(
+        joinedload(models.Resultado.aluno),
+        joinedload(models.Resultado.gabarito)
+    ).all()
+
     resp = []
     for r in resultados:
         r_dict = r.__dict__.copy()
         if "_sa_instance_state" in r_dict: del r_dict["_sa_instance_state"]
         if r.aluno:
             r_dict["nome"] = r.aluno.nome
-            r_dict["turma_id"] = r.aluno.turma_id
             r_dict["aluno_codigo"] = r.aluno.codigo
         if r.gabarito:
             r_dict["assunto"] = r.gabarito.titulo or r.gabarito.assunto
             r_dict["periodo"] = r.gabarito.periodo
+            r_dict["turma_id"] = turma_id # Como filtramos por esta turma
         if r.data_correcao:
             r_dict["data"] = r.data_correcao.strftime("%Y-%m-%d %H:%M:%S")
         resp.append(r_dict)
@@ -615,9 +648,11 @@ async def get_stats(db: Session = Depends(get_db)):
 
 @app.get("/stats/turma/{turma_id}")
 async def get_stats_by_turma(turma_id: int, db: Session = Depends(get_db)):
-    total_alunos = db.query(models.Aluno).filter(models.Aluno.turma_id == turma_id).count()
-    # Calcular media
-    resultados = db.query(models.Resultado).join(models.Aluno).filter(models.Aluno.turma_id == turma_id).all()
+    total_alunos = db.query(models.Aluno).filter(models.Aluno.turmas.any(models.Turma.id == turma_id)).count()
+    # Calcular media baseada nos resultados dos gabaritos vinculados a esta turma
+    resultados = db.query(models.Resultado).join(models.Gabarito).filter(
+        models.Gabarito.turmas.any(models.Turma.id == turma_id)
+    ).all()
     media = 0
     aprovacao = 0
     if resultados:
