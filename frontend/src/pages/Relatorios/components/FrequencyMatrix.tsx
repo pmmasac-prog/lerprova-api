@@ -3,9 +3,10 @@ import { api } from '../../../services/api';
 
 interface FrequencyMatrixProps {
     turmaId: number;
+    month: number;
 }
 
-export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId }) => {
+export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId, month }) => {
     const [dates, setDates] = useState<string[]>([]);
     const [alunos, setAlunos] = useState<any[]>([]);
     const [matrix, setMatrix] = useState<{ [key: string]: boolean }>({});
@@ -13,7 +14,7 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId }) => 
 
     useEffect(() => {
         loadMatrix();
-    }, [turmaId]);
+    }, [turmaId, month]); // Adicionado month aos gatilhos
 
     const loadMatrix = async () => {
         try {
@@ -24,7 +25,13 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId }) => 
                 api.getFrequenciaTurma(turmaId)
             ]);
 
-            const sortedDates = (fetchedDates as string[]).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+            // Filtrar as datas pelo mês selecionado (YYYY-MM-DD)
+            const filteredDates = (fetchedDates as string[]).filter(d => {
+                const dateParts = d.split('-');
+                return parseInt(dateParts[1]) === month;
+            });
+
+            const sortedDates = filteredDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()); // Ordem crescente para matriz
             setDates(sortedDates);
             setAlunos(fetchedAlunos);
 
@@ -50,44 +57,81 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId }) => 
         return Math.round((presentCount / dates.length) * 100);
     };
 
-    if (loading) return <p className="loading-text">Carregando matriz...</p>;
+    if (loading) return <div className="loading-container"><p className="loading-text">Carregando matriz...</p></div>;
+
+    const meses = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
 
     return (
-        <div className="frequency-matrix-container">
-            <div className="matrix-scroll">
-                <table className="matrix-table">
+        <div className="frequency-matrix-container" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+            <div className="matrix-header-info" style={{ marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, color: '#1e293b', fontSize: '15px' }}>
+                    Frequência de {meses[month - 1]}
+                </h4>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                    {dates.length} aulas registradas no mês
+                </div>
+            </div>
+
+            <div className="matrix-scroll" style={{ borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}>
+                <table className="matrix-table" style={{ borderCollapse: 'collapse', width: '100%' }}>
                     <thead>
-                        <tr>
-                            <th className="matrix-fixed-col">Aluno</th>
-                            <th className="matrix-stats-col">%</th>
+                        <tr style={{ background: '#f8fafc' }}>
+                            <th className="matrix-fixed-col" style={{ position: 'sticky', left: 0, zIndex: 10, background: '#f8fafc', padding: '12px', borderBottom: '2px solid #e2e8f0', textAlign: 'left', minWidth: '180px' }}>Aluno</th>
+                            <th className="matrix-stats-col" style={{ padding: '12px', borderBottom: '2px solid #e2e8f0', textAlign: 'center', minWidth: '60px' }}>%</th>
                             {dates.map(d => (
-                                <th key={d} className="matrix-date-col">
-                                    {new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                <th key={d} className="matrix-date-col" style={{ padding: '12px', borderBottom: '2px solid #e2e8f0', textAlign: 'center', fontSize: '11px', color: '#64748b' }}>
+                                    <div style={{ fontWeight: 'bold', color: '#475569' }}>{d.split('-')[2]}</div>
+                                    <div style={{ fontSize: '9px' }}>/ {d.split('-')[1]}</div>
                                 </th>
                             ))}
-                            {dates.length === 0 && <th>Nenhuma aula registrada</th>}
+                            {dates.length === 0 && <th style={{ padding: '20px', color: '#94a3b8', fontSize: '13px' }}>Nenhuma aula registrada neste mês</th>}
                         </tr>
                     </thead>
                     <tbody>
-                        {alunos.sort((a, b) => a.nome.localeCompare(b.nome)).map(aluno => (
-                            <tr key={aluno.id}>
-                                <td className="matrix-fixed-col matrix-name">{aluno.nome}</td>
-                                <td className="matrix-stats-col">
-                                    <strong>{calculateAttendance(aluno.id)}%</strong>
+                        {alunos.sort((a, b) => a.nome.localeCompare(b.nome)).map((aluno, idx) => (
+                            <tr key={aluno.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? 'white' : '#fcfdfe' }}>
+                                <td className="matrix-fixed-col matrix-name" style={{ position: 'sticky', left: 0, zIndex: 10, background: idx % 2 === 0 ? 'white' : '#fcfdfe', padding: '10px 12px', fontWeight: '600', color: '#334155', fontSize: '13px' }}>
+                                    {aluno.nome}
+                                </td>
+                                <td className="matrix-stats-col" style={{ textAlign: 'center' }}>
+                                    <span style={{
+                                        fontWeight: 'bold',
+                                        color: calculateAttendance(aluno.id) >= 75 ? '#10b981' : '#f59e0b',
+                                        fontSize: '12px',
+                                        background: calculateAttendance(aluno.id) >= 75 ? '#f0fdf4' : '#fffbeb',
+                                        padding: '2px 6px',
+                                        borderRadius: '6px'
+                                    }}>
+                                        {calculateAttendance(aluno.id)}%
+                                    </span>
                                 </td>
                                 {dates.map(d => {
                                     const isPresent = matrix[`${aluno.id}-${d}`];
                                     return (
-                                        <td key={d} className="matrix-cell">
-                                            {isPresent ? (
-                                                <div className="status-dot present" title="Presente"></div>
-                                            ) : (
-                                                <div className="status-dot absent" title="Falta"></div>
-                                            )}
+                                        <td key={d} className="matrix-cell" style={{ textAlign: 'center', padding: '10px' }}>
+                                            <div style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '50%',
+                                                margin: '0 auto',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                background: isPresent === true ? '#dcfce7' : isPresent === false ? '#fee2e2' : '#f1f5f9',
+                                                color: isPresent === true ? '#166534' : isPresent === false ? '#991b1b' : '#94a3b8',
+                                                fontSize: '10px',
+                                                fontWeight: 'bold',
+                                                border: `1px solid ${isPresent === true ? '#10b981' : isPresent === false ? '#ef4444' : '#e2e8f0'}`
+                                            }}>
+                                                {isPresent === true ? 'P' : isPresent === false ? 'F' : '-'}
+                                            </div>
                                         </td>
                                     );
                                 })}
-                                {dates.length === 0 && <td style={{ fontSize: '11px', color: '#94a3b8' }}>-</td>}
+                                {dates.length === 0 && <td style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>-</td>}
                             </tr>
                         ))}
                     </tbody>

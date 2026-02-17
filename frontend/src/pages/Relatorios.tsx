@@ -25,6 +25,7 @@ export const Relatorios: React.FC = () => {
   const [gabaritos, setGabaritos] = useState<Gabarito[]>([]);
   const [selectedGabarito, setSelectedGabarito] = useState<number | null>(null);
   const [selectedPeriodo, setSelectedPeriodo] = useState<number | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
   const [overallStats, setOverallStats] = useState({ media: '0.0', aprovacao: 0, total: 0 });
 
   // Modais de Edição
@@ -197,6 +198,8 @@ export const Relatorios: React.FC = () => {
           setSelectedGabarito={setSelectedGabarito}
           selectedPeriodo={selectedPeriodo}
           setSelectedPeriodo={setSelectedPeriodo}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
           gabaritos={gabaritos}
         />
 
@@ -223,7 +226,7 @@ export const Relatorios: React.FC = () => {
 
         {activeTab === 'Presença' && (
           <div className="tab-content">
-            {selectedTurma ? <FrequencyMatrix turmaId={selectedTurma} /> : <div className="empty-box"><p className="empty-text">Selecione uma turma no filtro acima</p></div>}
+            {selectedTurma ? <FrequencyMatrix turmaId={selectedTurma} month={selectedMonth} /> : <div className="empty-box"><p className="empty-text">Selecione uma turma no filtro acima</p></div>}
           </div>
         )}
       </div>

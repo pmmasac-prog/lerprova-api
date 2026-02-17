@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ArrowUpDown, Users, FileText } from 'lucide-react';
+import { Search, ArrowUpDown, Users, FileText, Calendar } from 'lucide-react';
 
 interface RelatoriosSearchBarProps {
     searchQuery: string;
@@ -13,6 +13,8 @@ interface RelatoriosSearchBarProps {
     setSelectedGabarito: (id: number | null) => void;
     selectedPeriodo: number | null;
     setSelectedPeriodo: (periodo: number | null) => void;
+    selectedMonth: number;
+    setSelectedMonth: (month: number) => void;
     gabaritos: any[];
 }
 
@@ -28,11 +30,13 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
     setSelectedGabarito,
     selectedPeriodo,
     setSelectedPeriodo,
+    selectedMonth,
+    setSelectedMonth,
     gabaritos
 }) => {
     return (
         <div className="search-area" style={{ padding: '15px', background: '#fff', borderRadius: '15px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginBottom: '12px' }}>
                 <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                         <Users size={14} color="#94a3b8" />
@@ -110,11 +114,43 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                             cursor: 'pointer'
                         }}
                     >
-                        <option value="">Todos Períodos</option>
-                        <option value="1">1º Período</option>
-                        <option value="2">2º Período</option>
-                        <option value="3">3º Período</option>
                         <option value="4">4º Período</option>
+                    </select>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                        <Calendar size={14} color="#94a3b8" />
+                    </div>
+                    <select
+                        className="filter-select"
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                        style={{
+                            width: '100%',
+                            padding: '10px 15px 10px 35px',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '10px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            appearance: 'none',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
                     </select>
                 </div>
             </div>
