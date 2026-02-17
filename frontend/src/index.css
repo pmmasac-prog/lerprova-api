@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ===== LERPROVA Design System ===== */
 /* Baseado nos arquivos mobile: tema escuro, glassmorphism, componentes modernos */
