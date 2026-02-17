@@ -306,7 +306,7 @@ export const api = {
     },
 
     async concluirAula(aulaId: number, data: { percepcoes?: string[], observacoes?: string | null }) {
-        const response = await fetch(`${API_URL}/aulas/${aulaId}/concluir`, {
+        const response = await fetch(`${API_URL}/planos/aulas/${aulaId}/concluir`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data)
@@ -315,7 +315,7 @@ export const api = {
     },
 
     async inserirReforco(aulaId: number) {
-        const response = await fetch(`${API_URL}/aulas/${aulaId}/inserir-reforco`, {
+        const response = await fetch(`${API_URL}/planos/aulas/${aulaId}/inserir-reforco`, {
             method: 'POST',
             headers: getAuthHeaders()
         });

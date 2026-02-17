@@ -54,13 +54,13 @@ export const Planejamento: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedTurmaId) {
+        if (selectedTurmaId && selectedTurmaId > 0) {
             loadPlanos(selectedTurmaId);
         }
     }, [selectedTurmaId]);
 
     useEffect(() => {
-        if (selectedPlanoId) {
+        if (selectedPlanoId && selectedPlanoId > 0) {
             loadPlanoDetails(selectedPlanoId);
         }
     }, [selectedPlanoId]);
@@ -289,7 +289,15 @@ const NewPlanoModal: React.FC<{ onClose: () => void, onCreated: () => void, turm
         setLoading(true);
         try {
             const aulas_list = data.aulas_raw.split('\n').filter(l => l.trim() !== '').map((l, i) => ({ ordem: i + 1, titulo: l.trim() }));
-            await api.createPlano({ ...data, turma_id: turmaId, aulas: aulas_list, intervalo_dias: data.intervalo });
+            // Enviar apenas os campos necessários (remover aulas_raw)
+            await api.createPlano({
+                turma_id: turmaId,
+                titulo: data.titulo,
+                disciplina: data.disciplina,
+                data_inicio: data.data_inicio,
+                aulas: aulas_list,
+                intervalo_dias: data.intervalo
+            });
             onCreated();
             onClose();
         } catch (e) {
