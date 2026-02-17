@@ -13,48 +13,32 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
     const [answers, setAnswers] = useState<string[]>([]);
     const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [overrideNota, setOverrideNota] = useState(false);
+    const [manualNota, setManualNota] = useState(resultado.nota.toString());
 
     useEffect(() => {
         try {
-            const parsedRespostas = JSON.parse(resultado.respostas_aluno || '[]');
-            setAnswers(parsedRespostas);
-
-            const parsedCorretas = JSON.parse(gabarito.respostas_corretas || '[]');
-            setCorrectAnswers(parsedCorretas);
-
-            // Se o aluno tiver menos respostas que o gabarito, preencher com vazio
-            if (parsedRespostas.length < parsedCorretas.length) {
-                const newAnswers = [...parsedRespostas];
-                while (newAnswers.length < parsedCorretas.length) {
-                    newAnswers.push("");
-                }
-                setAnswers(newAnswers);
-            }
+            setAnswers(JSON.parse(resultado.respostas_aluno || '[]'));
+            setCorrectAnswers(JSON.parse(gabarito.respostas_corretas || '[]'));
         } catch (e) {
-            console.error('Erro ao processar respostas:', e);
+            console.error('Erro ao processar dados:', e);
         }
     }, [resultado, gabarito]);
 
-    const handleSelect = (idx: number, val: string) => {
+    const handleSelectOption = (idx: number, opt: string) => {
         const newAnswers = [...answers];
-        newAnswers[idx] = val;
+        newAnswers[idx] = opt;
         setAnswers(newAnswers);
-    };
-
-    const calculatePreview = () => {
-        let acertos = 0;
-        const total = correctAnswers.length;
-        answers.forEach((ans, idx) => {
-            if (ans === correctAnswers[idx]) acertos++;
-        });
-        const nota = total > 0 ? (acertos / total) * 10 : 0;
-        return { acertos, nota: nota.toFixed(1) };
     };
 
     const handleSave = async () => {
         setLoading(true);
         try {
-            await api.updateResultado(resultado.id, { respostas_aluno: answers });
+            const payload: any = { respostas_aluno: answers };
+            if (overrideNota) {
+                payload.nota = parseFloat(manualNota.replace(',', '.'));
+            }
+            await api.updateResultado(resultado.id, payload);
             onSuccess();
             onClose();
         } catch (error) {
@@ -65,6 +49,19 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
         }
     };
 
+    const calculatePreview = () => {
+        if (overrideNota) {
+            return { acertos: '-', nota: manualNota || '0.0' };
+        }
+        let acertos = 0;
+        const total = correctAnswers.length;
+        answers.forEach((ans, idx) => {
+            if (ans === correctAnswers[idx]) acertos++;
+        });
+        const nota = total > 0 ? (acertos / total) * 10 : 0;
+        return { acertos, nota: nota.toFixed(1) };
+    };
+
     const { acertos, nota } = calculatePreview();
 
     return (
@@ -72,8 +69,8 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
             <div className="modal-container" style={{ maxWidth: '800px' }}>
                 <div className="modal-header">
                     <div>
-                        <h2>Correção Manual</h2>
-                        <p className="admin-subtitle">{resultado.nome} • {gabarito.titulo || gabarito.assunto}</p>
+                        <h2>Corrigir Resultado</h2>
+                        <p className="admin-subtitle">{resultado.aluno.nome} • {gabarito.titulo || gabarito.assunto}</p>
                     </div>
                     <button className="close-btn" onClick={onClose}><X /></button>
                 </div>
@@ -81,15 +78,42 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                 <div className="admin-form">
                     <div className="stats-row" style={{ marginBottom: '20px', background: '#f8fafc' }}>
                         <div className="mini-stat">
-                            <div className="mini-stat-value">{acertos}/{correctAnswers.length}</div>
+                            <div className="mini-stat-value">{acertos}</div>
                             <div className="mini-stat-label">Acertos</div>
                         </div>
                         <div className="mini-stat">
-                            <div className={`nota-badge ${parseFloat(nota) >= 7 ? 'success' : 'danger'}`} style={{ fontSize: '20px', padding: '10px 20px' }}>
+                            <div className={`nota-badge ${parseFloat(nota) >= 7 ? 'success' : (parseFloat(nota) >= 5 ? 'warning' : 'danger')}`} style={{ fontSize: '20px', padding: '10px 20px' }}>
                                 {nota}
                             </div>
-                            <div className="mini-stat-label">Nota</div>
+                            <div className="mini-stat-label">Nota Atual</div>
                         </div>
+                    </div>
+
+                    <div style={{ marginBottom: '20px', padding: '15px', background: overrideNota ? '#fff7ed' : '#f1f5f9', borderRadius: '12px', border: overrideNota ? '1px solid #fdba74' : '1px solid transparent' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <input
+                                type="checkbox"
+                                id="override"
+                                checked={overrideNota}
+                                onChange={(e) => setOverrideNota(e.target.checked)}
+                                style={{ width: '18px', height: '18px' }}
+                            />
+                            <label htmlFor="override" style={{ fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
+                                Sobrescrever nota final manualmente
+                            </label>
+                        </div>
+                        {overrideNota && (
+                            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '13px', color: '#64748b' }}>Nova Nota:</span>
+                                <input
+                                    type="text"
+                                    value={manualNota}
+                                    onChange={(e) => setManualNota(e.target.value)}
+                                    style={{ width: '80px', padding: '8px', borderRadius: '8px', border: '2px solid #f97316', textAlign: 'center', fontWeight: 'bold' }}
+                                />
+                                <span style={{ fontSize: '11px', color: '#f97316' }}>⚠️ Ignorará as respostas abaixo para o cálculo.</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="info-alert" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '12px', marginBottom: '20px', display: 'flex', gap: '10px', color: '#1d4ed8' }}>
@@ -114,7 +138,7 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                                         {['A', 'B', 'C', 'D', 'E'].map(opt => (
                                             <button
                                                 key={opt}
-                                                onClick={() => handleSelect(idx, opt)}
+                                                onClick={() => handleSelectOption(idx, opt)}
                                                 style={{
                                                     width: '24px',
                                                     height: '24px',

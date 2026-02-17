@@ -66,7 +66,7 @@ export const api = {
         return response.json();
     },
 
-    async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno: string[] }) {
+    async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno?: string[], nota?: number }) {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/resultados`, {
             method: 'POST',
@@ -79,7 +79,7 @@ export const api = {
         return response.json();
     },
 
-    async updateResultado(id: number, data: { respostas_aluno: string[] }) {
+    async updateResultado(id: number, data: { respostas_aluno?: string[], nota?: number }) {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/resultados/${id}`, {
             method: 'PATCH',

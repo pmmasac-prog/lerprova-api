@@ -13,6 +13,8 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     const [step, setStep] = useState(1);
     const [alunos, setAlunos] = useState<any[]>([]);
     const [selectedAlunoId, setSelectedAlunoId] = useState<number | null>(null);
+    const [entryMode, setEntryMode] = useState<'full' | 'quick'>('full');
+    const [manualNota, setManualNota] = useState<string>('');
     const [answers, setAnswers] = useState<string[]>([]);
     const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -57,11 +59,18 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
         if (!selectedAlunoId) return;
         setLoading(true);
         try {
-            await api.addResultadoManual({
+            const payload: any = {
                 aluno_id: selectedAlunoId,
                 gabarito_id: gabarito.id,
-                respostas_aluno: answers
-            });
+            };
+
+            if (entryMode === 'quick') {
+                payload.nota = parseFloat(manualNota.replace(',', '.'));
+            } else {
+                payload.respostas_aluno = answers;
+            }
+
+            await api.addResultadoManual(payload);
             onSuccess();
             onClose();
         } catch (error) {
@@ -73,6 +82,9 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     };
 
     const calculatePreview = () => {
+        if (entryMode === 'quick') {
+            return { acertos: '-', nota: manualNota || '0.0' };
+        }
         let acertos = 0;
         const total = correctAnswers.length;
         answers.forEach((ans, idx) => {
@@ -142,7 +154,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                     onClick={() => setStep(2)}
                                     disabled={!selectedAlunoId}
                                 >
-                                    <span>Próximo: Respostas</span>
+                                    <span>Próximo: Escolha o Modo</span>
                                     <ChevronRight size={18} />
                                 </button>
                             </div>
@@ -155,54 +167,98 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                     <div className="mini-stat-label">Aluno Selecionado</div>
                                 </div>
                                 <div className="mini-stat">
-                                    <div className="mini-stat-value">{acertos}/{correctAnswers.length}</div>
-                                    <div className="mini-stat-label">Acertos Estimados</div>
+                                    <div className="mini-stat-value">{acertos}{entryMode === 'full' ? `/${correctAnswers.length}` : ''}</div>
+                                    <div className="mini-stat-label">Acertos {entryMode === 'full' ? 'Estimados' : ''}</div>
                                 </div>
                                 <div className="mini-stat">
-                                    <div className={`nota-badge ${parseFloat(nota) >= 7 ? 'success' : 'danger'}`} style={{ fontSize: '20px', padding: '10px 20px' }}>
+                                    <div className={`nota-badge ${parseFloat(nota) >= 7 ? 'success' : (parseFloat(nota) >= 5 ? 'warning' : 'danger')}`} style={{ fontSize: '20px', padding: '10px 20px' }}>
                                         {nota}
                                     </div>
                                     <div className="mini-stat-label">Nota</div>
                                 </div>
                             </div>
 
+                            <div className="tab-container" style={{ marginBottom: '20px', padding: '5px', background: '#f1f5f9', borderRadius: '12px' }}>
+                                <button
+                                    className={`tab ${entryMode === 'full' ? 'active' : ''}`}
+                                    onClick={() => setEntryMode('full')}
+                                    style={{ padding: '10px', fontSize: '13px' }}
+                                >
+                                    Lançamento Completo
+                                </button>
+                                <button
+                                    className={`tab ${entryMode === 'quick' ? 'active' : ''}`}
+                                    onClick={() => setEntryMode('quick')}
+                                    style={{ padding: '10px', fontSize: '13px' }}
+                                >
+                                    Lançamento Rápido (Só Nota)
+                                </button>
+                            </div>
+
                             <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
-                                    {correctAnswers.map((correta, idx) => (
-                                        <div key={idx} style={{
-                                            padding: '12px',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: '16px',
-                                            background: answers[idx] === correta ? '#f0fdf4' : (answers[idx] ? '#fef2f2' : 'white')
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', fontWeight: 800 }}>
-                                                <span color="#64748b">Questão {idx + 1}</span>
-                                                {answers[idx] === correta ? <CheckCircle2 size={14} color="#10b981" /> : (answers[idx] ? <AlertCircle size={14} color="#ef4444" /> : null)}
+                                {entryMode === 'quick' ? (
+                                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                                        <label className="label" style={{ fontSize: '16px', marginBottom: '15px' }}>Digite a Nota Final (0 a 10)</label>
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            placeholder="Ex: 8.5"
+                                            value={manualNota}
+                                            onChange={(e) => setManualNota(e.target.value)}
+                                            style={{
+                                                width: '120px',
+                                                height: '60px',
+                                                fontSize: '32px',
+                                                textAlign: 'center',
+                                                border: '2px solid #3b82f6',
+                                                borderRadius: '16px',
+                                                fontWeight: 'bold',
+                                                color: '#1e293b',
+                                                outline: 'none'
+                                            }}
+                                        />
+                                        <p style={{ marginTop: '15px', color: '#64748b', fontSize: '13px' }}>
+                                            Este modo não permite análise por questão, apenas registra o resultado final.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
+                                        {correctAnswers.map((_, idx) => (
+                                            <div key={idx} style={{
+                                                padding: '12px',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '16px',
+                                                background: answers[idx] === correctAnswers[idx] ? '#f0fdf4' : (answers[idx] ? '#fef2f2' : 'white')
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', fontWeight: 800 }}>
+                                                    <span color="#64748b">Questão {idx + 1}</span>
+                                                    {answers[idx] === correctAnswers[idx] ? <CheckCircle2 size={14} color="#10b981" /> : (answers[idx] ? <AlertCircle size={14} color="#ef4444" /> : null)}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    {['A', 'B', 'C', 'D', 'E'].map(opt => (
+                                                        <button
+                                                            key={opt}
+                                                            onClick={() => handleSelectOption(idx, opt)}
+                                                            style={{
+                                                                width: '24px',
+                                                                height: '24px',
+                                                                borderRadius: '50%',
+                                                                border: '1px solid #e2e8f0',
+                                                                fontSize: '10px',
+                                                                fontWeight: 800,
+                                                                background: answers[idx] === opt ? (opt === correctAnswers[idx] ? '#10b981' : '#ef4444') : 'white',
+                                                                color: answers[idx] === opt ? 'white' : '#64748b',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            {opt}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div style={{ display: 'flex', gap: '4px' }}>
-                                                {['A', 'B', 'C', 'D', 'E'].map(opt => (
-                                                    <button
-                                                        key={opt}
-                                                        onClick={() => handleSelectOption(idx, opt)}
-                                                        style={{
-                                                            width: '24px',
-                                                            height: '24px',
-                                                            borderRadius: '50%',
-                                                            border: '1px solid #e2e8f0',
-                                                            fontSize: '10px',
-                                                            fontWeight: 800,
-                                                            background: answers[idx] === opt ? (opt === correta ? '#10b981' : '#ef4444') : 'white',
-                                                            color: answers[idx] === opt ? 'white' : '#64748b',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        {opt}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="form-actions">

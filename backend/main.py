@@ -6,6 +6,7 @@ import json
 import os
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 from dotenv import load_dotenv
 
 # Carregar variáveis de ambiente do arquivo .env
@@ -58,17 +59,25 @@ class ProcessRequest(BaseModel):
     aluno_id: Optional[int] = None
 
 class ResultadoUpdate(BaseModel):
-    respostas_aluno: List[str]
+    respostas_aluno: Optional[List[str]] = None
+    nota: Optional[float] = None
+    acertos: Optional[int] = None
 
 class ResultadoCreate(BaseModel):
     aluno_id: int
     gabarito_id: int
-    respostas_aluno: List[str]
+    respostas_aluno: Optional[List[str]] = None
+    nota: Optional[float] = None
+    acertos: Optional[int] = None
 
 # Configuração de CORS restrita
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://lerprova-frontend-app-vzbd.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -401,30 +410,45 @@ async def create_resultado_manual(data: ResultadoCreate, db: Session = Depends(g
     if not gabarito:
         raise HTTPException(status_code=404, detail="Gabarito não encontrado")
     
-    corretas = json.loads(gabarito.respostas_corretas)
-    detectadas = data.respostas_aluno
-    
+    nota = 0.0
     acertos = 0
-    total = len(corretas)
-    # Comparar apenas até o limite de questões do gabarito
-    for i in range(min(total, len(detectadas))):
-        if detectadas[i] == corretas[i]:
-            acertos += 1
-            
-    nota = (acertos / total) * 10 if total > 0 else 0
+    total = gabarito.num_questoes
+    
+    # Se a nota foi fornecida diretamente (Lançamento Rápido)
+    if data.nota is not None:
+        nota = data.nota
+        # Se acertos não foi fornecido, estimar proporcionalmente
+        if data.acertos is not None:
+            acertos = data.acertos
+        else:
+            acertos = int((nota / 10) * total)
+    elif data.respostas_aluno is not None:
+        # Lançamento Completo por respostas
+        corretas = json.loads(gabarito.respostas_corretas)
+        detectadas = data.respostas_aluno
+        
+        acertos = 0
+        total_gab = len(corretas)
+        for i in range(min(total_gab, len(detectadas))):
+            if detectadas[i] == corretas[i]:
+                acertos += 1
+        
+        nota = (acertos / total_gab) * 10 if total_gab > 0 else 0
+    else:
+        raise HTTPException(status_code=400, detail="É necessário fornecer a nota ou as respostas do aluno")
     
     novo_resultado = models.Resultado(
         aluno_id=data.aluno_id,
         gabarito_id=data.gabarito_id,
         acertos=acertos,
         nota=nota,
-        respostas_aluno=json.dumps(detectadas),
+        respostas_aluno=json.dumps(data.respostas_aluno) if data.respostas_aluno else None,
         data_correcao=datetime.utcnow()
     )
     db.add(novo_resultado)
     db.commit()
     db.refresh(novo_resultado)
-    return {"message": "Resultado registrado manualmente", "id": novo_resultado.id, "nota": nota}
+    return {"message": "Resultado registrado com sucesso", "id": novo_resultado.id, "nota": nota}
 
 @app.patch("/resultados/{resultado_id}")
 async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session = Depends(get_db)):
@@ -436,21 +460,26 @@ async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session
     if not gabarito:
         raise HTTPException(status_code=400, detail="Gabarito associado não encontrado")
     
-    # Atualizar respostas
-    resultado.respostas_aluno = json.dumps(data.respostas_aluno)
-    
-    # Recalcular nota
-    corretas = json.loads(gabarito.respostas_corretas)
-    detectadas = data.respostas_aluno
-    
-    acertos = 0
-    total = len(corretas)
-    for i in range(min(total, len(detectadas))):
-        if detectadas[i] == corretas[i]:
-            acertos += 1
+    if data.nota is not None:
+        resultado.nota = data.nota
+        if data.acertos is not None:
+            resultado.acertos = data.acertos
+        else:
+            resultado.acertos = int((data.nota / 10) * gabarito.num_questoes)
             
-    resultado.acertos = acertos
-    resultado.nota = (acertos / total) * 10 if total > 0 else 0
+    if data.respostas_aluno is not None:
+        resultado.respostas_aluno = json.dumps(data.respostas_aluno)
+        # Se apenas as respostas vieram, recalcular nota
+        if data.nota is None:
+            corretas = json.loads(gabarito.respostas_corretas)
+            detectadas = data.respostas_aluno
+            acertos = 0
+            total_gab = len(corretas)
+            for i in range(min(total_gab, len(detectadas))):
+                if detectadas[i] == corretas[i]:
+                    acertos += 1
+            resultado.acertos = acertos
+            resultado.nota = (acertos / total_gab) * 10 if total_gab > 0 else 0
     
     db.commit()
     db.refresh(resultado)
