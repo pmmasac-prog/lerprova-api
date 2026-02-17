@@ -265,6 +265,21 @@ async def delete_aluno(aluno_id: int, db: Session = Depends(get_db)):
         return {"message": "Aluno excluído com sucesso"}
     raise HTTPException(status_code=404, detail="Aluno não encontrado")
 
+@app.delete("/turmas/{turma_id}/alunos/{aluno_id}")
+async def unlink_aluno_from_turma(turma_id: int, aluno_id: int, db: Session = Depends(get_db)):
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    
+    if not turma or not aluno:
+        raise HTTPException(status_code=404, detail="Turma ou Aluno não encontrado")
+    
+    if aluno in turma.alunos:
+        turma.alunos.remove(aluno)
+        db.commit()
+        return {"message": "Aluno removido da turma com sucesso"}
+    
+    return {"message": "Aluno não estava vinculado a esta turma"}
+
 
 # --- Endpoints de Gabaritos (Banco de Dados) ---
 

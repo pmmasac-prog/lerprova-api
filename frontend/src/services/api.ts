@@ -131,6 +131,13 @@ export const api = {
         return response.json();
     },
 
+    async unlinkAlunoFromTurma(turmaId: number, alunoId: number) {
+        const response = await fetch(`${API_URL}/turmas/${turmaId}/alunos/${alunoId}`, {
+            method: 'DELETE',
+        });
+        return response.json();
+    },
+
     // Gabaritos - adicionar
     async addGabarito(data: any) {
         const response = await fetch(`${API_URL}/gabaritos`, {

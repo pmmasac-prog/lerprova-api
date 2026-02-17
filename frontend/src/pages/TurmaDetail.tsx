@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3 } from 'lucide-react';
+import { ArrowLeft, Calendar, Trash2, User, Users, FileText, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3, UserMinus } from 'lucide-react';
 import { api } from '../services/api';
 import { EditResultadoModal } from './Relatorios/components/EditResultadoModal';
 import './TurmaDetail.css';
@@ -255,6 +255,32 @@ export const TurmaDetail: React.FC = () => {
         reader.readAsText(file);
     };
 
+    const handleUnlinkAluno = async () => {
+        if (!selectedAluno || !id || !confirm(`Remover ${selectedAluno.nome} desta turma? O histórico de notas e frequências desse aluno nesta turma será preservado, mas ele não aparecerá mais nesta lista.`)) return;
+
+        try {
+            await api.unlinkAlunoFromTurma(parseInt(id), selectedAluno.id);
+            setShowAlunoModal(false);
+            loadData();
+        } catch (error) {
+            console.error('Erro ao desvincular aluno:', error);
+            alert('Erro ao remover aluno da turma');
+        }
+    };
+
+    const handleDeleteAluno = async () => {
+        if (!selectedAluno || !confirm(`AVISO CRÍTICO: Excluir ${selectedAluno.nome} permanentemente do sistema? Isso removerá o aluno de TODAS as turmas e excluirá todo o seu histórico. Esta ação não pode ser desfeita.`)) return;
+
+        try {
+            await api.deleteAluno(selectedAluno.id);
+            setShowAlunoModal(false);
+            loadData();
+        } catch (error) {
+            console.error('Erro ao excluir aluno:', error);
+            alert('Erro ao excluir aluno permanentemente');
+        }
+    };
+
     if (loading) {
         return (
             <div className="turma-detail-container">
@@ -469,13 +495,32 @@ export const TurmaDetail: React.FC = () => {
                             <X size={20} />
                         </button>
 
-                        <div className="aluno-modal-header">
-                            <div className="aluno-avatar-large">
-                                <User size={32} />
+                        <div className="aluno-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div className="aluno-avatar-large">
+                                    <User size={32} />
+                                </div>
+                                <div>
+                                    <h2 className="modal-title" style={{ marginBottom: '4px' }}>{selectedAluno.nome}</h2>
+                                    <p className="aluno-code-modal">Nº {selectedAluno.codigo}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="modal-title">{selectedAluno.nome}</h2>
-                                <p className="aluno-code-modal">Nº {selectedAluno.codigo}</p>
+                            <div className="header-actions" style={{ marginTop: '4px' }}>
+                                <button
+                                    className="action-icon-btn"
+                                    onClick={handleUnlinkAluno}
+                                    title="Remover desta Turma"
+                                    style={{ color: '#f59e0b', background: '#fffbeb', border: '1px solid #fef3c7' }}
+                                >
+                                    <UserMinus size={18} />
+                                </button>
+                                <button
+                                    className="action-icon-btn danger"
+                                    onClick={handleDeleteAluno}
+                                    title="Excluir Permanentemente"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                             </div>
                         </div>
 
