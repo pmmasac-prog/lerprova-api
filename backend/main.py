@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from dotenv import load_dotenv
+import traceback
+from fastapi.responses import JSONResponse
 
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -70,34 +72,48 @@ class ResultadoCreate(BaseModel):
     nota: Optional[float] = None
     acertos: Optional[int] = None
 
-# Configuração de CORS restrita
+# Configuração de CORS (Temporariamente permitindo tudo para depuração de 500)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://lerprova-frontend-app-vzbd.onrender.com"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False, # Credentials must be false for wildcard origin
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    err_msg = f"Erro Global: {str(exc)}\n{traceback.format_exc()}"
+    logger.error(err_msg)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Erro interno no servidor", 
+            "error": str(exc),
+            "trace": traceback.format_exc() if os.getenv("DEBUG") == "true" else "Trace oculto em produção"
+        }
+    )
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
-    response = await call_next(request)
-    duration = time.time() - start_time
-    
-    # Log estruturado da requisição
-    log_data = {
-        "method": request.method,
-        "path": request.url.path,
-        "status": response.status_code,
-        "duration_ms": int(duration * 1000)
-    }
-    logger.info(f"REQ: {json.dumps(log_data)}")
-    return response
+    try:
+        response = await call_next(request)
+        duration = time.time() - start_time
+        
+        # Log estruturado da requisição
+        log_data = {
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "duration_ms": int(duration * 1000)
+        }
+        logger.info(f"REQ: {json.dumps(log_data)}")
+        return response
+    except Exception as e:
+        logger.error(f"Erro no middleware: {str(e)}\n{traceback.format_exc()}")
+        # Re-raise para o global_exception_handler pegar e devolver JSON + CORS
+        raise e
 
 async def verify_api_key(x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET:
@@ -424,9 +440,12 @@ async def create_resultado_manual(data: ResultadoCreate, db: Session = Depends(g
             acertos = int((nota / 10) * total)
     elif data.respostas_aluno is not None:
         # Lançamento Completo por respostas
-        corretas = json.loads(gabarito.respostas_corretas)
-        detectadas = data.respostas_aluno
+        try:
+            corretas = json.loads(gabarito.respostas_corretas) if gabarito.respostas_corretas else []
+        except:
+            corretas = []
         
+        detectadas = data.respostas_aluno
         acertos = 0
         total_gab = len(corretas)
         for i in range(min(total_gab, len(detectadas))):
@@ -471,7 +490,11 @@ async def update_resultado(resultado_id: int, data: ResultadoUpdate, db: Session
         resultado.respostas_aluno = json.dumps(data.respostas_aluno)
         # Se apenas as respostas vieram, recalcular nota
         if data.nota is None:
-            corretas = json.loads(gabarito.respostas_corretas)
+            try:
+                corretas = json.loads(gabarito.respostas_corretas) if gabarito.respostas_corretas else []
+            except:
+                corretas = []
+            
             detectadas = data.respostas_aluno
             acertos = 0
             total_gab = len(corretas)
