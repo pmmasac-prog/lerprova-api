@@ -175,7 +175,10 @@ export const Planejamento: React.FC = () => {
                 </div>
 
                 <div className="plan-highlights">
-                    <h1 className="plan-title">{currentPlano?.titulo || 'Sem Plano Ativo'}</h1>
+                    <h1 className="plan-title">
+                        {currentPlano?.titulo || 'Sem Plano Ativo'}
+                        <span style={{ fontSize: '0.6rem', background: '#3b82f6', padding: '2px 6px', borderRadius: 4, marginLeft: 8, verticalAlign: 'middle' }}>V25 BETA</span>
+                    </h1>
                     <div className="plan-meta">
                         {aulaHoje ? (
                             <>

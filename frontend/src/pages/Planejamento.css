@@ -1,12 +1,27 @@
 /* Planejamento Momento - Design Assistente Pedagógico */
 
+@keyframes pulse-blue {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
 .planejamento-momento {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    background: var(--bg-dark);
-    color: var(--text-main);
-    padding-bottom: 110px;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    position: relative;
     /* Espaço para o botão fixo */
 }
 
@@ -361,16 +376,19 @@
 }
 
 .btn-create-floating {
-    margin-top: 20px;
-    background: var(--primary-color);
+    background: #3b82f6;
+    color: white;
     border: none;
     padding: 12px 24px;
-    border-radius: 12px;
+    border-radius: 50px;
     font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-inline: auto;
+    transition: 0.2s;
+    animation: pulse-blue 2s infinite;
 }
 
 @media (min-width: 768px) {
