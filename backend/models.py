@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Float, Text, Table
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Float, Text, Table, JSON
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -37,11 +37,11 @@ class Turma(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String)
     disciplina = Column(String, nullable=True)
-    dias_semana = Column(String, nullable=True) # JSON: [0, 2, 4] (Seg, Qua, Sex)
+    dias_semana = Column(JSON, nullable=True) # Lista de inteiros
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     professor = relationship("User", back_populates="turmas")
     
     alunos = relationship("Aluno", secondary="aluno_turma", back_populates="turmas")
@@ -87,7 +87,7 @@ class Gabarito(Base):
     disciplina = Column(String, nullable=True)
     data_prova = Column(String, nullable=True) # Data da prova
     num_questoes = Column(Integer, default=10)
-    respostas_corretas = Column(Text) # JSON string: ["A", "B", ...]
+    respostas_corretas = Column(JSON) # Lista de strings
     periodo = Column(Integer, nullable=True) # Bimestre/Trimestre (1 a 4)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -103,13 +103,13 @@ class Resultado(Base):
     gabarito_id = Column(Integer, ForeignKey("gabaritos.id", ondelete="CASCADE"))
     acertos = Column(Integer)
     nota = Column(Float)
-    respostas_aluno = Column(Text, nullable=True) # JSON string das respostas do aluno
+    respostas_aluno = Column(JSON, nullable=True) # Lista de strings
     data_correcao = Column(DateTime, default=datetime.utcnow)
     imagem_path = Column(String, nullable=True) # Caminho da imagem da prova corrigida
 
     # Campos de auditoria OMR
-    status_list = Column(Text, nullable=True)          # JSON: ["valid","blank",...]
-    confidence_scores = Column(Text, nullable=True)    # JSON: [0.95, 0.8, ...]
+    status_list = Column(JSON, nullable=True)          # Lista de strings
+    confidence_scores = Column(JSON, nullable=True)    # Lista de floats
     avg_confidence = Column(Float, default=0.0)
     layout_version = Column(String, nullable=True)
     anchors_found = Column(Integer, default=0)
@@ -141,7 +141,7 @@ class Plano(Base):
     titulo = Column(String)
     disciplina = Column(String, nullable=True)
     data_inicio = Column(String)  # YYYY-MM-DD
-    dias_semana = Column(String, nullable=True) # JSON: [0, 2, 4] (Seg, Qua, Sex)
+    dias_semana = Column(JSON, nullable=True) # Lista de inteiros
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
@@ -170,9 +170,9 @@ class RegistroAula(Base):
     aula_id = Column(Integer, ForeignKey("aulas_planejadas.id", ondelete="CASCADE"))
     user_id = Column(Integer, ForeignKey("users.id"))
     data_registro = Column(DateTime, default=datetime.utcnow)
-    percepcoes = Column(Text, nullable=True)  # JSON: ["engajados", "duvida"]
+    percepcoes = Column(JSON, nullable=True)  # Lista de strings
     observacoes = Column(Text, nullable=True)
-    ajustes_feitos = Column(Text, nullable=True)  # JSON: {"reforco_inserido": true, "datas_recalculadas": 3}
+    ajustes_feitos = Column(JSON, nullable=True) # Objeto/Dicionário
 
     # Relacionamentos
     aula = relationship("AulaPlanejada", back_populates="registros")

@@ -1,33 +1,61 @@
-from sqlalchemy import text
+from sqlalchemy import text, inspect, JSON
+from sqlalchemy.dialects.postgresql import JSONB
 import logging
 
 logger = logging.getLogger("lerprova-api")
 
 def run_migrations(engine):
     """
-    Função de bootstrap para o banco de dados. 
-    Garante que colunas críticas adicionadas recentemente existam no banco.
+    Função de bootstrap robusta para o banco de dados. 
+    Usa transações e inspeção para garantir que o esquema esteja correto.
     """
-    logger.info("Verificando migrações pendentes...")
+    logger.info("Iniciando verificação de migrações (Modo Robusto)...")
     
+    inspector = inspect(engine)
+    is_postgres = engine.dialect.name == "postgresql"
+
+    # Lista de colunas para converter para JSON/JSONB
+    # Formato: (tabela, coluna, tipo_sql_original, nulo)
+    json_migrations = [
+        ("turmas", "dias_semana"),
+        ("gabaritos", "respostas_corretas"),
+        ("resultados", "respostas_aluno"),
+        ("resultados", "status_list"),
+        ("resultados", "confidence_scores"),
+        ("planos", "dias_semana"),
+        ("registros_aula", "percepcoes"),
+        ("registros_aula", "ajustes_feitos"),
+    ]
+
     try:
-        with engine.connect() as conn:
-            # 1. Verificar coluna dias_semana na tabela turmas
-            try:
-                # O SELECT 0 funciona tanto em SQLite quanto Postgres para checar existência
-                conn.execute(text("SELECT dias_semana FROM turmas LIMIT 0"))
-            except Exception:
-                logger.warning("Coluna 'dias_semana' não encontrada em 'turmas'. Adicionando...")
-                conn.execute(text("ALTER TABLE turmas ADD COLUMN dias_semana VARCHAR(255) NULL"))
-                conn.commit()
-                logger.info("Coluna 'dias_semana' adicionada com sucesso.")
-            
-            # Adicione aqui outras migrações incrementais se necessário
+        # engine.begin() garante COMMIT ao fim do bloco ou ROLLBACK em caso de erro
+        with engine.begin() as conn:
+            for table, col in json_migrations:
+                columns = [c["name"] for c in inspector.get_columns(table)]
+                
+                if col not in columns:
+                    logger.warning(f"Coluna '{col}' não encontrada em '{table}'. Adicionando como JSON...")
+                    # No Postgres usamos JSONB, outros (SQLite) usam JSON (que vira TEXT internamente mas é validado pelo SA)
+                    col_type = "JSONB" if is_postgres else "JSON"
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type} NULL"))
+                    logger.info(f"Coluna '{col}' adicionada com sucesso.")
+                else:
+                    # Se a coluna existe mas queremos garantir que seja JSONB no Postgres
+                    if is_postgres:
+                        # Verifica o tipo atual (simplificado)
+                        current_type = next(c["type"] for c in inspector.get_columns(table) if c["name"] == col)
+                        if not str(current_type).upper().startswith("JSON"):
+                            logger.info(f"Convertendo coluna '{col}' em '{table}' para JSONB...")
+                            # No Postgres, conversão de VARCHAR/TEXT para JSONB precisa do USING
+                            conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN {col} TYPE JSONB USING {col}::jsonb"))
+                            logger.info(f"Coluna '{col}' convertida para JSONB.")
+
+            # Outras migrações ad-hoc se necessário...
             
     except Exception as e:
-        logger.error(f"Erro ao executar migrações manuais: {e}")
+        logger.error(f"FALHA CRÍTICA NA MIGRAÇÃO: {e}")
         return False
 
-    logger.info("Bootstrap do banco de dados concluído.")
+    logger.info("Bootstrap do banco de dados concluído com sucesso.")
     return True
 
