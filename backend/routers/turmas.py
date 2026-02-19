@@ -53,9 +53,14 @@ async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_
     if not turma:
         raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
 
-    # Limpar registros relacionados para evitar FK violation
+    # Limpar TODOS os registros relacionados para evitar FK violation
     try:
         db.query(models.Frequencia).filter(models.Frequencia.turma_id == turma_id).delete()
+        db.query(models.Plano).filter(models.Plano.turma_id == turma_id).delete()
+        # Limpar tabelas M2M
+        from sqlalchemy import text
+        db.execute(text("DELETE FROM aluno_turma WHERE turma_id = :tid"), {"tid": turma_id})
+        db.execute(text("DELETE FROM gabarito_turma WHERE turma_id = :tid"), {"tid": turma_id})
         db.delete(turma)
         db.commit()
         return {"message": "Turma excluída com sucesso"}
