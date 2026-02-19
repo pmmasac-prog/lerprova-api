@@ -338,7 +338,7 @@ export const Planejamento: React.FC = () => {
                             Conteúdo: <b>{aulaHoje.titulo}</b>
                         </div>
 
-                        {(aulaHoje.metodologia_recurso?.length > 0 || aulaHoje.bncc_skills?.length > 0) && (
+                        {((aulaHoje.metodologia_recurso?.length ?? 0) > 0 || (aulaHoje.bncc_skills?.length ?? 0) > 0) && (
                             <div className="lesson-tags-main">
                                 {aulaHoje.metodologia_recurso?.map((m: string) => (
                                     <span key={m} className="tag-metodologia">{m}</span>
