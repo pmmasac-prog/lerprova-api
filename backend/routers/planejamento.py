@@ -332,8 +332,8 @@ async def get_plano_aulas(
             "ordem": a.ordem,
             "scheduled_date": a.scheduled_date,
             "status": a.status,
-            "metodologia_recurso": json.loads(a.metodologia_recurso) if a.metodologia_recurso else [],
-            "bncc_skills": json.loads(a.bncc_skills) if a.bncc_skills else [],
+            "metodologia_recurso": (json.loads(a.metodologia_recurso) if isinstance(a.metodologia_recurso, str) else a.metodologia_recurso) or [],
+            "bncc_skills": (json.loads(a.bncc_skills) if isinstance(a.bncc_skills, str) else a.bncc_skills) or [],
             "registros": [
                 {
                     "percepcoes": json.loads(r.percepcoes) if r.percepcoes else [],
@@ -553,3 +553,35 @@ async def get_heatmap(
         {"data": a.data, "engajamento": a.engajamento_score, "alerta": a.alerta_score}
         for a in analytics
     ]
+
+@router.get("/{plano_id}/cobertura-pedagogica")
+async def get_cobertura_pedagogica(plano_id: int, db: Session = Depends(get_db)):
+    aulas = db.query(models.AulaPlanejada).filter(models.AulaPlanejada.plano_id == plano_id).all()
+    
+    all_codes = []
+    for a in aulas:
+        skills = a.bncc_skills
+        if skills:
+            if isinstance(skills, str):
+                try:
+                    skills = json.loads(skills)
+                except:
+                    skills = []
+            if isinstance(skills, list):
+                all_codes.extend(skills)
+    
+    areas = {"MAT": 0, "LGG": 0, "CNT": 0, "CHS": 0, "Geral": 0}
+    for code in all_codes:
+        if "MAT" in code: areas["MAT"] += 1
+        elif any(x in code for x in ["LGG", "LP", "EF", "AR"]): areas["LGG"] += 1
+        elif any(x in code for x in ["CNT", "CI"]): areas["CNT"] += 1
+        elif any(x in code for x in ["CHS", "HI", "GE"]): areas["CHS"] += 1
+        else: areas["Geral"] += 1
+            
+    return {
+        "plano_id": plano_id,
+        "total_habilidades": len(all_codes),
+        "distribuicao_areas": areas,
+        "labels": list(areas.keys()),
+        "values": list(areas.values())
+    }

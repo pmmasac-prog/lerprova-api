@@ -29,7 +29,6 @@ interface TeachingStudioProps {
 
 type PanelKey = 'config' | 'canvas' | 'curriculo' | 'bncc';
 
-
 function safeParseISODate(iso: string): Date | null {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
     if (!m) return null;
@@ -67,12 +66,12 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     const [activePanel, setActivePanel] = useState<PanelKey>('canvas');
     const [targetLessonId, setTargetLessonId] = useState<string | null>(null);
 
-    // Config - Init with initialData if present
+    // Config
     const [titulo, setTitulo] = useState(initialData?.titulo || '');
     const [dataInicio, setDataInicio] = useState(() => initialData?.data_inicio ? initialData.data_inicio.slice(0, 10) : new Date().toISOString().slice(0, 10));
-    const [diasSemana] = useState<number[]>(initialData?.dias_semana || (diasSemanaPre.length > 0 ? diasSemanaPre : [0, 2]));
+    const [diasSemana] = useState<number[]>(initialData?.dias_semana || (diasSemanaPre.length > 0 ? diasSemanaPre : [0, 2, 4]));
 
-    // Canvas - Init with initialData
+    // Canvas
     const [lessons, setLessons] = useState<Lesson[]>(() => {
         if (initialData?.aulas && initialData.aulas.length > 0) {
             return initialData.aulas.map(a => ({
@@ -83,7 +82,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                 bncc_skills: a.bncc_skills || []
             }));
         }
-        return [{ id: '1', title: '', dateDisplay: '', metodologia_recurso: [], bncc_skills: [] }];
+        return [{ id: Math.random().toString(36).slice(2, 10), title: '', dateDisplay: '', metodologia_recurso: [], bncc_skills: [] }];
     });
 
     const [subjects, setSubjects] = useState<CurriculoItem[]>([]);
@@ -98,7 +97,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     const [bnccResults, setBnccResults] = useState<any[]>([]);
     const [searchingBncc, setSearchingBncc] = useState(false);
 
-    // Base Curricular Estática
     const [methodologies, setMethodologies] = useState<CurriculoItem[]>([]);
     const [resources, setResources] = useState<CurriculoItem[]>([]);
     const [suggestedMeths, setSuggestedMeths] = useState<number[]>([]);
@@ -151,41 +149,34 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                 }
                 setSubjects(filtered);
                 if (filtered.length === 1) setSelectedSub(filtered[0].id);
-            })
-            .catch(console.error);
+            });
     }, [disciplinaPre]);
 
-    // Load Units
     useEffect(() => {
         if (!selectedSub) return;
-        api.getCurriculoUnits(selectedSub).then(setUnits).catch(console.error);
+        api.getCurriculoUnits(selectedSub).then(setUnits);
     }, [selectedSub]);
 
-    // Load Topics
     useEffect(() => {
         if (!selectedUnit) return;
-        api.getCurriculoTopics(selectedUnit).then(setTopics).catch(console.error);
+        api.getCurriculoTopics(selectedUnit).then(setTopics);
     }, [selectedUnit]);
 
-    // Load Met/Res
     useEffect(() => {
-        api.getCurriculoMethodologies().then(setMethodologies).catch(console.error);
-        api.getCurriculoResources().then(setResources).catch(console.error);
+        api.getCurriculoMethodologies().then(setMethodologies);
+        api.getCurriculoResources().then(setResources);
     }, []);
 
-    // Load Suggestions
     useEffect(() => {
         if (!selectedTopic) {
             setSuggestedMeths([]);
             setSuggestedRes([]);
             return;
         }
-        api.getCurriculoSuggestions(selectedTopic)
-            .then((data: any) => {
-                setSuggestedMeths(data.methodologies.map((m: any) => m.id));
-                setSuggestedRes(data.resources.map((r: any) => r.id));
-            })
-            .catch(console.error);
+        api.getCurriculoSuggestions(selectedTopic).then((data: any) => {
+            setSuggestedMeths(data.methodologies.map((m: any) => m.id));
+            setSuggestedRes(data.resources.map((r: any) => r.id));
+        });
     }, [selectedTopic]);
 
     // BNCC Search Effect
@@ -208,7 +199,14 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         return () => clearTimeout(timeout);
     }, [bnccSearch]);
 
-    // Reconcile dates when general config changes
+    // Auto-select target lesson if null and panel changes
+    useEffect(() => {
+        if ((activePanel === 'bncc' || activePanel === 'curriculo') && !targetLessonId && lessons.length > 0) {
+            setTargetLessonId(lessons[0].id);
+        }
+    }, [activePanel, targetLessonId, lessons]);
+
+    // Reconcile dates 
     useEffect(() => {
         setLessons(prev => reconcileDates(dataInicio, diasSemana, prev));
     }, [dataInicio, diasSemana, reconcileDates]);
@@ -222,7 +220,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
             return reconcileDates(dataInicio, diasSemana, next);
         });
         setActivePanel('canvas');
-        setTargetLessonId(null);
     }, [dataInicio, diasSemana, reconcileDates]);
 
     const removeLesson = useCallback((index: number) => {
@@ -238,16 +235,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         setLessons(prev => prev.map((l, i) => (i === index ? { ...l, title } : l)));
     };
 
-    const handleAddComplement = (name: string) => {
-        if (!targetLessonId) return;
-        setLessons(prev => prev.map(l => {
-            if (l.id !== targetLessonId) return l;
-            const current = l.metodologia_recurso || [];
-            if (current.includes(name)) return l;
-            return { ...l, metodologia_recurso: [...current, name] };
-        }));
-    };
-
     const handleAddBNCC = (code: string) => {
         if (!targetLessonId) return;
         setLessons(prev => prev.map(l => {
@@ -258,65 +245,30 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         }));
     };
 
-    const removeContent = (lessonId: string, name: string) => {
+    const handleAddComplement = (name: string) => {
+        if (!targetLessonId) return;
         setLessons(prev => prev.map(l => {
-            if (l.id !== lessonId) return l;
-            return { ...l, metodologia_recurso: l.metodologia_recurso.filter(c => c !== name) };
+            if (l.id !== targetLessonId) return l;
+            const current = l.metodologia_recurso || [];
+            if (current.includes(name)) return l;
+            return { ...l, metodologia_recurso: [...current, name] };
         }));
-    };
-
-    const removeBNCC = (lessonId: string, code: string) => {
-        setLessons(prev => prev.map(l => {
-            if (l.id !== lessonId) return l;
-            return { ...l, bncc_skills: l.bncc_skills.filter(s => s !== code) };
-        }));
-    };
-
-    const validLessons = useMemo(() => {
-        return lessons
-            .filter(l => l.title.trim() || l.metodologia_recurso.length > 0 || l.bncc_skills.length > 0)
-            .map((t, i) => ({
-                ordem: i + 1,
-                titulo: t.title || t.metodologia_recurso[0] || t.bncc_skills[0] || 'Aula sem título',
-                metodologia_recurso: t.metodologia_recurso,
-                bncc_skills: t.bncc_skills
-            }));
-    }, [lessons]);
-
-    const canSave = titulo.trim().length > 0 && validLessons.length > 0 && !saving;
-
-    const handleSave = async () => {
-        if (!canSave) return;
-        setSaving(true);
-        try {
-            const data = {
-                turma_id: turmaId,
-                titulo: titulo.trim(),
-                disciplina: disciplinaPre,
-                data_inicio: dataInicio,
-                aulas: validLessons,
-                dias_semana: diasSemana
-            };
-            if (planoId) {
-                await api.updatePlano(planoId, data);
-            } else {
-                await api.createPlano(data);
-            }
-            onCreated();
-        } catch (e) {
-            console.error(e);
-            window.alert('Erro ao salvar planejamento');
-        } finally {
-            setSaving(false);
-        }
     };
 
     // Drag and Drop Logic
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-    const onDragStart = (index: number) => setDraggingIndex(index);
+
+    const onDragStart = (e: React.DragEvent, index: number) => {
+        setDraggingIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        // Add a class for styling
+        (e.target as HTMLElement).classList.add('is-dragging');
+    };
+
     const onDragOver = (e: React.DragEvent, index: number) => {
         e.preventDefault();
         if (draggingIndex === null || draggingIndex === index) return;
+
         setLessons(prev => {
             const next = [...prev];
             const [moved] = next.splice(draggingIndex, 1);
@@ -326,13 +278,46 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         setDraggingIndex(index);
     };
 
+    const onDragEnd = (e: React.DragEvent) => {
+        setDraggingIndex(null);
+        (e.target as HTMLElement).classList.remove('is-dragging');
+    };
+
+    const handleSave = async () => {
+        if (titulo.trim().length === 0 || saving) return;
+        setSaving(true);
+        try {
+            const valid = lessons.filter(l => l.title.trim() || l.metodologia_recurso.length > 0 || l.bncc_skills.length > 0)
+                .map((t, i) => ({
+                    ordem: i + 1,
+                    titulo: t.title || 'Aula sem título',
+                    metodologia_recurso: t.metodologia_recurso,
+                    bncc_skills: t.bncc_skills
+                }));
+
+            const data = {
+                turma_id: turmaId,
+                titulo: titulo.trim(),
+                disciplina: disciplinaPre,
+                data_inicio: dataInicio,
+                aulas: valid,
+                dias_semana: diasSemana
+            };
+            if (planoId) await api.updatePlano(planoId, data);
+            else await api.createPlano(data);
+            onCreated();
+        } catch (e) {
+            console.error(e);
+            window.alert('Erro ao salvar planejamento');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="studio-container">
             <header className="studio-header">
-                <div className="studio-title">
-                    <BookOpen size={20} color="#3b82f6" />
-                    Studio: {turmaNome}
-                </div>
+                <div className="studio-title"><BookOpen size={20} color="#3b82f6" /> Studio: {turmaNome}</div>
                 <div className="studio-tabs">
                     <button className="studio-tab" data-active={activePanel === 'config'} onClick={() => setActivePanel('config')}>Config</button>
                     <button className="studio-tab" data-active={activePanel === 'canvas'} onClick={() => setActivePanel('canvas')}>Sequência</button>
@@ -340,19 +325,18 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     <button className="studio-tab" data-active={activePanel === 'bncc'} onClick={() => setActivePanel('bncc')}>BNCC</button>
                 </div>
                 <div className="studio-actions">
-                    <button className="btn-studio cancel" onClick={onClose}>Cancelar</button>
-                    <button className="btn-studio save" onClick={handleSave} disabled={!canSave}>
-                        <Save size={16} /> Publicar
+                    <button className="btn-studio cancel" onClick={onClose}>Sair</button>
+                    <button className="btn-studio save" onClick={handleSave} disabled={saving || !titulo.trim()}>
+                        {saving ? '...' : <><Save size={16} /> Publicar</>}
                     </button>
                 </div>
             </header>
 
             <div className="studio-grid">
-                {/* CONFIG */}
                 <div className="studio-panel left" data-visible={activePanel === 'config'}>
                     <div className="panel-title">Configurações</div>
                     <div className="studio-input-group">
-                        <label className="studio-label">Título da Sequência</label>
+                        <label className="studio-label">Título</label>
                         <input className="studio-input" value={titulo} onChange={e => setTitulo(e.target.value)} />
                     </div>
                     <div className="studio-input-group">
@@ -361,17 +345,17 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     </div>
                 </div>
 
-                {/* CANVAS */}
                 <div className="studio-panel center" data-visible={activePanel === 'canvas'}>
                     <div className="timeline-canvas">
                         {lessons.map((lesson, index) => (
                             <div
                                 key={lesson.id}
-                                className={`lesson-card ${draggingIndex === index ? 'dragging' : ''}`}
+                                className={`lesson-card ${draggingIndex === index ? 'dragging' : ''} ${targetLessonId === lesson.id ? 'active-target' : ''}`}
                                 draggable
-                                onDragStart={() => onDragStart(index)}
-                                onDragOver={e => onDragOver(e, index)}
-                                onDragEnd={() => setDraggingIndex(null)}
+                                onDragStart={(e) => onDragStart(e, index)}
+                                onDragOver={(e) => onDragOver(e, index)}
+                                onDragEnd={onDragEnd}
+                                onClick={() => setTargetLessonId(lesson.id)}
                             >
                                 <div className="card-header">
                                     <span className="card-order">AULA {index + 1}</span>
@@ -384,18 +368,13 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                 </div>
                                 <div className="lesson-contents">
                                     {lesson.bncc_skills.map(s => (
-                                        <div key={s} className="bncc-tag">
-                                            <Target size={12} /> {s}
-                                            <X size={12} onClick={() => removeBNCC(lesson.id, s)} />
-                                        </div>
+                                        <div key={s} className="bncc-tag"><Target size={12} /> {s} <X size={12} onClick={() => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, bncc_skills: x.bncc_skills.filter(y => y !== s) } : x))} /></div>
                                     ))}
                                     {lesson.metodologia_recurso.map(m => (
-                                        <div key={m} className="content-tag">
-                                            {m} <X size={12} onClick={() => removeContent(lesson.id, m)} />
-                                        </div>
+                                        <div key={m} className="content-tag">{m} <X size={12} onClick={() => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, metodologia_recurso: x.metodologia_recurso.filter(y => y !== m) } : x))} /></div>
                                     ))}
-                                    <button className="btn-add-content-small" onClick={() => { setTargetLessonId(lesson.id); setActivePanel('curriculo'); }}>+ Met/Rec</button>
-                                    <button className="btn-add-bncc-small" onClick={() => { setTargetLessonId(lesson.id); setActivePanel('bncc'); }}>+ BNCC</button>
+                                    <button className="btn-add-content-small" onClick={(e) => { e.stopPropagation(); setTargetLessonId(lesson.id); setActivePanel('curriculo'); }}>+ Met/Rec</button>
+                                    <button className="btn-add-bncc-small" onClick={(e) => { e.stopPropagation(); setTargetLessonId(lesson.id); setActivePanel('bncc'); }}>+ BNCC</button>
                                 </div>
                             </div>
                         ))}
@@ -403,35 +382,26 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     </div>
                 </div>
 
-                {/* CURRICULO */}
                 <div className="studio-panel right" data-visible={activePanel === 'curriculo'}>
                     <div className="panel-header">
                         <select className="studio-input" value={selectedSub ?? ''} onChange={e => setSelectedSub(Number(e.target.value))}>
-                            <option value="">Selecione a Disciplina...</option>
+                            <option value="">Disciplina...</option>
                             {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                     </div>
                     <div className="panel-content">
-                        {!selectedUnit && units.map(u => (
-                            <div key={u.id} className="curr-item" onClick={() => setSelectedUnit(u.id)}><ChevronRight size={14} /> {u.title}</div>
-                        ))}
+                        {targetLessonId && <div className="target-hint">Alvo: Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                        {!selectedUnit && units.map(u => <div key={u.id} className="curr-item" onClick={() => setSelectedUnit(u.id)}><ChevronRight size={14} /> {u.title}</div>)}
                         {selectedUnit && (
                             <>
                                 <button className="btn-back" onClick={() => setSelectedUnit(null)}>← Unidades</button>
                                 {topics.map(t => (
                                     <div key={t.id} className="topic-box">
-                                        <div className="topic-header" onClick={() => setSelectedTopic(t.id)}>
-                                            <span>{t.name}</span>
-                                            <Plus size={16} onClick={(e) => { e.stopPropagation(); addLesson(t.name); }} />
-                                        </div>
+                                        <div className="topic-header" onClick={() => setSelectedTopic(t.id)}><span>{t.name}</span> <Plus size={16} onClick={(e) => { e.stopPropagation(); addLesson(t.name); }} /></div>
                                         {selectedTopic === t.id && (
                                             <div className="suggestions">
-                                                {methodologies.filter(m => suggestedMeths.includes(m.id)).map(m => (
-                                                    <button key={m.id} className="suggest-btn" onClick={() => handleAddComplement(m.name)}>{m.name}</button>
-                                                ))}
-                                                {resources.filter(r => suggestedRes.includes(r.id)).map(r => (
-                                                    <button key={r.id} className="suggest-btn" onClick={() => handleAddComplement(r.name)}>{r.name}</button>
-                                                ))}
+                                                {methodologies.filter(m => suggestedMeths.includes(m.id)).map(m => <button key={m.id} className="suggest-btn" onClick={() => handleAddComplement(m.name)}>{m.name}</button>)}
+                                                {resources.filter(r => suggestedRes.includes(r.id)).map(r => <button key={r.id} className="suggest-btn" onClick={() => handleAddComplement(r.name)}>{r.name}</button>)}
                                             </div>
                                         )}
                                     </div>
@@ -441,20 +411,14 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     </div>
                 </div>
 
-                {/* BNCC */}
                 <div className="studio-panel right" data-visible={activePanel === 'bncc'}>
                     <div className="panel-header">
-                        <div className="search-box">
-                            <Search size={16} />
-                            <input placeholder="Habilidade ou Código..." value={bnccSearch} onChange={e => setBnccSearch(e.target.value)} />
-                        </div>
+                        <div className="search-box"><Search size={16} /><input placeholder="Habilidade/Código..." value={bnccSearch} onChange={e => setBnccSearch(e.target.value)} /></div>
                     </div>
                     <div className="panel-content">
-                        {searchingBncc ? <div className="loading">Buscando...</div> : bnccResults.map(s => (
-                            <div key={s.id} className="bncc-item" onClick={() => handleAddBNCC(s.code)}>
-                                <strong>{s.code}</strong>
-                                <p>{s.description}</p>
-                            </div>
+                        {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                        {searchingBncc ? <div className="loading">...</div> : bnccResults.map(s => (
+                            <div key={s.id} className="bncc-item" onClick={() => handleAddBNCC(s.code)}><strong>{s.code}</strong><p>{s.description}</p></div>
                         ))}
                     </div>
                 </div>

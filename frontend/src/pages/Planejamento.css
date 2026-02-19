@@ -92,6 +92,7 @@
 }
 
 .zona-orientacao {
+    position: relative;
     padding: 18px var(--pm-pad) 14px;
     background: linear-gradient(180deg, rgba(30, 41, 59, .45) 0%, rgba(15, 23, 42, 0) 100%);
     border-bottom: 1px solid var(--pm-border);
