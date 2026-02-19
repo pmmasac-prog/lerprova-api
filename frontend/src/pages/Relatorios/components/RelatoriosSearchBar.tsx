@@ -35,7 +35,7 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
     gabaritos
 }) => {
     return (
-        <div className="search-area" style={{ padding: '15px', background: '#fff', borderRadius: '15px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+        <div className="search-area">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginBottom: '12px' }}>
                 <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
@@ -45,18 +45,6 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                         className="filter-select"
                         value={selectedTurma || ''}
                         onChange={(e) => setSelectedTurma(Number(e.target.value) || null)}
-                        style={{
-                            width: '100%',
-                            padding: '10px 15px 10px 35px',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            appearance: 'none',
-                            cursor: 'pointer'
-                        }}
                     >
                         <option value="">Todas as Turmas</option>
                         {turmas.map(t => (
@@ -73,18 +61,6 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                         className="filter-select"
                         value={selectedGabarito || ''}
                         onChange={(e) => setSelectedGabarito(Number(e.target.value) || null)}
-                        style={{
-                            width: '100%',
-                            padding: '10px 15px 10px 35px',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            appearance: 'none',
-                            cursor: 'pointer'
-                        }}
                     >
                         <option value="">Todas as Provas</option>
                         {gabaritos.map(g => (
@@ -101,18 +77,6 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                         className="filter-select"
                         value={selectedPeriodo || ''}
                         onChange={(e) => setSelectedPeriodo(e.target.value ? Number(e.target.value) : null)}
-                        style={{
-                            width: '100%',
-                            padding: '10px 15px 10px 35px',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            appearance: 'none',
-                            cursor: 'pointer'
-                        }}
                     >
                         <option value="">Todos os Períodos</option>
                         <option value="1">1º Período</option>
@@ -130,18 +94,6 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                         className="filter-select"
                         value={selectedMonth}
                         onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                        style={{
-                            width: '100%',
-                            padding: '10px 15px 10px 35px',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            appearance: 'none',
-                            cursor: 'pointer'
-                        }}
                     >
                         <option value="1">Janeiro</option>
                         <option value="2">Fevereiro</option>
@@ -159,8 +111,8 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                 </div>
             </div>
 
-            <div className="search-row" style={{ display: 'flex', gap: '8px' }}>
-                <div className="search-box" style={{ flex: 1, margin: 0 }}>
+            <div className="search-row">
+                <div className="search-box">
                     <Search size={16} color="#94a3b8" />
                     <input
                         type="text"
@@ -168,13 +120,11 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                         className="search-input"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{ border: 'none', background: 'transparent', width: '100%', outline: 'none', padding: '8px' }}
                     />
                 </div>
                 <button
                     className="sort-btn"
                     onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                    style={{ padding: '0 15px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', color: '#64748b' }}
                 >
                     <ArrowUpDown size={14} />
                 </button>

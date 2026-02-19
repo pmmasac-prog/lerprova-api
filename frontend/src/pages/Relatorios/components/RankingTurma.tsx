@@ -52,7 +52,6 @@ export const RankingTurma: React.FC<RankingTurmaProps> = (props) => {
                                 </div>
                                 <button
                                     className="icon-btn"
-                                    style={{ padding: '4px' }}
                                     title="Editar Manualmente"
                                     onClick={() => props.onEdit?.(r)}
                                 >

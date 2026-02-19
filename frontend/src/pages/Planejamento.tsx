@@ -1,7 +1,7 @@
 // Planejamento.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, CheckCircle2, AlertCircle, BookOpen, Pencil } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, CheckCircle2, AlertCircle, BookOpen, Pencil, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
 import { PlanejamentoStudio } from './PlanejamentoStudio';
@@ -53,6 +53,7 @@ type PercepcaoKey = (typeof PERCEPCOES)[number]['key'];
 
 export const Planejamento: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     const [turmas, setTurmas] = useState<Turma[]>([]);
     const [selectedTurmaId, setSelectedTurmaId] = useState<number | null>(null);
@@ -251,7 +252,22 @@ export const Planejamento: React.FC = () => {
         <div className="planejamento-momento">
             <header className="zona-orientacao pm-container">
                 <div className="context-top">
-                    <div className="class-info">
+                    <div className="class-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {searchParams.get('turmaId') && (
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="btn-icon-subtle"
+                                style={{
+                                    width: '38px', height: '38px', borderRadius: '10px',
+                                    border: '1px solid var(--pm-border)', background: 'var(--pm-surface)',
+                                    color: 'var(--pm-muted)', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', cursor: 'pointer', flexShrink: 0
+                                }}
+                                title="Voltar"
+                            >
+                                <ArrowLeft size={18} />
+                            </button>
+                        )}
                         <select
                             value={selectedTurmaId ?? ''}
                             onChange={(e) => setSelectedTurmaId(Number(e.target.value))}

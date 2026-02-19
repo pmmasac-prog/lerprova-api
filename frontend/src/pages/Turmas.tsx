@@ -105,7 +105,7 @@ export const Turmas: React.FC = () => {
                         {turmas.map(turma => (
                             <div key={turma.id} className="turma-card" onClick={() => navigate(`/dashboard/turma/${turma.id}`)}>
                                 <div className="turma-left">
-                                    <div className="icon-bg icon-bg-sm icon-purple">
+                                    <div className="turma-icon">
                                         <BookOpen size={20} />
                                     </div>
                                     <div className="turma-info">

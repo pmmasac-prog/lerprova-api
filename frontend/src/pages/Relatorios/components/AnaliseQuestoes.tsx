@@ -43,33 +43,32 @@ export const AnaliseQuestoes: React.FC<AnaliseQuestoesProps> = ({
                             <p className="empty-text">Sem resultados processados para este gabarito.</p>
                         </div>
                     ) : (
-                        <table className="matrix-table" style={{ width: '100%', marginTop: '15px' }}>
+                        <table className="matrix-table">
                             <thead>
                                 <tr>
-                                    <th style={{ textAlign: 'center' }}>Questão</th>
-                                    <th style={{ textAlign: 'center' }}>Gabarito</th>
-                                    <th style={{ textAlign: 'center' }}>Acertos</th>
-                                    <th style={{ textAlign: 'center' }}>Erros</th>
-                                    <th style={{ textAlign: 'center' }}>% Acerto</th>
-                                    <th style={{ textAlign: 'center' }}>Status</th>
+                                    <th>Questão</th>
+                                    <th>Gabarito</th>
+                                    <th>Acertos</th>
+                                    <th>Erros</th>
+                                    <th>% Acerto</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {questaoStats.map(q => (
                                     <tr key={q.questao}>
-                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>#{q.questao}</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <span className="badge-gabarito" style={{ padding: '2px 8px', background: '#e2e8f0', borderRadius: '12px', fontSize: '12px' }}>
+                                        <td className="font-bold">#{q.questao}</td>
+                                        <td>
+                                            <span className="badge-gabarito">
                                                 {q.correta}
                                             </span>
                                         </td>
-                                        <td style={{ textAlign: 'center', color: '#16a34a', fontWeight: 'bold' }}>{q.acertos}</td>
-                                        <td style={{ textAlign: 'center', color: '#dc2626', fontWeight: 'bold' }}>{q.erros}</td>
-                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{q.perc}%</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                                                <div style={{
-                                                    height: '100%',
+                                        <td className="text-success font-bold">{q.acertos}</td>
+                                        <td className="text-danger font-bold">{q.erros}</td>
+                                        <td className="font-bold">{q.perc}%</td>
+                                        <td>
+                                            <div className="progress-bar-bg">
+                                                <div className="progress-bar-fill" style={{
                                                     width: `${q.perc}%`,
                                                     background: q.perc >= 70 ? '#16a34a' : q.perc >= 50 ? '#ca8a04' : '#dc2626'
                                                 }}></div>

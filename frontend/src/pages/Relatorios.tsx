@@ -164,7 +164,11 @@ export const Relatorios: React.FC = () => {
     <div className="relatorios-container">
       <div className="relatorios-header">
         <div className="flex items-center gap-3">
-          <div className="icon-bg icon-bg-sm icon-indigo">
+          <div className="mini-stat-icon" style={{
+            width: '36px', height: '36px', borderRadius: '10px',
+            background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
             <TrendingUp size={20} />
           </div>
           <h1 className="relatorios-title">Relatórios</h1>
