@@ -1,0 +1,289 @@
+Plano de implementação detalhado (com trechos de código) para corrigir todos os problemas que já apareceram + avaliação objetiva do OMR
+1) Padronizar o modelo de dados (eliminar “duas fontes de verdade”)
+1.1 Aluno ↔ Turma: escolha 1 regra
+
+Hoje você tem M2M (aluno_turma) e ao mesmo tempo Aluno.turma_id. Isso quebra filtro, relatório e autorização.
+
+Recomendação: manter M2M (mais flexível) e remover Aluno.turma_id.
+
+models.py (ajuste)
+
+class Aluno(Base):
+    __tablename__ = "alunos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String)
+    codigo = Column(String, index=True)
+    # REMOVER turma_id
+    # turma_id = Column(Integer, ForeignKey("turmas.id"))
+    qr_token = Column(String, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    turmas = relationship("Turma", secondary="aluno_turma", back_populates="alunos")
+    resultados = relationship("Resultado", back_populates="aluno", cascade="all, delete-orphan")
+
+
+Migração: remover coluna turma_id e popular aluno_turma com base no valor antigo (se existir).
+
+1.2 Gabarito ↔ Turma: escolha 1 regra
+
+Hoje você tem Gabarito.turma_id e também M2M gabarito_turma.
+
+Recomendação: manter M2M e remover Gabarito.turma_id.
+
+class Gabarito(Base):
+    __tablename__ = "gabaritos"
+    id = Column(Integer, primary_key=True, index=True)
+    # REMOVER turma_id
+    # turma_id = Column(Integer, ForeignKey("turmas.id"), nullable=True)
+
+    titulo = Column(String)
+    assunto = Column(String, nullable=True)
+    disciplina = Column(String, nullable=True)
+    data_prova = Column(String, nullable=True)
+    num_questoes = Column(Integer, default=10)
+    respostas_corretas = Column(Text)  # JSON string lista
+    periodo = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    turmas = relationship("Turma", secondary="gabarito_turma", back_populates="gabaritos")
+    resultados = relationship("Resultado", back_populates="gabarito", cascade="all, delete-orphan")
+
+2) Normalização de respostas (gabarito e aluno) sempre como JSON-lista
+
+Crie um util central (ex: utils/answers.py) e use nos endpoints.
+
+import json
+from fastapi import HTTPException
+
+def parse_json_list(value, field_name="value"):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(x).strip() if x is not None else None for x in value]
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return []
+        # tenta JSON
+        if s.startswith("["):
+            try:
+                arr = json.loads(s)
+                if isinstance(arr, list):
+                    return [str(x).strip() if x is not None else None for x in arr]
+            except json.JSONDecodeError:
+                pass
+        # fallback CSV
+        if "," in s:
+            return [x.strip() for x in s.split(",")]
+        return [s]
+    raise HTTPException(status_code=422, detail=f"{field_name} inválido (esperado lista/string)")
+
+def dump_json_list(arr):
+    return json.dumps(arr, ensure_ascii=False)
+
+2.1 Corrigir gabaritos.py (create/update)
+
+sempre salvar respostas_corretas como JSON lista
+
+validar tamanho = num_questoes
+
+Trecho (exemplo no create):
+
+from utils.answers import parse_json_list, dump_json_list
+
+num_questoes = int(data.get("questoes") or data.get("num_questoes") or 10)
+corretas = parse_json_list(data.get("respostas"), "respostas")
+
+if corretas and len(corretas) != num_questoes:
+    raise HTTPException(status_code=422, detail=f"respostas deve ter {num_questoes} itens")
+
+novo_gabarito.respostas_corretas = dump_json_list(corretas)
+
+3) Consertar a nota/acertos no fluxo automático (bug mais grave)
+3.1 Bug atual (em provas.py)
+
+Você calcula:
+
+total = min(len(corretas), len(detectadas))
+nota = (acertos / total) * 10
+
+
+Isso infla nota quando a leitura vem incompleta.
+
+3.2 Correção (obrigatória)
+
+total = gabarito.num_questoes (ou len(corretas) se for mais confiável)
+
+padronizar listas para terem o mesmo tamanho
+
+usar status/confiança para bloquear leituras ruins
+
+Substitua o bloco de correção em /provas/processar por:
+
+from utils.answers import parse_json_list, dump_json_list
+
+# 1) parse corretas robusto
+corretas = parse_json_list(gabarito.respostas_corretas, "gabarito.respostas_corretas")
+total = gabarito.num_questoes or len(corretas)
+total = max(total, len(corretas))
+
+# 2) respostas detectadas padronizadas
+detectadas = result.get("answers") or []
+# garante tamanho total
+detectadas = (detectadas + [None] * total)[:total]
+corretas = (corretas + [None] * total)[:total]
+
+# 3) qualidade OMR (não salva se ruim)
+status_counts = result.get("status_counts") or {}
+avg_conf = float(result.get("avg_confidence") or 0.0)
+
+if status_counts.get("invalid", 0) > 0:
+    return {"success": False, "error": "Marcação múltipla detectada. Refaça a foto.", "status_counts": status_counts}
+if status_counts.get("ambiguous", 0) > 3 or avg_conf < 0.75:
+    return {"success": False, "error": "Leitura com baixa confiança. Refaça a foto.", "status_counts": status_counts, "avg_confidence": avg_conf}
+
+# 4) acertos/nota com base no total do gabarito
+acertos = sum(
+    1 for i in range(total)
+    if detectadas[i] is not None and corretas[i] is not None and detectadas[i] == corretas[i]
+)
+nota = (acertos / total) * 10 if total else 0.0
+
+4) Corrigir autorização no /provas/processar (falha de segurança)
+
+Hoje qualquer professor pode passar gabarito_id e corrigir.
+
+Conserto:
+
+if current_user.role != "admin":
+    gabarito = db.query(models.Gabarito).filter(
+        models.Gabarito.id == gabarito_id,
+        models.Gabarito.turmas.any(models.Turma.user_id == current_user.id)
+    ).first()
+else:
+    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
+
+if not gabarito:
+    return {"success": False, "error": "Gabarito não encontrado ou acesso negado."}
+
+5) Validar QR (evitar aluno/gabarito trocado)
+
+Regras recomendadas:
+
+Se o request informou gabarito_id, e QR traz gid, tem que bater.
+
+Se QR trouxe aid, validar se o aluno está em alguma turma do gabarito.
+
+Trecho:
+
+qr = result.get("qr_data")
+if qr and isinstance(qr, dict):
+    qr_aid = int(qr.get("aid") or 0)
+    qr_gid = int(qr.get("gid") or 0)
+
+    if req.gabarito_id and qr_gid and qr_gid != req.gabarito_id:
+        return {"success": False, "error": "QR Code não corresponde ao gabarito selecionado."}
+
+    if qr_gid:
+        gabarito_id = qr_gid
+    if qr_aid:
+        aluno_id = qr_aid
+
+# valida aluno pertence à turma do gabarito
+if aluno_id:
+    aluno_ok = db.query(models.Aluno).filter(
+        models.Aluno.id == aluno_id,
+        models.Aluno.turmas.any(models.Turma.id.in_([t.id for t in gabarito.turmas]))
+    ).first()
+    if not aluno_ok:
+        return {"success": False, "error": "Aluno não pertence às turmas deste gabarito."}
+
+6) Guardar auditoria do OMR no banco (para suporte e relatórios)
+
+Adicione campos em Resultado:
+
+status_list (JSON)
+
+confidence_scores (JSON)
+
+avg_confidence (float)
+
+layout_version (string)
+
+anchors_found (int)
+
+Exemplo no model:
+
+class Resultado(Base):
+    __tablename__ = "resultados"
+    ...
+    respostas_aluno = Column(Text, nullable=True)
+    status_list = Column(Text, nullable=True)          # JSON list
+    confidence_scores = Column(Text, nullable=True)    # JSON list
+    avg_confidence = Column(Float, default=0.0)
+    layout_version = Column(String, nullable=True)
+    anchors_found = Column(Integer, default=0)
+
+
+Salvando:
+
+resultado_existente.status_list = json.dumps(result.get("question_status"))
+resultado_existente.confidence_scores = json.dumps(result.get("confidence_scores"))
+resultado_existente.avg_confidence = float(result.get("avg_confidence") or 0)
+resultado_existente.layout_version = layout_version
+resultado_existente.anchors_found = int(result.get("anchors_found") or 0)
+
+7) Arrumar o OMREngine (erros reais no código)
+7.1 Função duplicada validate_questions
+
+Você tem duas definições. Remova a incompleta.
+
+7.2 Inconsistência: generate_audit_map usa bubble['confidence'] antiga
+
+Seu validate_questions por z-score redefine marked mas não recalcula confidence.
+
+Ajuste: recalcular a confiança no validador ou fazer o audit map usar o status final.
+
+Exemplo simples: retornar final_marked_idx e status por questão e desenhar com base nisso.
+
+# no validate_questions, para cada questão:
+question_data["final_status"] = status
+question_data["final_index"] = idx if status in ("valid","ambiguous") else None
+question_data["final_conf"] = conf
+
+
+E no audit:
+
+status = question_data.get("final_status")
+idx = question_data.get("final_index")
+conf = question_data.get("final_conf", 0)
+
+if status == "blank": ...
+elif status == "invalid": ...
+else:
+    bubble = question_data["bubbles"][idx]
+    # usar conf final, não bubble['confidence']
+
+7.3 Ajustar ROI do layout (reduzir instabilidade)
+
+Com teu layout:
+
+step vertical ~43px
+
+ROI ~39px (muito apertado)
+
+Recomendação prática:
+
+roi_size_pct_of_width = 0.030 (≈33.6px) ou 0.028 (≈31px)
+
+8) Segurança do API_KEY_SECRET (reports/batch)
+
+Não use default hardcoded.
+
+API_KEY_SECRET = os.getenv("API_KEY_SECRET")
+if not API_KEY_SECRET:
+    raise RuntimeError("API_KEY_SECRET não configurada")
+
+
+E ideal: colocar o batch sob get_current_user + role == admin.
