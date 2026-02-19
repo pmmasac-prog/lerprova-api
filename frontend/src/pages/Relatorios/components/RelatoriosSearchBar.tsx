@@ -100,7 +100,7 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                     <select
                         className="filter-select"
                         value={selectedPeriodo || ''}
-                        onChange={(e) => setSelectedPeriodo(Number(e.target.value) || null)}
+                        onChange={(e) => setSelectedPeriodo(e.target.value ? Number(e.target.value) : null)}
                         style={{
                             width: '100%',
                             padding: '10px 15px 10px 35px',
@@ -114,6 +114,10 @@ export const RelatoriosSearchBar: React.FC<RelatoriosSearchBarProps> = ({
                             cursor: 'pointer'
                         }}
                     >
+                        <option value="">Todos os Períodos</option>
+                        <option value="1">1º Período</option>
+                        <option value="2">2º Período</option>
+                        <option value="3">3º Período</option>
                         <option value="4">4º Período</option>
                     </select>
                 </div>

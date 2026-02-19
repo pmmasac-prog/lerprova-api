@@ -9,12 +9,12 @@ interface FrequencyMatrixProps {
 export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId, month }) => {
     const [dates, setDates] = useState<string[]>([]);
     const [alunos, setAlunos] = useState<any[]>([]);
-    const [matrix, setMatrix] = useState<{ [key: string]: boolean }>({});
+    const [matrix, setMatrix] = useState<{ [key: string]: any }>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadMatrix();
-    }, [turmaId, month]); // Adicionado month aos gatilhos
+    }, [turmaId, month]);
 
     const loadMatrix = async () => {
         try {
@@ -25,17 +25,16 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId, month
                 api.getFrequenciaTurma(turmaId)
             ]);
 
-            // Filtrar as datas pelo mês selecionado (YYYY-MM-DD)
             const filteredDates = (fetchedDates as string[]).filter(d => {
                 const dateParts = d.split('-');
                 return parseInt(dateParts[1]) === month;
             });
 
-            const sortedDates = filteredDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime()); // Ordem crescente para matriz
+            const sortedDates = filteredDates.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
             setDates(sortedDates);
             setAlunos(fetchedAlunos);
 
-            const freqMap: { [key: string]: boolean } = {};
+            const freqMap: { [key: string]: any } = {};
             fetchedFreqs.forEach((f: any) => {
                 freqMap[`${f.aluno_id}-${f.data}`] = f.presente;
             });
@@ -52,7 +51,8 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId, month
         if (dates.length === 0) return 0;
         let presentCount = 0;
         dates.forEach(d => {
-            if (matrix[`${alunoId}-${d}`]) presentCount++;
+            const val = matrix[`${alunoId}-${d}`];
+            if (val === true || val === 1 || val === "1") presentCount++;
         });
         return Math.round((presentCount / dates.length) * 100);
     };
@@ -109,24 +109,26 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId, month
                                     </span>
                                 </td>
                                 {dates.map(d => {
-                                    const isPresent = matrix[`${aluno.id}-${d}`];
+                                    const val = matrix[`${aluno.id}-${d}`];
+                                    const isP = val === true || val === 1 || val === "1";
+                                    const isF = val === false || val === 0 || val === "0";
                                     return (
-                                        <td key={d} className="matrix-cell" style={{ textAlign: 'center', padding: '10px' }}>
+                                        <td key={d} style={{ padding: '8px 0', textAlign: 'center' }}>
                                             <div style={{
-                                                width: '20px',
-                                                height: '20px',
+                                                width: '24px',
+                                                height: '24px',
                                                 borderRadius: '50%',
                                                 margin: '0 auto',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                background: isPresent === true ? '#dcfce7' : isPresent === false ? '#fee2e2' : '#f1f5f9',
-                                                color: isPresent === true ? '#166534' : isPresent === false ? '#991b1b' : '#94a3b8',
-                                                fontSize: '10px',
+                                                background: isP ? '#dcfce7' : isF ? '#fee2e2' : '#f1f5f9',
+                                                color: isP ? '#166534' : isF ? '#991b1b' : '#94a3b8',
+                                                fontSize: '11px',
                                                 fontWeight: 'bold',
-                                                border: `1px solid ${isPresent === true ? '#10b981' : isPresent === false ? '#ef4444' : '#e2e8f0'}`
+                                                border: `1px solid ${isP ? '#10b981' : isF ? '#ef4444' : '#e2e8f0'}`
                                             }}>
-                                                {isPresent === true ? 'P' : isPresent === false ? 'F' : '-'}
+                                                {isP ? 'P' : isF ? 'F' : '-'}
                                             </div>
                                         </td>
                                     );

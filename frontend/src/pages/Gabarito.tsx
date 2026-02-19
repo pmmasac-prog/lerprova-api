@@ -76,14 +76,16 @@ export const Gabarito: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [turmasData, gabaritosData, disciplinasData] = await Promise.all([
+            const [turmasData, gabaritosData] = await Promise.all([
                 api.getTurmas(),
-                api.getGabaritos(),
-                api.getDisciplinas()
+                api.getGabaritos()
             ]);
             setTurmas(turmasData);
             setGabaritos(gabaritosData);
-            setAvailableDisciplinas(disciplinasData);
+
+            // Filtrar disciplinas apenas do professor (preservando as que já existem no banco se necessário)
+            const professorDisciplines = Array.from(new Set(turmasData.map((t: any) => t.disciplina).filter(Boolean)));
+            setAvailableDisciplinas(professorDisciplines as string[]);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
         } finally {

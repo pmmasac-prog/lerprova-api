@@ -255,34 +255,43 @@ export const Dashboard: React.FC = () => {
                 {/* LAYER 3: Classes Status (Right) */}
                 <div className="op-turmas-col">
                     <h3 className="op-section-title">
-                        <BookOpen size={16} />
-                        Minhas Turmas
+                        <Users size={16} />
+                        Suas Turmas
                     </h3>
-                    {classes_status.length === 0 ? (
-                        <div className="op-empty-state">
-                            <Users size={24} />
-                            <span>Nenhuma turma cadastrada</span>
-                        </div>
-                    ) : (
-                        classes_status.map((t) => {
-                            const sem = SEMAFORO[t.estado] || SEMAFORO['ok'];
-                            return (
-                                <div
-                                    key={t.turma_id}
-                                    className={`op-turma-row ${sem.className}`}
-                                    onClick={() => navigate(`/dashboard/turma/${t.turma_id}`)}
-                                >
-                                    <span className="op-turma-dot">{sem.dot}</span>
-                                    <div className="op-turma-info">
-                                        <span className="op-turma-name">{t.nome}</span>
-                                        {t.disciplina && <span className="op-turma-disc">{t.disciplina}</span>}
+                    <div className="op-turmas-grid">
+                        {classes_status.length === 0 ? (
+                            <div className="op-empty-state">
+                                <Users size={24} />
+                                <span>Nenhuma turma cadastrada</span>
+                            </div>
+                        ) : (
+                            classes_status.map((t) => {
+                                const sem = SEMAFORO[t.estado] || SEMAFORO['ok'];
+                                return (
+                                    <div
+                                        key={t.turma_id}
+                                        className={`op-turma-card ${sem.className}`}
+                                        onClick={() => navigate(`/dashboard/turma/${t.turma_id}`)}
+                                    >
+                                        <div className="op-turma-card-header">
+                                            <div className="op-turma-icon">
+                                                <Users size={20} />
+                                            </div>
+                                            <span className="op-turma-status-badge">{sem.label}</span>
+                                        </div>
+                                        <div className="op-turma-card-body">
+                                            <span className="op-turma-name">{t.nome}</span>
+                                            {t.disciplina && <span className="op-turma-disc">{t.disciplina}</span>}
+                                        </div>
+                                        <div className="op-turma-card-footer">
+                                            <span className="op-turma-action">Ver Detalhes</span>
+                                            <ChevronRight size={14} />
+                                        </div>
                                     </div>
-                                    <span className="op-turma-label">{sem.label}</span>
-                                    <ChevronRight size={16} />
-                                </div>
-                            );
-                        })
-                    )}
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
 
                 {/* LAYER 4: Recent History (Bottom) */}
