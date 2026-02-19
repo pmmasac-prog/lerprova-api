@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import './Planejamento.css';
 import { PlanejamentoStudio } from './PlanejamentoStudio';
 import { BNCCRadar } from '../components/BNCCRadar';
+import { StepList } from '../components/StepList';
 
 interface Turma {
     id: number;
@@ -48,22 +49,7 @@ const PERCEPCOES = [
 
 type PercepcaoKey = (typeof PERCEPCOES)[number]['key'];
 
-function safeParseISODate(iso: string): Date | null {
-    // iso esperado: YYYY-MM-DD
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-    if (!m) return null;
-    const y = Number(m[1]);
-    const mo = Number(m[2]) - 1;
-    const d = Number(m[3]);
-    const dt = new Date(y, mo, d);
-    return Number.isNaN(dt.getTime()) ? null : dt;
-}
 
-function formatBRShort(iso: string): string {
-    const dt = safeParseISODate(iso);
-    if (!dt) return '--/--';
-    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(dt);
-}
 
 export const Planejamento: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -279,13 +265,48 @@ export const Planejamento: React.FC = () => {
                                 </option>
                             ))}
                         </select>
-
-                        <span className="disciplina-tag" title={currentTurma?.disciplina ?? 'Pedagógico'}>
-                            {currentTurma?.disciplina || 'Pedagógico'}
-                        </span>
+                        <div className="date-pill">HOJE, {dataHoje}</div>
                     </div>
 
-                    <div className="date-pill">HOJE, {dataHoje}</div>
+                    {cobertura && cobertura.total_habilidades > 0 && (
+                        <div className="pedagogical-radar-overlay">
+                            <div className="radar-header">Foco BNCC</div>
+                            <BNCCRadar data={cobertura} size={160} />
+                        </div>
+                    )}
+                </div>
+
+                <div className="sequences-container">
+                    <h2 className="section-label-light">SEQUÊNCIAS DIDÁTICAS</h2>
+                    <div className="sequences-grid">
+                        {planos.map(p => (
+                            <div
+                                key={p.id}
+                                className={`sequence-card ${p.id === selectedPlanoId ? 'active' : ''}`}
+                                onClick={() => setSelectedPlanoId(p.id)}
+                            >
+                                <div className="seq-card-header">
+                                    <BookOpen size={14} />
+                                    <span className="seq-tag">{p.disciplina || currentTurma?.disciplina || 'Geral'}</span>
+                                </div>
+                                <h4 className="seq-card-title">{p.titulo}</h4>
+                                <div className="seq-card-footer">
+                                    <div className="seq-progress-info">
+                                        <span className="seq-progress-mini">{p.progresso}%</span>
+                                        <span className="seq-count-mini">{p.aulas_concluidas}/{p.total_aulas}</span>
+                                    </div>
+                                    <div className="seq-progress-bar-mini">
+                                        <div className="seq-fill-mini" style={{ width: `${p.progresso}%` }} />
+                                    </div>
+                                </div>
+                                {p.id === selectedPlanoId && <div className="active-card-indicator" />}
+                            </div>
+                        ))}
+                        <button className="btn-add-sequence-card" onClick={() => setShowNewPlanoModal(true)}>
+                            <Plus size={24} />
+                            <span>Nova Sequência</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="plan-highlights">
@@ -314,21 +335,6 @@ export const Planejamento: React.FC = () => {
                     </div>
                 </div>
 
-                {currentPlano && (
-                    <div className="progress-container" aria-label="Progresso do plano">
-                        <div className="progress-bar-bg" role="progressbar" aria-valuenow={currentPlano.progresso} aria-valuemin={0} aria-valuemax={100}>
-                            <div className="progress-bar-fill" style={{ width: `${currentPlano.progresso}%` }} />
-                        </div>
-                        <span className="progress-text">{currentPlano.progresso}%</span>
-                    </div>
-                )}
-
-                {cobertura && cobertura.total_habilidades > 0 && (
-                    <div className="pedagogical-radar-overlay">
-                        <div className="radar-header">Cobertura BNCC</div>
-                        <BNCCRadar data={cobertura} size={200} />
-                    </div>
-                )}
             </header>
 
             <main className="zona-decisao pm-container">
@@ -394,28 +400,27 @@ export const Planejamento: React.FC = () => {
             </main>
 
             <section className="zona-sequencia pm-container" aria-label="Sequência didática">
-                <h3 className="section-label">SEQUÊNCIA DIDÁTICA</h3>
-                <div className="timeline-horizontal">
-                    {aulas.map((aula) => (
-                        <div
-                            key={aula.id}
-                            className={`step-bubble ${aula.status} ${aula.id === aulaHoje?.id ? 'active' : ''}`}
-                            title={aula.titulo}
-                        >
-                            <div className="bubble-icon" aria-label={`Aula ${aula.ordem}`}>
-                                {aula.status === 'done' ? <CheckCircle2 size={12} /> : <span>{aula.ordem}</span>}
-                            </div>
-                            <span className="bubble-date">{formatBRShort(aula.scheduled_date)}</span>
-                            {aula.id === aulaHoje?.id && <div className="current-marker" />}
-                        </div>
-                    ))}
-
-                    {planos.length > 0 && (
-                        <button type="button" className="btn-add-step" onClick={() => setShowNewPlanoModal(true)} aria-label="Criar novo planejamento">
-                            <Plus size={16} />
+                <header className="section-header-flex">
+                    <h3 className="section-label">INDICADOR DE PROGRESSO PEDAGÓGICO</h3>
+                    {currentPlano && (
+                        <button type="button" className="btn-edit-plano-subtle" onClick={handleEditPlano}>
+                            <Pencil size={14} /> Editar Sequência
                         </button>
                     )}
-                </div>
+                </header>
+
+                {aulas.length > 0 ? (
+                    <StepList items={aulas.map(a => ({
+                        id: a.id,
+                        title: a.titulo,
+                        date: a.scheduled_date,
+                        status: a.status === 'done' ? 'done' : (a.id === aulaHoje?.id ? 'current' : 'future')
+                    }))} />
+                ) : (
+                    <div className="empty-steps-hint">
+                        Nenhuma aula planejada para esta sequência.
+                    </div>
+                )}
             </section>
 
             <footer className="zona-conclusao">
