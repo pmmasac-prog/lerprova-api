@@ -35,6 +35,8 @@ interface Aula {
     status: AulaStatus;
     registros?: unknown[];
     conteudos?: string[];
+    metodologia_recurso?: string[];
+    bncc_skills?: string[];
 }
 
 const PERCEPCOES = [
