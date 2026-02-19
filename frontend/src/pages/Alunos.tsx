@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, FileUp, QrCode, Trash2, Plus, HelpCircle, X, BarChart3 } from 'lucide-react';
+import { User, FileUp, QrCode, Trash2, Plus, HelpCircle, BarChart3, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
 import './Alunos.css';
 
@@ -219,10 +219,12 @@ export const Alunos: React.FC = () => {
             {showHelpModal && (
                 <div className="modal-overlay" onClick={() => setShowHelpModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowHelpModal(false)}>
-                            <X size={20} />
-                        </button>
-                        <h2 className="modal-title">Modelo de Importação CSV</h2>
+                        <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <button className="back-btn-modal" onClick={() => setShowHelpModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <h2 className="modal-title" style={{ margin: 0 }}>Modelo de Importação CSV</h2>
+                        </div>
                         <p className="modal-text">
                             O arquivo deve ser um CSV comum com os nomes das colunas na primeira linha (cabeçalho).
                         </p>
@@ -262,10 +264,12 @@ export const Alunos: React.FC = () => {
             {showQRModal && selectedAluno && (
                 <div className="modal-overlay" onClick={() => setShowQRModal(false)}>
                     <div className="modal-content qr-modal" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowQRModal(false)}>
-                            <X size={20} />
-                        </button>
-                        <h2 className="modal-title">{selectedAluno.nome}</h2>
+                        <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <button className="back-btn-modal" onClick={() => setShowQRModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <h2 className="modal-title" style={{ margin: 0 }}>{selectedAluno.nome}</h2>
+                        </div>
                         <div className="qr-placeholder">
                             <QrCode size={120} />
                             <p>QR Code: {selectedAluno.qr_token}</p>

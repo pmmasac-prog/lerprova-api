@@ -21,10 +21,31 @@
 }
 
 .gabarito-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: #0f172a;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
     margin: 0;
+}
+
+.back-btn-header {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+    margin-right: 12px;
+}
+
+.back-btn-header:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: translateX(-2px);
 }
 
 .status-badge {

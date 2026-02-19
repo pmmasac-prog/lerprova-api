@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardList, Plus, Search, Download, Trash2, Save, Edit3, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload, Users } from 'lucide-react';
+import { ClipboardList, Plus, Search, Download, Trash2, Save, Edit3, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload, Users, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
@@ -301,6 +301,11 @@ export const Gabarito: React.FC = () => {
         <div className="gabarito-container">
             <div className="gabarito-header">
                 <div className="header-info">
+                    {viewMode === 'create' && (
+                        <button className="back-btn-header" onClick={() => { handleReset(); setViewMode('history'); }} title="Voltar para lista">
+                            <ArrowLeft size={20} />
+                        </button>
+                    )}
                     <div className="icon-bg icon-bg-sm icon-green">
                         <ClipboardList size={20} />
                     </div>

@@ -406,10 +406,12 @@ export const TurmaDetail: React.FC = () => {
             {showFrequenciaModal && (
                 <div className="modal-overlay" onClick={() => setShowFrequenciaModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowFrequenciaModal(false)}>
-                            <X size={20} />
-                        </button>
-                        <h2 className="modal-title">Chamada</h2>
+                        <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <button className="back-btn-modal" onClick={() => setShowFrequenciaModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <h2 className="modal-title" style={{ margin: 0 }}>Chamada</h2>
+                        </div>
 
                         <div className="form-group">
                             <label className="form-label">Data da Chamada</label>
@@ -455,10 +457,12 @@ export const TurmaDetail: React.FC = () => {
             {showAddAlunoModal && (
                 <div className="modal-overlay" onClick={() => setShowAddAlunoModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowAddAlunoModal(false)}>
-                            <X size={20} />
-                        </button>
-                        <h2 className="modal-title">Adicionar Aluno</h2>
+                        <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <button className="back-btn-modal" onClick={() => setShowAddAlunoModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <h2 className="modal-title" style={{ margin: 0 }}>Adicionar Aluno</h2>
+                        </div>
 
                         <div className="form-group">
                             <label className="form-label">Nome do Aluno</label>
@@ -493,9 +497,12 @@ export const TurmaDetail: React.FC = () => {
             {showAlunoModal && selectedAluno && (
                 <div className="modal-overlay" onClick={() => setShowAlunoModal(false)}>
                     <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
-                        <button className="modal-close" onClick={() => setShowAlunoModal(false)}>
-                            <X size={20} />
-                        </button>
+                        <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <button className="back-btn-modal" onClick={() => setShowAlunoModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>Detalhes do Aluno</span>
+                        </div>
 
                         <div className="aluno-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

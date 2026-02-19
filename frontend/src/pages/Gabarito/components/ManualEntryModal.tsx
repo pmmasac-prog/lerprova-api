@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, ChevronRight } from 'lucide-react';
+import { X, Save, User, ChevronRight, ArrowLeft } from 'lucide-react';
 import { api } from '../../../services/api';
 
 interface ManualEntryModalProps {
@@ -101,9 +101,16 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
         <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '600px' }}>
                 <div className="modal-header">
-                    <div>
-                        <h2>Lançamento de Nota</h2>
-                        <p className="admin-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} questões</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {step === 2 && (
+                            <button className="back-btn-modal" onClick={() => setStep(1)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                        )}
+                        <div>
+                            <h2>Lançamento de Nota</h2>
+                            <p className="admin-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} questões</p>
+                        </div>
                     </div>
                     <button className="close-btn" onClick={onClose}><X /></button>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Camera, RefreshCw, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { X, Camera, RefreshCw, CheckCircle, AlertCircle, Info, ArrowLeft } from 'lucide-react';
 import { api } from '../../../services/api';
 import './ScannerModal.css';
 
@@ -101,7 +101,12 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
             <div className="scanner-container">
                 <div className="scanner-header">
                     <h3>Corrigir Prova</h3>
-                    <button className="close-btn" onClick={onClose}><X /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button className="btn-text-nav" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>
+                            <ArrowLeft size={14} /> Sair
+                        </button>
+                        <button className="close-btn" onClick={onClose}><X /></button>
+                    </div>
                 </div>
 
                 <div className="scanner-body">

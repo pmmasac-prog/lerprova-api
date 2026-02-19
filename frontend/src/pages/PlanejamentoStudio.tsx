@@ -1,6 +1,6 @@
 // PlanejamentoStudio.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Save, Plus, Trash2, BookOpen, ChevronRight, GripVertical, Target, Search, X } from 'lucide-react';
+import { Save, Plus, Trash2, BookOpen, ChevronRight, GripVertical, Target, Search, X, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
 import './PlanejamentoStudio.css';
 
@@ -325,7 +325,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     <button className="studio-tab" data-active={activePanel === 'bncc'} onClick={() => setActivePanel('bncc')}>BNCC</button>
                 </div>
                 <div className="studio-actions">
-                    <button className="btn-studio cancel" onClick={onClose}>Sair</button>
+                    <button className="btn-studio cancel" onClick={onClose}><ArrowLeft size={16} /> Voltar</button>
                     <button className="btn-studio save" onClick={handleSave} disabled={saving || !titulo.trim()}>
                         {saving ? '...' : <><Save size={16} /> Publicar</>}
                     </button>

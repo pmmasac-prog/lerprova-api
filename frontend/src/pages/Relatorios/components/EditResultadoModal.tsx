@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Info, ArrowLeft } from 'lucide-react';
 import { api } from '../../../services/api';
 
 interface EditResultadoModalProps {
@@ -68,11 +68,15 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
         <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '800px' }}>
                 <div className="modal-header">
-                    <div>
-                        <h2>Corrigir Resultado</h2>
-                        <p className="admin-subtitle">{resultado.aluno.nome} • {gabarito.titulo || gabarito.assunto}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button className="back-btn-modal" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                            <ArrowLeft size={16} />
+                        </button>
+                        <div>
+                            <h2>Corrigir Resultado</h2>
+                            <p className="admin-subtitle">{resultado.aluno.nome} • {gabarito.titulo || gabarito.assunto}</p>
+                        </div>
                     </div>
-                    <button className="close-btn" onClick={onClose}><X /></button>
                 </div>
 
                 <div className="admin-form">
