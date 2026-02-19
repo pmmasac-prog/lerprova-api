@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
     AlertTriangle, CheckCircle, BookOpen, ArrowRight,
     LogOut, Settings, Zap, Clock, ChevronRight,
@@ -79,9 +79,9 @@ const ACTION_GRADIENTS: Record<string, string> = {
 };
 
 const SEMAFORO: Record<string, { dot: string; label: string; className: string }> = {
-    'ok': { dot: '🟢', label: 'Em dia', className: 'status-ok' },
-    'atencao': { dot: '🟡', label: 'Atenção', className: 'status-atencao' },
-    'critico': { dot: '🔴', label: 'Crítico', className: 'status-critico' },
+    'ok': { dot: '­ƒƒó', label: 'Em dia', className: 'status-ok' },
+    'atencao': { dot: '­ƒƒí', label: 'Aten├º├úo', className: 'status-atencao' },
+    'critico': { dot: '­ƒö┤', label: 'Cr├¡tico', className: 'status-critico' },
 };
 
 export const Dashboard: React.FC = () => {
@@ -131,11 +131,11 @@ export const Dashboard: React.FC = () => {
             const now = new Date();
             const diffMs = now.getTime() - date.getTime();
             const diffMin = Math.floor(diffMs / 60000);
-            if (diffMin < 60) return `${diffMin}min atrás`;
+            if (diffMin < 60) return `${diffMin}min atr├ís`;
             const diffH = Math.floor(diffMin / 60);
-            if (diffH < 24) return `${diffH}h atrás`;
+            if (diffH < 24) return `${diffH}h atr├ís`;
             const diffD = Math.floor(diffH / 24);
-            return `${diffD}d atrás`;
+            return `${diffD}d atr├ís`;
         } catch {
             return '';
         }
@@ -148,7 +148,7 @@ export const Dashboard: React.FC = () => {
             <div className="op-dashboard">
                 <div className="op-header">
                     <div className="op-header-left">
-                        <h1 className="op-greeting">Olá, {firstName}</h1>
+                        <h1 className="op-greeting">Ol├í, {firstName}</h1>
                         <p className="op-date">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                     </div>
                 </div>
@@ -183,12 +183,12 @@ export const Dashboard: React.FC = () => {
             {/* Header */}
             <div className="op-header">
                 <div className="op-header-left">
-                    <h1 className="op-greeting">Olá, {firstName}</h1>
+                    <h1 className="op-greeting">Ol├í, {firstName}</h1>
                     <p className="op-date">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                 </div>
                 <div className="op-header-right">
                     {isAdmin && (
-                        <button className="op-icon-btn" onClick={() => navigate('/dashboard/debug')} title="Diagnóstico">
+                        <button className="op-icon-btn" onClick={() => navigate('/dashboard/debug')} title="Diagn├│stico">
                             <Settings size={20} />
                         </button>
                     )}
@@ -228,7 +228,7 @@ export const Dashboard: React.FC = () => {
                 <div className="op-alerts-col">
                     <h3 className="op-section-title">
                         <AlertTriangle size={16} />
-                        Alertas Pedagógicos
+                        Alertas Pedag├│gicos
                     </h3>
                     {alerts.length === 0 ? (
                         <div className="op-empty-state">
@@ -289,7 +289,7 @@ export const Dashboard: React.FC = () => {
                 <div className="op-history-col">
                     <h3 className="op-section-title">
                         <Clock size={16} />
-                        Histórico Recente
+                        Hist├│rico Recente
                     </h3>
                     {recent_activity.length === 0 ? (
                         <div className="op-empty-state">
