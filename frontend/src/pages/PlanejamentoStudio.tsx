@@ -350,7 +350,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                         {lessons.map((lesson, index) => (
                             <div
                                 key={lesson.id}
-                                className={`lesson-card ${draggingIndex === index ? 'dragging' : ''} ${targetLessonId === lesson.id ? 'active-target' : ''}`}
+                                className={`lesson-card ${draggingIndex === index ? 'is-dragging' : ''} ${targetLessonId === lesson.id ? 'active-target' : ''}`}
                                 draggable
                                 onDragStart={(e) => onDragStart(e, index)}
                                 onDragOver={(e) => onDragOver(e, index)}
@@ -417,7 +417,9 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     </div>
                     <div className="panel-content">
                         {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
-                        {searchingBncc ? <div className="loading">...</div> : bnccResults.map(s => (
+                        {searchingBncc && <div className="loading">Buscando...</div>}
+                        {!searchingBncc && bnccSearch.trim().length >= 2 && bnccResults.length === 0 && <div className="loading">Nenhuma habilidade encontrada.</div>}
+                        {!searchingBncc && bnccResults.map(s => (
                             <div key={s.id} className="bncc-item" onClick={() => handleAddBNCC(s.code)}><strong>{s.code}</strong><p>{s.description}</p></div>
                         ))}
                     </div>

@@ -37,6 +37,18 @@ models.Base.metadata.create_all(bind=engine) # Criar tabelas novas (idempotente)
 # Opcional: Popular com usuários iniciais se estiver vazio
 db = SessionLocal()
 users_db.init_default_users(db)
+
+# Auto-seed BNCC se estiver vazio
+from models import BNCCSkill
+if db.query(BNCCSkill).count() == 0:
+    logger.info("Base BNCC vazia. Iniciando seed automático...")
+    from scripts.seed_bncc import seed_bncc
+    try:
+        seed_bncc()
+        logger.info("Seed BNCC concluído com sucesso.")
+    except Exception as e:
+        logger.error(f"Erro no seed BNCC: {e}")
+
 db.close()
 
 app = FastAPI(title="LERPROVA API", version="1.3.0")

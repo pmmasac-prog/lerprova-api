@@ -408,15 +408,23 @@ export const api = {
     },
 
     async searchBNCCSkills(q?: string, subjectId?: number, grade?: string) {
-        let url = `${API_URL}/curriculo/bncc/skills?`;
-        if (q) url += `q=${encodeURIComponent(q)}&`;
-        if (subjectId) url += `subject_id=${subjectId}&`;
-        if (grade) url += `grade=${encodeURIComponent(grade)}&`;
+        const params = new URLSearchParams();
+        if (q) params.append('q', q);
+        if (subjectId) params.append('subject_id', subjectId.toString());
+        if (grade) params.append('grade', grade);
 
-        const response = await fetch(url, {
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        const url = `${API_URL}/curriculo/bncc/skills?${params.toString()}`;
+
+        try {
+            const response = await fetch(url, {
+                headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            return Array.isArray(data) ? data : [];
+        } catch (e) {
+            console.error("Erro ao buscar BNCC:", e);
+            return [];
+        }
     },
 
     async getBNCCCompetencies() {
