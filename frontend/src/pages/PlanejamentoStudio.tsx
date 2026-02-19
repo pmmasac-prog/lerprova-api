@@ -29,13 +29,6 @@ interface TeachingStudioProps {
 
 type PanelKey = 'config' | 'canvas' | 'curriculo' | 'bncc';
 
-const DIAS_SEMANA = [
-    { id: 0, label: 'Seg' },
-    { id: 1, label: 'Ter' },
-    { id: 2, label: 'Qua' },
-    { id: 3, label: 'Qui' },
-    { id: 4, label: 'Sex' },
-] as const;
 
 function safeParseISODate(iso: string): Date | null {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
@@ -77,7 +70,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     // Config - Init with initialData if present
     const [titulo, setTitulo] = useState(initialData?.titulo || '');
     const [dataInicio, setDataInicio] = useState(() => initialData?.data_inicio ? initialData.data_inicio.slice(0, 10) : new Date().toISOString().slice(0, 10));
-    const [diasSemana, setDiasSemana] = useState<number[]>(initialData?.dias_semana || (diasSemanaPre.length > 0 ? diasSemanaPre : [0, 2]));
+    const [diasSemana] = useState<number[]>(initialData?.dias_semana || (diasSemanaPre.length > 0 ? diasSemanaPre : [0, 2]));
 
     // Canvas - Init with initialData
     const [lessons, setLessons] = useState<Lesson[]>(() => {
