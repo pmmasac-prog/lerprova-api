@@ -130,6 +130,13 @@ export const api = {
         return response.json();
     },
 
+    async getDashboardOperacional() {
+        const response = await fetch(`${API_URL}/dashboard/operacional`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
     async getStatsByTurma(turmaId: number) {
         const response = await fetch(`${API_URL}/stats/turma/${turmaId}`, {
             headers: getAuthHeaders()
