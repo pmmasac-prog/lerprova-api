@@ -3,8 +3,9 @@ from typing import List, Optional
 import csv
 import os
 from pydantic import BaseModel
-from database import SessionLocal
+from database import get_db
 from models import BNCCSkill, BNCCCompetency
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/curriculo", tags=["curriculo"])
 
@@ -121,8 +122,7 @@ async def get_suggestions(topic_id: int):
     return CurriculumSuggestions(methodologies=suggested_meths, resources=suggested_res)
 
 @router.get("/bncc/skills", response_model=List[BNCCSkillSchema])
-async def search_skills(q: Optional[str] = None, subject_id: Optional[int] = None, grade: Optional[str] = None):
-    db = SessionLocal()
+async def search_skills(q: Optional[str] = None, subject_id: Optional[int] = None, grade: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(BNCCSkill)
     if q:
         query = query.filter(BNCCSkill.description.ilike(f"%{q}%") | BNCCSkill.code.ilike(f"%{q}%"))
@@ -132,12 +132,9 @@ async def search_skills(q: Optional[str] = None, subject_id: Optional[int] = Non
         query = query.filter(BNCCSkill.grade == grade)
     
     skills = query.limit(50).all()
-    db.close()
     return skills
 
 @router.get("/bncc/competencies", response_model=List[BNCCCompetencySchema])
-async def get_competencies():
-    db = SessionLocal()
+async def get_competencies(db: Session = Depends(get_db)):
     comps = db.query(BNCCCompetency).all()
-    db.close()
     return comps

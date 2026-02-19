@@ -238,6 +238,79 @@ async def create_plano(
     return {"message": "Plano criado com sucesso", "id": novo_plano.id}
 
 
+@router.put("/{plano_id}")
+async def update_plano(
+    plano_id: int,
+    data: PlanoCreate,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    plano = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    _rbac_check_plano_owner(user, plano.user_id)
+
+    # Atualiza metadados básicos
+    plano.titulo = data.titulo
+    if data.disciplina:
+        plano.disciplina = data.disciplina
+    plano.data_inicio = data.data_inicio
+    plano.dias_semana = json.dumps(data.dias_semana)
+
+    # Re-sincronizar aulas
+    # Estratégia: Atualizar aulas existentes (por ordem) e adicionar novas.
+    # Manter status 'done' e registros.
+    
+    aulas_existentes = {a.ordem: a for a in plano.aulas}
+    novos_ids_aulas = []
+
+    # Re-calcula datas baseado na nova data_inicio
+    start_date = _parse_date_yyyy_mm_dd(data.data_inicio)
+    dias = _normalize_days(data.dias_semana)
+    schedule = _build_schedule(start_date, dias, len(data.aulas))
+
+    for i, aula_in in enumerate(data.aulas):
+        ordem = i + 1
+        scheduled_date = schedule[i].isoformat()
+        
+        if ordem in aulas_existentes:
+            # Atualiza aula existente
+            aula = aulas_existentes[ordem]
+            aula.titulo = aula_in.titulo
+            aula.metodologia_recurso = json.dumps(aula_in.metodologia_recurso, ensure_ascii=False) if aula_in.metodologia_recurso else None
+            aula.bncc_skills = json.dumps(aula_in.bncc_skills, ensure_ascii=False) if aula_in.bncc_skills else None
+            # Só atualiza a data se for 'pending'. 
+            # Se for 'done', a data original de execução (ou agendada) é preservada para histórico.
+            if aula.status == "pending":
+                aula.scheduled_date = scheduled_date
+            novos_ids_aulas.append(aula.id)
+        else:
+            # Cria nova aula
+            nova_aula = models.AulaPlanejada(
+                plano_id=plano.id,
+                ordem=ordem,
+                titulo=aula_in.titulo,
+                scheduled_date=scheduled_date,
+                metodologia_recurso = json.dumps(aula_in.metodologia_recurso, ensure_ascii=False) if aula_in.metodologia_recurso else None,
+                bncc_skills = json.dumps(aula_in.bncc_skills, ensure_ascii=False) if aula_in.bncc_skills else None,
+                status="pending",
+            )
+            db.add(nova_aula)
+            db.flush()
+            novos_ids_aulas.append(nova_aula.id)
+
+    # Remove aulas que sobraram (se a nova lista for menor que a antiga)
+    # CUIDADO: Não remover aulas 'done'? No Studio, se o usuário removeu, vira deleção.
+    # Mas para segurança, vamos remover apenas as que não estão na nova lista.
+    for a in plano.aulas:
+        if a.id not in novos_ids_aulas:
+            db.delete(a)
+
+    db.commit()
+    return {"message": "Plano atualizado com sucesso"}
+
+
 @router.get("/turma/{turma_id}")
 async def get_planos_turma(
     turma_id: int,

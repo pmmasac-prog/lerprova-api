@@ -335,6 +335,17 @@ export const Planejamento: React.FC = () => {
                         <div className="label-percepcao">
                             Conteúdo: <b>{aulaHoje.titulo}</b>
                         </div>
+
+                        {(aulaHoje.metodologia_recurso?.length > 0 || aulaHoje.bncc_skills?.length > 0) && (
+                            <div className="lesson-tags-main">
+                                {aulaHoje.metodologia_recurso?.map((m: string) => (
+                                    <span key={m} className="tag-metodologia">{m}</span>
+                                ))}
+                                {aulaHoje.bncc_skills?.map((s: string) => (
+                                    <span key={s} className="tag-bncc">{s}</span>
+                                ))}
+                            </div>
+                        )}
                         <p className="hint-percepcao">Como foi o clima da turma nesta aula?</p>
 
                         <div className="chips-grid" role="group" aria-label="Percepções da aula">
