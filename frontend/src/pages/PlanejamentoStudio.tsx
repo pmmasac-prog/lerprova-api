@@ -1,5 +1,5 @@
 // PlanejamentoStudio.tsx
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Save, Plus, Trash2, BookOpen, ChevronRight, GripVertical, Target, Search, X } from 'lucide-react';
 import { api } from '../services/api';
 import './PlanejamentoStudio.css';
