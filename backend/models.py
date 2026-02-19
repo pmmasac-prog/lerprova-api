@@ -37,6 +37,7 @@ class Turma(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String)
     disciplina = Column(String, nullable=True)
+    dias_semana = Column(String, nullable=True) # JSON: [0, 2, 4] (Seg, Qua, Sex)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos

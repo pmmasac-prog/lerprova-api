@@ -8,14 +8,27 @@ interface Turma {
     id: number;
     nome: string;
     disciplina?: string;
+    dias_semana?: string | number[];
 }
 
 export const Turmas: React.FC = () => {
     const navigate = useNavigate();
     const [turmas, setTurmas] = useState<Turma[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newTurma, setNewTurma] = useState({ nome: '', disciplina: '' });
+    const [newTurma, setNewTurma] = useState<{
+        nome: string;
+        disciplina: string;
+        dias_semana: number[];
+    }>({ nome: '', disciplina: '', dias_semana: [0, 2, 4] });
     const [loading, setLoading] = useState(true);
+
+    const DIAS_SEMANA = [
+        { id: 0, label: 'Seg' },
+        { id: 1, label: 'Ter' },
+        { id: 2, label: 'Qua' },
+        { id: 3, label: 'Qui' },
+        { id: 4, label: 'Sex' },
+    ];
 
     useEffect(() => {
         loadTurmas();
@@ -33,16 +46,26 @@ export const Turmas: React.FC = () => {
         }
     };
 
+    const toggleDay = (dayId: number) => {
+        setNewTurma(prev => {
+            const current = prev.dias_semana || [];
+            const next = current.includes(dayId)
+                ? current.filter(d => d !== dayId)
+                : [...current, dayId];
+            return { ...prev, dias_semana: next.sort() };
+        });
+    };
+
     const handleAddTurma = async () => {
-        if (!newTurma.nome) {
-            alert('Nome da turma é obrigatório');
+        if (!newTurma.nome || !newTurma.disciplina || newTurma.dias_semana.length === 0) {
+            alert('Nome, disciplina e pelo menos um dia da semana são obrigatórios');
             return;
         }
 
         try {
             await api.addTurma(newTurma);
             setShowAddModal(false);
-            setNewTurma({ nome: '', disciplina: '' });
+            setNewTurma({ nome: '', disciplina: '', dias_semana: [0, 2, 4] });
             loadTurmas();
         } catch (error) {
             console.error('Erro ao criar turma:', error);
@@ -113,7 +136,7 @@ export const Turmas: React.FC = () => {
                 )}
             </div>
 
-            {/* Modal Nova Turma - Mantendo estrutura simples por enquanto */}
+            {/* Modal Nova Turma */}
             {showAddModal && (
                 <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -138,6 +161,23 @@ export const Turmas: React.FC = () => {
                                 onChange={e => setNewTurma({ ...newTurma, disciplina: e.target.value })}
                             />
                         </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Dias de Aula</label>
+                            <div className="weekday-selector">
+                                {DIAS_SEMANA.map(day => (
+                                    <button
+                                        key={day.id}
+                                        type="button"
+                                        className={`weekday-btn ${newTurma.dias_semana.includes(day.id) ? 'active' : ''}`}
+                                        onClick={() => toggleDay(day.id)}
+                                    >
+                                        {day.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="modal-actions">
                             <button className="btn-cancel" onClick={() => setShowAddModal(false)}>Cancelar</button>
                             <button className="btn-primary" onClick={handleAddTurma}>Criar Turma</button>

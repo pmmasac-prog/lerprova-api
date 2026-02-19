@@ -27,6 +27,18 @@ class CurriculumTopic(CurriculoBase):
     title: str
     default_lessons: int
 
+class CurriculumMethodology(CurriculoBase):
+    description: Optional[str] = None
+    modality: Optional[str] = None
+
+class CurriculumResource(CurriculoBase):
+    type: Optional[str] = None
+    url: Optional[str] = None
+
+class CurriculumSuggestions(BaseModel):
+    methodologies: List[CurriculumMethodology]
+    resources: List[CurriculumResource]
+
 def load_csv(filename):
     path = os.path.join(CURRICULUM_DIR, filename)
     if not os.path.exists(path):
@@ -50,3 +62,39 @@ async def get_topics(unit_id: int):
     data = load_csv("curriculum_topics.csv")
     topics = [row for row in data if int(row['unit_id']) == unit_id]
     return [CurriculumTopic(id=int(row['id']), unit_id=int(row['unit_id']), order_index=int(row['order_index']), name=row['title'], title=row['title'], default_lessons=int(row['default_lessons'])) for row in topics]
+
+@router.get("/methodologies", response_model=List[CurriculumMethodology])
+async def get_methodologies():
+    data = load_csv("curriculum_methodologies.csv")
+    return [CurriculumMethodology(id=int(row['id']), name=row['name'], description=row.get('description'), modality=row.get('modality')) for row in data if row.get('active') != 'False']
+
+@router.get("/resources", response_model=List[CurriculumResource])
+async def get_resources():
+    data = load_csv("curriculum_resources.csv")
+    return [CurriculumResource(id=int(row['id']), name=row['name'], type=row.get('type'), url=row.get('url')) for row in data if row.get('active') != 'False']
+
+@router.get("/topics/{topic_id}/suggestions", response_model=CurriculumSuggestions)
+async def get_suggestions(topic_id: int):
+    # Load suggestion maps
+    mapping_m = load_csv("curriculum_topic_methodologies.csv")
+    mapping_r = load_csv("curriculum_topic_resources.csv")
+    
+    # Load base data
+    meths = load_csv("curriculum_methodologies.csv")
+    res = load_csv("curriculum_resources.csv")
+    
+    # Filter IDs for this topic
+    m_ids = [int(row['methodology_id']) for row in mapping_m if int(row['topic_id']) == topic_id]
+    r_ids = [int(row['resource_id']) for row in mapping_r if int(row['topic_id']) == topic_id]
+    
+    # Map to objects
+    suggested_meths = [
+        CurriculumMethodology(id=int(row['id']), name=row['name'], description=row.get('description'), modality=row.get('modality')) 
+        for row in meths if int(row['id']) in m_ids
+    ]
+    suggested_res = [
+        CurriculumResource(id=int(row['id']), name=row['name'], type=row.get('type'), url=row.get('url')) 
+        for row in res if int(row['id']) in r_ids
+    ]
+    
+    return CurriculumSuggestions(methodologies=suggested_meths, resources=suggested_res)

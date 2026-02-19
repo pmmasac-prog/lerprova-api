@@ -384,5 +384,26 @@ export const api = {
             headers: getAuthHeaders()
         });
         return response.json();
+    },
+
+    async getCurriculoMethodologies() {
+        const response = await fetch(`${API_URL}/curriculo/methodologies`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
+    async getCurriculoResources() {
+        const response = await fetch(`${API_URL}/curriculo/resources`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
+    async getCurriculoSuggestions(topicId: number) {
+        const response = await fetch(`${API_URL}/curriculo/topics/${topicId}/suggestions`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
     }
 };

@@ -434,11 +434,21 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
-    padding: 14px var(--pm-pad) calc(14px + env(safe-area-inset-bottom, 0px));
+    bottom: 70px;
+    /* Acima da TabNavigation */
+    padding: 14px var(--pm-pad);
     background: linear-gradient(0deg, rgba(15, 23, 42, .92) 55%, rgba(15, 23, 42, 0) 100%);
-    z-index: 60;
+    z-index: 100;
+    /* Menor que TabNavigation (1000), mas visível se não houver conflito */
     backdrop-filter: blur(10px);
+}
+
+/* Reajuste se z-index conflitar: se TabNavigation é 1000, 
+   zona-conclusao deve ser 1001 se quisermos que sobreponha, 
+   ou bottom: 70px resolve se quisermos que fique encostado no topo da barra. */
+.zona-conclusao {
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    z-index: 1100;
 }
 
 .btn-concluir-momento {

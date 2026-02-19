@@ -1,0 +1,57 @@
+id,name,type,description,url,active
+1,Livro didático,impresso,,,True
+2,Caderno do aluno,impresso,,,True
+3,Quadro e pincéis,sala,,,True
+4,Projetor / Datashow,sala,,,True
+5,Computador / Notebook,sala,,,True
+6,Celular do aluno (quando permitido),sala,,,True
+7,Internet (quando disponível),sala,,,True
+8,Slides / Apresentação,digital,,,True
+9,Vídeo curto (até 5 min),digital,,,True
+10,Documentário,digital,,,True
+11,Podcast,digital,,,True
+12,Áudio / música,digital,,,True
+13,Textos jornalísticos,impresso,,,True
+14,Crônicas,impresso,,,True
+15,Poemas,impresso,,,True
+16,Contos,impresso,,,True
+17,HQ / tirinhas,impresso,,,True
+18,Charges,impresso,,,True
+19,Memes (análise crítica),digital,,,True
+20,Propagandas,digital,,,True
+21,Cartazes,impresso,,,True
+22,Infográficos,digital,,,True
+23,Mapas e gráficos,impresso,,,True
+24,Dicionário,impresso,,,True
+25,Dicionário online,digital,,,True
+26,Gramática de consulta,impresso,,,True
+27,Folha de atividades,impresso,,,True
+28,Lista de exercícios,impresso,,,True
+29,Rubrica de avaliação,impresso,,,True
+30,Ficha de leitura,impresso,,,True
+31,Fichas de vocabulário,impresso,,,True
+32,Cartões de debate,impresso,,,True
+33,Cartões de perguntas,impresso,,,True
+34,Textos de referência (BNCC/PCNs),impresso,,,True
+35,Plataforma de quizzes,digital,,,True
+36,Editor de texto,digital,,,True
+37,Planilha (para dados),digital,,,True
+38,Ambiente virtual de aprendizagem,digital,,,True
+39,Mural (físico ou digital),sala,,,True
+40,Cartolina e canetas,sala,,,True
+41,Post-its,sala,,,True
+42,Recortes de jornais/revistas,impresso,,,True
+43,Biblioteca / acervo,escola,,,True
+44,Laboratório de informática,escola,,,True
+45,Sala de leitura,escola,,,True
+46,Caixa de som,sala,,,True
+47,Microfone (se houver),sala,,,True
+48,Câmera (celular),digital,,,True
+49,Editor de vídeo simples,digital,,,True
+50,Editor de áudio simples,digital,,,True
+51,Ferramenta de mapas mentais,digital,,,True
+52,Ferramenta de apresentações,digital,,,True
+53,Ferramenta de infográficos,digital,,,True
+54,Coleção de textos impressos,impresso,,,True
+55,Banco de questões,digital,,,True
+56,Simulado impresso,impresso,,,True

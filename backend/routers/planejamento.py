@@ -189,9 +189,16 @@ async def create_plano(
     user: users_db.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _rbac_check_turma(db, user, data.turma_id)
+    turma = db.query(models.Turma).filter(models.Turma.id == data.turma_id).first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada")
 
-    dias = _normalize_days(data.dias_semana)
+    # Usa dados da turma (prioridade) ou do payload se não houver na turma (fallback)
+    dias_semana_raw = turma.dias_semana or json.dumps(data.dias_semana)
+    disciplina = turma.disciplina or data.disciplina
+    
+    dias = _normalize_days(json.loads(dias_semana_raw))
+    
     if not data.aulas:
         raise HTTPException(status_code=422, detail="Você precisa enviar pelo menos 1 aula.")
 
@@ -200,9 +207,9 @@ async def create_plano(
         turma_id=data.turma_id,
         user_id=user.id,
         titulo=data.titulo,
-        disciplina=data.disciplina,
+        disciplina=disciplina,
         data_inicio=data.data_inicio,
-        dias_semana=json.dumps(dias),
+        dias_semana=dias_semana_raw,
     )
     db.add(novo_plano)
     db.flush()

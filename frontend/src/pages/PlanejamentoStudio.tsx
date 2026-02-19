@@ -17,6 +17,7 @@ interface TeachingStudioProps {
     turmaId: number;
     turmaNome: string;
     disciplinaPre: string;
+    diasSemanaPre: number[]; // Novo: herdado da turma
     planoId?: number; // Optional: for editing
     initialData?: {
         titulo: string;
@@ -67,6 +68,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     turmaId,
     turmaNome,
     disciplinaPre,
+    diasSemanaPre,
     planoId,
     initialData
 }) => {
@@ -75,9 +77,8 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
 
     // Config - Init with initialData if present
     const [titulo, setTitulo] = useState(initialData?.titulo || '');
-    const [disciplina, setDisciplina] = useState(disciplinaPre);
     const [dataInicio, setDataInicio] = useState(() => initialData?.data_inicio ? initialData.data_inicio.slice(0, 10) : new Date().toISOString().slice(0, 10));
-    const [diasSemana, setDiasSemana] = useState<number[]>(initialData?.dias_semana || [0, 2]);
+    const [diasSemana, setDiasSemana] = useState<number[]>(initialData?.dias_semana || (diasSemanaPre.length > 0 ? diasSemanaPre : [0, 2]));
 
     // Canvas - Init with initialData
     const [lessons, setLessons] = useState<Lesson[]>(() => {
@@ -98,6 +99,13 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     const [topics, setTopics] = useState<CurriculoItem[]>([]);
     const [selectedSub, setSelectedSub] = useState<number | null>(null);
     const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
+    const [selectedTopic, setSelectedTopic] = useState<number | null>(null); // Novo: para sugestões
+
+    // Base Curricular Estática (V4)
+    const [methodologies, setMethodologies] = useState<CurriculoItem[]>([]);
+    const [resources, setResources] = useState<CurriculoItem[]>([]);
+    const [suggestedMeths, setSuggestedMeths] = useState<number[]>([]);
+    const [suggestedRes, setSuggestedRes] = useState<number[]>([]);
 
     const [saving, setSaving] = useState(false);
     const loadToken = useRef(0);
@@ -112,22 +120,13 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                 // Filter by disciplinaPre if provided (Strict Mode)
                 let filtered = data;
                 if (disciplinaPre) {
-                    // Normalize for comparison (remove accents, case insensitive basic check)
                     const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     const target = normalize(disciplinaPre);
-
                     filtered = data.filter(s => normalize(s.name).includes(target) || target.includes(normalize(s.name)));
-
-                    // Fallback: if filter removed everything, maybe strict match failed, keep all? 
-                    // Or keep stricter: user said "so pode colocar assuntos referente a disciplina"
-                    // If filtered is empty, we show nothing? Or all? 
-                    // Let's decide to keep filtered. If 0, maybe user has to search manually or we have a mapping issue.
-                    // But if we find a match, auto-select it?
                 }
 
                 setSubjects(filtered);
 
-                // Auto-select if only 1 option or if exact name match
                 const exact = filtered.find(s => s.name === disciplinaPre);
                 if (exact) {
                     setSelectedSub(exact.id);
@@ -149,9 +148,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                 setUnits(data);
                 setTopics([]);
                 setSelectedUnit(null);
-
-                const sub = subjects.find(s => s.id === selectedSub);
-                if (sub?.name) setDisciplina(sub.name);
             })
             .catch((e: unknown) => console.error(e));
     }, [selectedSub, subjects]);
@@ -169,15 +165,35 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
             .catch((e: unknown) => console.error(e));
     }, [selectedUnit]);
 
+    // Carregar Metodologias e Recursos Base
+    useEffect(() => {
+        api.getCurriculoMethodologies().then(setMethodologies).catch(console.error);
+        api.getCurriculoResources().then(setResources).catch(console.error);
+    }, []);
+
+    // Carregar Sugestões quando tópico é selecionado
+    useEffect(() => {
+        if (!selectedTopic) {
+            setSuggestedMeths([]);
+            setSuggestedRes([]);
+            return;
+        }
+        api.getCurriculoSuggestions(selectedTopic)
+            .then((data: { methodologies: any[], resources: any[] }) => {
+                setSuggestedMeths(data.methodologies.map(m => m.id));
+                setSuggestedRes(data.resources.map(r => r.id));
+            })
+            .catch(console.error);
+    }, [selectedTopic]);
+
     const reconcileDates = useCallback((baseISO: string, days: number[], ls: Lesson[]): Lesson[] => {
         if (days.length === 0) return ls.map(l => ({ ...l, dateDisplay: '' }));
         const base = safeParseISODate(baseISO);
         if (!base) return ls.map(l => ({ ...l, dateDisplay: '' }));
 
-        const allowed = new Set(days); // 0=Seg..4=Sex (mas nosso conversor vai gerar 0..6)
+        const allowed = new Set(days);
         let cursor = new Date(base.getFullYear(), base.getMonth(), base.getDate());
 
-        // achar primeiro dia válido
         let guard = 0;
         while (!allowed.has(jsDayToMon0(cursor.getDay())) && guard < 14) {
             cursor.setDate(cursor.getDate() + 1);
@@ -188,7 +204,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
             if (idx === 0) {
                 return { ...lesson, dateDisplay: formatLessonDate(cursor) };
             }
-            // avançar até próximo dia válido
             let g = 0;
             do {
                 cursor.setDate(cursor.getDate() + 1);
@@ -241,22 +256,32 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         });
     }, []);
 
-    const handleAddTopic = useCallback((topicName: string) => {
+    const handleAddTopic = useCallback((topic: CurriculoItem) => {
+        setSelectedTopic(topic.id); // Ativa carregamento de sugestões
+
         if (targetLessonId) {
-            // Add to specific lesson
             setLessons(prev => prev.map(l => {
                 if (l.id === targetLessonId) {
-                    return { ...l, conteudos: [...(l.conteudos || []), topicName] };
+                    return { ...l, title: l.title || topic.name };
                 }
                 return l;
             }));
-            setActivePanel('canvas'); // Go back to canvas
-            setTargetLessonId(null); // Clear target
         } else {
-            // Create new lesson with this topic as title
-            addLesson(topicName);
+            addLesson(topic.name);
         }
     }, [targetLessonId, addLesson]);
+
+    const handleAddComplement = useCallback((name: string) => {
+        if (!targetLessonId) return;
+        setLessons(prev => prev.map(l => {
+            if (l.id === targetLessonId) {
+                const current = l.conteudos || [];
+                if (current.includes(name)) return l;
+                return { ...l, conteudos: [...current, name] };
+            }
+            return l;
+        }));
+    }, [targetLessonId]);
 
     const requestContentFor = useCallback((lessonId: string) => {
         setTargetLessonId(lessonId);
@@ -274,20 +299,19 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         }));
     }, []);
 
-
     const validLessons = useMemo(() => {
         return lessons
             .filter(l => l.title.trim() || (l.conteudos && l.conteudos.length > 0))
             .map((t, i) => ({
                 ordem: i + 1,
                 titulo: t.title || t.conteudos[0] || 'Aula sem título',
-                conteudos: t.conteudos // Pass this to backend if supported, or just use title
+                conteudos: t.conteudos
             }));
     }, [lessons]);
 
     const canSave = useMemo(() => {
-        return titulo.trim().length > 0 && validLessons.length > 0 && diasSemana.length > 0 && !saving;
-    }, [titulo, validLessons.length, diasSemana.length, saving]);
+        return titulo.trim().length > 0 && validLessons.length > 0 && !saving;
+    }, [titulo, validLessons.length, saving]);
 
     const handleSave = useCallback(async () => {
         if (!canSave) return;
@@ -295,24 +319,17 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         setSaving(true);
         try {
             if (planoId) {
-                // UPDATE
                 await api.updatePlano(planoId, {
                     titulo: titulo.trim(),
-                    disciplina: disciplina.trim() || disciplinaPre,
-                    // If backend supports partial update of these fields
-                    aulas: validLessons, // We send full list to replace/update
+                    disciplina: disciplinaPre,
+                    aulas: validLessons,
                     dias_semana: diasSemana
-                    // data_inicio might be read-only on update? Let's check api.ts/backend. 
-                    // Looking at api.ts signature: updatePlano(id, data: { titulo?, disciplina?, aulas?, dias_semana? })
-                    // It doesn't include data_inicio. So we don't send it unless we update the signature or backend. 
-                    // Current signature I added: { titulo?, disciplina?, aulas?, dias_semana? }
                 });
             } else {
-                // CREATE
                 await api.createPlano({
                     turma_id: turmaId,
                     titulo: titulo.trim(),
-                    disciplina: disciplina.trim() || disciplinaPre,
+                    disciplina: disciplinaPre,
                     data_inicio: dataInicio,
                     aulas: validLessons,
                     dias_semana: diasSemana,
@@ -325,7 +342,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         } finally {
             setSaving(false);
         }
-    }, [canSave, turmaId, titulo, disciplina, disciplinaPre, dataInicio, validLessons, diasSemana, onCreated, planoId]);
+    }, [canSave, turmaId, titulo, disciplinaPre, dataInicio, validLessons, diasSemana, onCreated, planoId]);
 
     return (
         <div className="studio-container" role="dialog" aria-modal="true" aria-label="Editor de planejamento">
@@ -397,14 +414,10 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     </div>
 
                     <div className="studio-input-group">
-                        <label className="studio-label" htmlFor="ps-disciplina">Disciplina</label>
-                        <input
-                            id="ps-disciplina"
-                            type="text"
-                            className="studio-input"
-                            value={disciplina}
-                            onChange={e => setDisciplina(e.target.value)}
-                        />
+                        <label className="studio-label">Disciplina</label>
+                        <div className="studio-input" style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }}>
+                            {disciplinaPre || 'Geral'}
+                        </div>
                     </div>
 
                     <div className="studio-input-group">
@@ -418,16 +431,15 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                         />
                     </div>
 
-                    <div className="studio-input-group">
-                        <label className="studio-label">Dias de Aula (Semanal)</label>
-                        <div className="weekday-visual" role="group" aria-label="Selecionar dias da semana">
+                    <div className="studio-input-group" style={{ opacity: 0.6, pointerEvents: 'none' }}>
+                        <label className="studio-label">Dias de Aula (Herdados da Turma)</label>
+                        <div className="weekday-visual">
                             {DIAS_SEMANA.map(day => (
                                 <button
                                     key={day.id}
                                     type="button"
                                     className={`weekday-btn ${diasSemana.includes(day.id) ? 'active' : ''}`}
                                     onClick={() => toggleDay(day.id)}
-                                    aria-pressed={diasSemana.includes(day.id)}
                                 >
                                     {day.label}
                                 </button>
@@ -544,16 +556,66 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
 
                                 <div style={{ padding: 2 }}>
                                     {topics.map(t => (
-                                        <div key={t.id} className="curr-topic">
-                                            <span>{t.name}</span>
-                                            <button
-                                                type="button"
-                                                className="btn-add-topic"
-                                                onClick={() => handleAddTopic(t.name)}
-                                                aria-label={targetLessonId ? "Adicionar à aula selecionada" : "Criar aula com este tópico"}
-                                            >
-                                                <Plus size={16} />
-                                            </button>
+                                        <div key={t.id} style={{ marginBottom: 16 }}>
+                                            <div className="curr-topic" style={{ background: selectedTopic === t.id ? 'rgba(59, 130, 246, 0.1)' : undefined }}>
+                                                <span onClick={() => setSelectedTopic(t.id)} style={{ cursor: 'pointer', flex: 1 }}>{t.name}</span>
+                                                <button
+                                                    type="button"
+                                                    className="btn-add-topic"
+                                                    onClick={() => handleAddTopic(t)}
+                                                    aria-label={targetLessonId ? "Selecionar este tópico" : "Criar aula com este tópico"}
+                                                >
+                                                    <Plus size={16} />
+                                                </button>
+                                            </div>
+
+                                            {selectedTopic === t.id && (
+                                                <div className="topic-complements" style={{ paddingLeft: 12, marginTop: 8 }}>
+                                                    {/* Metodologias */}
+                                                    <div className="complement-section">
+                                                        <div className="curr-hint" style={{ fontSize: 10, opacity: 0.8 }}>METODOLOGIAS SUGERIDAS</div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                                            {methodologies.filter(m => suggestedMeths.includes(m.id)).map(m => (
+                                                                <button key={m.id} className="btn-complement suggested" onClick={() => handleAddComplement(m.name)}>
+                                                                    {m.name}
+                                                                </button>
+                                                            ))}
+                                                            <select
+                                                                className="studio-input"
+                                                                style={{ fontSize: 10, height: 24, padding: '0 4px', width: 'auto' }}
+                                                                onChange={(e) => { if (e.target.value) handleAddComplement(e.target.value); e.target.value = ''; }}
+                                                            >
+                                                                <option value="">Outras...</option>
+                                                                {methodologies.filter(m => !suggestedMeths.includes(m.id)).map(m => (
+                                                                    <option key={m.id} value={m.name}>{m.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Recursos */}
+                                                    <div className="complement-section" style={{ marginTop: 12 }}>
+                                                        <div className="curr-hint" style={{ fontSize: 10, opacity: 0.8 }}>RECURSOS SUGERIDOS</div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                                            {resources.filter(r => suggestedRes.includes(r.id)).map(r => (
+                                                                <button key={r.id} className="btn-complement suggested" onClick={() => handleAddComplement(r.name)}>
+                                                                    {r.name}
+                                                                </button>
+                                                            ))}
+                                                            <select
+                                                                className="studio-input"
+                                                                style={{ fontSize: 10, height: 24, padding: '0 4px', width: 'auto' }}
+                                                                onChange={(e) => { if (e.target.value) handleAddComplement(e.target.value); e.target.value = ''; }}
+                                                            >
+                                                                <option value="">Outros...</option>
+                                                                {resources.filter(r => !suggestedRes.includes(r.id)).map(r => (
+                                                                    <option key={r.id} value={r.name}>{r.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

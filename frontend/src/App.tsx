@@ -3,7 +3,7 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Turmas } from './pages/Turmas';
 import { Relatorios } from './pages/Relatorios';
-import { Assinatura } from './pages/Assinatura';
+
 import { Gabarito } from './pages/Gabarito';
 import { TurmaDetail } from './pages/TurmaDetail';
 import { Debug } from './pages/Debug';
@@ -49,12 +49,7 @@ function App() {
             <Planejamento />
           </PrivateRoute>
         } />
-        <Route path="/dashboard/assinatura" element={
-          <PrivateRoute>
-            <TabNavigation />
-            <Assinatura />
-          </PrivateRoute>
-        } />
+
         <Route path="/dashboard/debug" element={<PrivateRoute><Debug /></PrivateRoute>} />
         <Route path="/dashboard/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
       </Routes>

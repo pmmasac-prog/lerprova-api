@@ -10,6 +10,7 @@ interface Turma {
     id: number;
     nome: string;
     disciplina?: string;
+    dias_semana?: string | number[];
 }
 
 interface Plano {
@@ -420,8 +421,16 @@ export const Planejamento: React.FC = () => {
                         if (selectedPlanoId) loadPlanoDetails(selectedPlanoId);
                     }}
                     turmaId={selectedTurmaId}
-                    turmaNome={turmas.find(t => t.id === selectedTurmaId)?.nome || ''}
-                    disciplinaPre={turmas.find(t => t.id === selectedTurmaId)?.disciplina || ''}
+                    turmaNome={currentTurma?.nome || ''}
+                    disciplinaPre={currentTurma?.disciplina || ''}
+                    diasSemanaPre={(() => {
+                        try {
+                            const ds = currentTurma?.dias_semana;
+                            if (typeof ds === 'string') return JSON.parse(ds);
+                            if (Array.isArray(ds)) return ds;
+                        } catch { }
+                        return [0, 2, 4]; // fallback
+                    })()}
                     planoId={isEditing && editingPlanoData ? editingPlanoData.id : undefined}
                     initialData={isEditing && editingPlanoData ? {
                         titulo: editingPlanoData.titulo,

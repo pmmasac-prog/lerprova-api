@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, ClipboardList, TrendingUp, CreditCard } from 'lucide-react';
+import { Home, Users, ClipboardList, TrendingUp } from 'lucide-react';
 import './TabNavigation.css';
 
 export const TabNavigation: React.FC = () => {
@@ -11,7 +11,6 @@ export const TabNavigation: React.FC = () => {
         { id: 'turmas', path: '/dashboard/turmas', icon: Users, label: 'Turmas' },
         { id: 'gabarito', path: '/dashboard/gabarito', icon: ClipboardList, label: 'Gabarito' },
         { id: 'relatorios', path: '/dashboard/relatorios', icon: TrendingUp, label: 'Relatórios' },
-        { id: 'assinatura', path: '/dashboard/assinatura', icon: CreditCard, label: 'Assinatura' },
     ];
 
     const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');

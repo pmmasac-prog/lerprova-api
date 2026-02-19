@@ -5,6 +5,7 @@ import models
 from database import get_db
 from dependencies import get_current_user
 import logging
+import json
 
 router = APIRouter(prefix="/turmas", tags=["turmas"])
 logger = logging.getLogger("lerprova-api")
@@ -22,6 +23,7 @@ async def get_turmas(user: users_db.User = Depends(get_current_user), db: Sessio
             "id": t.id,
             "nome": t.nome,
             "disciplina": t.disciplina,
+            "dias_semana": t.dias_semana, # Novo campo
             "user_id": t.user_id,
             "created_at": t.created_at.isoformat() if t.created_at else None
         } for t in turmas
@@ -29,9 +31,17 @@ async def get_turmas(user: users_db.User = Depends(get_current_user), db: Sessio
 
 @router.post("")
 async def create_turma(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    nome = data.get("nome")
+    disciplina = data.get("disciplina")
+    dias_semana = data.get("dias_semana") # JSON list ex: [0, 2]
+
+    if not nome or not disciplina or not dias_semana:
+        raise HTTPException(status_code=400, detail="Nome, Disciplina e Dias da Semana são obrigatórios")
+
     nova_turma = models.Turma(
-        nome=data.get("nome"),
-        disciplina=data.get("disciplina"),
+        nome=nome,
+        disciplina=disciplina,
+        dias_semana=json.dumps(dias_semana) if isinstance(dias_semana, list) else dias_semana,
         user_id=user.id # Vincula a turma ao professor logado
     )
     db.add(nova_turma)

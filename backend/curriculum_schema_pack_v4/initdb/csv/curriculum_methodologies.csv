@@ -1,0 +1,60 @@
+id,name,description,modality,active
+1,Resolução guiada de problemas,,,True
+2,Aprendizagem por pares,,,True
+3,Sala de aula invertida,,,True
+4,Aprendizagem baseada em projetos (ABP),,,True
+5,Aprendizagem baseada em problemas (PBL),,,True
+6,Estudo de caso,,,True
+7,Sequência didática,,,True
+8,Oficina prática,,,True
+9,Roda de conversa,,,True
+10,Debate regrado,,,True
+11,Seminário,,,True
+12,Aula expositiva dialogada,,,True
+13,Leitura compartilhada,,,True
+14,Leitura orientada,,,True
+15,Leitura autônoma com mediação,,,True
+16,Produção textual por etapas,,,True
+17,Reescrita e revisão colaborativa,,,True
+18,Análise linguística contextualizada,,,True
+19,Mapas conceituais,,,True
+20,Rotação por estações,,,True
+21,Gamificação,,,True
+22,Quiz diagnóstico,,,True
+23,Jigsaw (quebra-cabeça cooperativo),,,True
+24,Think-Pair-Share,,,True
+25,Peer review (avaliação por pares),,,True
+26,Portfólio,,,True
+27,Diário de aprendizagem,,,True
+28,Estudo dirigido,,,True
+29,Investigação orientada,,,True
+30,Pesquisa de campo (quando aplicável),,,True
+31,Simulação / role-play,,,True
+32,Dramatização,,,True
+33,Contação de histórias,,,True
+34,Leitura dramática,,,True
+35,Podcast em sala,,,True
+36,Produção de vídeo,,,True
+37,Produção de infográfico,,,True
+38,Análise de mídia,,,True
+39,Curadoria de fontes,,,True
+40,Análise de dados (tabelas/gráficos),,,True
+41,Trabalho com rubricas,,,True
+42,Feedback formativo rápido (exit ticket),,,True
+43,Correção comentada coletiva,,,True
+44,Rotina de pensamento (See-Think-Wonder),,,True
+45,Rotina de comparação (Similaridades/Diferenças),,,True
+46,Ensino híbrido (com atividades offline/online),,,True
+47,Microaulas (vídeos curtos),,,True
+48,Aprendizagem baseada em tarefas,,,True
+49,Oficina de argumentação,,,True
+50,Oficina de leitura e interpretação,,,True
+51,Oficina de escrita,,,True
+52,Clube de leitura,,,True
+53,Produção de roteiro/storyboard,,,True
+54,Análise de obras literárias por temas,,,True
+55,Intertextualidade guiada,,,True
+56,Análise de gêneros textuais,,,True
+57,Projeto interdisciplinar,,,True
+58,Estudo de vocabulário em contexto,,,True
+59,Laboratório de gramática (uso/reflexão),,,True
