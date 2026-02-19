@@ -23,8 +23,16 @@ from migrations import run_migrations
 from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard
 
 # Inicializar Banco de Dados
-run_migrations(engine)  # Garantir colunas novas
-models.Base.metadata.create_all(bind=engine) # Criar tabelas novas
+run_migrations(engine)  # Garantir bootstrap inicial
+
+# Emergência: Reset via Variável de Ambiente (Útil para Render Free)
+if os.getenv("RESET_DATABASE_ONCE") == "true":
+    logger.warning("!!! TRIGGER DE RESET ACTIVADO: Apagando banco de dados...")
+    models.Base.metadata.drop_all(bind=engine)
+    models.Base.metadata.create_all(bind=engine)
+    logger.info("!!! Banco de dados recriado com sucesso.")
+
+models.Base.metadata.create_all(bind=engine) # Criar tabelas novas (idempotente)
 
 # Opcional: Popular com usuários iniciais se estiver vazio
 db = SessionLocal()
