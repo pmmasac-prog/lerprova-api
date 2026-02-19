@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, FileUp, QrCode, Trash2, Plus, HelpCircle, BarChart3, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, FileUp, QrCode, Trash2, Plus, HelpCircle, BarChart3, ArrowLeft, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
 import './Alunos.css';
 
@@ -24,6 +25,7 @@ export const Alunos: React.FC = () => {
     const [showHelpModal, setShowHelpModal] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
     const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
+    const navigate = useNavigate();
 
     // Form states
     const [newAluno, setNewAluno] = useState({ nome: '', codigo: '' });
@@ -123,13 +125,18 @@ export const Alunos: React.FC = () => {
         <div className="alunos-container">
             {/* Header */}
             <div className="alunos-header">
-                <div>
-                    <h1 className="alunos-title">{selectedTurmaNome}</h1>
-                    <p className="alunos-count">{alunos.length} alunos</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <button className="help-btn" onClick={() => navigate('/dashboard')} style={{ padding: '10px' }}>
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                        <h1 className="alunos-title">{selectedTurmaNome}</h1>
+                        <p className="alunos-count">{alunos.length} alunos cadastrados</p>
+                    </div>
                 </div>
                 <button className="help-btn" onClick={() => setShowHelpModal(true)}>
-                    <HelpCircle size={20} />
-                    <span>Ajuda CSV</span>
+                    <HelpCircle size={18} />
+                    <span>Tutorial CSV</span>
                 </button>
             </div>
 
@@ -176,21 +183,22 @@ export const Alunos: React.FC = () => {
                     <p className="empty-text">Carregando...</p>
                 ) : alunos.length > 0 ? (
                     alunos.map(aluno => (
-                        <div key={aluno.id} className="aluno-card">
+                        <div key={aluno.id} className="aluno-card" onClick={() => handleShowQR(aluno)}>
                             <div className="aluno-avatar">
-                                <User size={20} />
+                                <User size={24} />
                             </div>
                             <div className="aluno-info">
                                 <div className="aluno-name">{aluno.nome}</div>
-                                <div className="aluno-code">ID: {aluno.codigo}</div>
+                                <div className="aluno-code">#{aluno.codigo}</div>
                             </div>
-                            <div className="aluno-actions">
+                            <div className="aluno-actions" onClick={e => e.stopPropagation()}>
                                 <button className="action-btn-qr" onClick={() => handleShowQR(aluno)}>
                                     <QrCode size={18} />
                                 </button>
                                 <button className="action-btn-delete" onClick={() => handleDelete(aluno.id)}>
                                     <Trash2 size={18} />
                                 </button>
+                                <ChevronRight size={16} color="#475569" />
                             </div>
                         </div>
                     ))
