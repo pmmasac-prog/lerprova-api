@@ -68,20 +68,19 @@ class Aluno(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String)
     codigo = Column(String, index=True) # Matrícula ou código único
-    turma_id = Column(Integer, ForeignKey("turmas.id"))
+    # turma_id REMOVIDO — usar apenas M2M (aluno_turma)
     qr_token = Column(String, unique=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
     turmas = relationship("Turma", secondary="aluno_turma", back_populates="alunos")
-    # turma = relationship("Turma", back_populates="alunos") # Deprecated
     resultados = relationship("Resultado", back_populates="aluno", cascade="all, delete-orphan")
 
 class Gabarito(Base):
     __tablename__ = "gabaritos"
 
     id = Column(Integer, primary_key=True, index=True)
-    turma_id = Column(Integer, ForeignKey("turmas.id"), nullable=True) # Pode ser global ou por turma? Assumindo por turma ou geral
+    # turma_id REMOVIDO — usar apenas M2M (gabarito_turma)
     titulo = Column(String) # Ex: "Prova Bimestral"
     assunto = Column(String, nullable=True)
     disciplina = Column(String, nullable=True)
@@ -106,6 +105,13 @@ class Resultado(Base):
     respostas_aluno = Column(Text, nullable=True) # JSON string das respostas do aluno
     data_correcao = Column(DateTime, default=datetime.utcnow)
     imagem_path = Column(String, nullable=True) # Caminho da imagem da prova corrigida
+
+    # Campos de auditoria OMR
+    status_list = Column(Text, nullable=True)          # JSON: ["valid","blank",...]
+    confidence_scores = Column(Text, nullable=True)    # JSON: [0.95, 0.8, ...]
+    avg_confidence = Column(Float, default=0.0)
+    layout_version = Column(String, nullable=True)
+    anchors_found = Column(Integer, default=0)
 
     # Relacionamentos
     aluno = relationship("Aluno", back_populates="resultados")

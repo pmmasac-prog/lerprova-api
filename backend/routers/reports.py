@@ -16,10 +16,12 @@ class SyncRequest(BaseModel):
     gabaritos: Optional[List[dict]] = []
     resultados: Optional[List[dict]] = []
 
-API_KEY_SECRET = os.getenv("API_KEY_SECRET", "lp_secret_key_2026_batch")
+API_KEY_SECRET = os.getenv("API_KEY_SECRET")
 
 @router.post("/batch/sync")
 async def batch_sync(request: SyncRequest, x_api_key: str = Header(None)):
+    if not API_KEY_SECRET:
+        raise HTTPException(status_code=500, detail="API_KEY_SECRET não configurada no servidor")
     if x_api_key != API_KEY_SECRET:
         raise HTTPException(status_code=403, detail="Acesso negado")
     

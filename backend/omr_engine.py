@@ -41,7 +41,7 @@ class OMREngine:
             "version": "default",
             "warped_size": {"w": 1120, "h": 1600},
             "thresholds": {"marked": 0.20, "ambiguous": 0.10},
-            "roi_size_pct_of_width": 0.035,
+            "roi_size_pct_of_width": 0.030,
             "options": ["A", "B", "C", "D", "E"],
             "x_centers_pct": [0.245, 0.318, 0.392, 0.465, 0.538],
             "y_start_pct": 0.21,
@@ -538,23 +538,8 @@ class OMREngine:
     
     def validate_questions(self, bubble_results):
         """
-        Valida cada questão e retorna respostas finais com status.
-        
-        Status possíveis:
-        - "valid": exatamente 1 bolha marcada
-        - "blank": nenhuma bolha marcada
-        - "invalid": múltiplas bolhas marcadas
-        - "ambiguous": bolha com baixa confiança
-        """
-        answers = []
-        confidence_scores = []
-        status_list = []
-        status_counts = {"valid": 0, "blank": 0, "invalid": 0, "ambiguous": 0}
-        valid_confidences = []
-        
-    def validate_questions(self, bubble_results):
-        """
         Lógica de Densidade Relativa (Z-Score): Compara a bolha com seus vizinhos de linha.
+        Também anota final_status/final_conf/final_index na question_data para o audit_map.
         """
         answers = []
         confidence_scores = []
@@ -584,8 +569,10 @@ class OMREngine:
                 status = "blank"
                 ans = None
                 conf = 1.0
+                final_idx = None
             elif len(marked_indices) == 1:
                 idx = marked_indices[0]
+                final_idx = idx
                 # Se a segunda maior densidade for muito próxima, é ambíguo
                 other_densities = np.delete(densities, idx)
                 if len(other_densities) > 0 and max_d - np.max(other_densities) < 0.10:
@@ -600,6 +587,12 @@ class OMREngine:
                 status = "invalid"
                 ans = None
                 conf = 0.0
+                final_idx = None
+
+            # Anotar na question_data para o audit_map usar
+            question_data["final_status"] = status
+            question_data["final_index"] = final_idx
+            question_data["final_conf"] = conf
 
             status_list.append(status)
             status_counts[status] += 1
@@ -617,6 +610,7 @@ class OMREngine:
     def generate_audit_map(self, warped, bubble_results, num_questions):
         """
         Gera mapa visual destacando as bolhas detectadas.
+        Usa final_status anotado pelo validate_questions para cores consistentes.
         
         Cores:
         - Verde: bolha marcada com alta confiança
@@ -627,30 +621,35 @@ class OMREngine:
         audit_img = warped.copy()
         
         for question_data in bubble_results:
-            marked_bubbles = [b for b in question_data['bubbles'] if b['marked']]
+            status = question_data.get("final_status")
+            final_idx = question_data.get("final_index")
+            conf = question_data.get("final_conf", 0)
             
-            if len(marked_bubbles) == 0:
-                # Questão em branco - destacar em azul
+            if status == "blank":
                 for bubble in question_data['bubbles']:
                     x1, y1, x2, y2 = bubble['coords']
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (255, 100, 0), 2)
             
-            elif len(marked_bubbles) == 1:
-                # Questão válida
-                bubble = marked_bubbles[0]
-                x1, y1, x2, y2 = bubble['coords']
-                
-                if bubble['confidence'] >= self.MIN_CONFIDENCE:
-                    # Alta confiança - verde
-                    cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 0), 3)
-                else:
-                    # Baixa confiança - amarelo
-                    cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 255), 3)
-            
-            else:
-                # Múltiplas marcações - vermelho
+            elif status == "invalid":
+                marked_bubbles = [b for b in question_data['bubbles'] if b['marked']]
                 for bubble in marked_bubbles:
                     x1, y1, x2, y2 = bubble['coords']
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 0, 255), 3)
+            
+            elif status in ("valid", "ambiguous") and final_idx is not None:
+                bubble = question_data['bubbles'][final_idx]
+                x1, y1, x2, y2 = bubble['coords']
+                
+                if status == "valid" and conf >= self.MIN_CONFIDENCE:
+                    cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+                else:
+                    cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 255), 3)
+            
+            else:
+                # Fallback para questões não validadas (ex: bubble_results sem validate)
+                marked_bubbles = [b for b in question_data['bubbles'] if b['marked']]
+                for bubble in marked_bubbles:
+                    x1, y1, x2, y2 = bubble['coords']
+                    cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 0), 3)
         
         return audit_img

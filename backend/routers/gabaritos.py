@@ -4,6 +4,7 @@ import models
 import users_db
 from database import get_db
 from dependencies import get_current_user
+from utils.answers import parse_json_list, dump_json_list
 import json
 import logging
 
@@ -12,13 +13,12 @@ logger = logging.getLogger("lerprova-api")
 
 @router.post("/gabaritos")
 async def create_gabarito(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    respostas = data.get("respostas")
-    if isinstance(respostas, list):
-        respostas = json.dumps(respostas)
-    
-    if isinstance(respostas, str) and "," in respostas:
-        arr = [x.strip() for x in respostas.split(",")]
-        respostas = json.dumps(arr)
+    # Normalizar respostas via util central
+    num_questoes = int(data.get("questoes") or data.get("num_questoes") or 10)
+    corretas = parse_json_list(data.get("respostas"), "respostas")
+
+    if corretas and len(corretas) != num_questoes:
+        raise HTTPException(status_code=422, detail=f"respostas deve ter {num_questoes} itens, recebeu {len(corretas)}")
 
     turma_ids = data.get("turma_ids", [])
     if data.get("turma_id") and int(data.get("turma_id")) not in turma_ids:
@@ -30,13 +30,12 @@ async def create_gabarito(data: dict, user: users_db.User = Depends(get_current_
              raise HTTPException(status_code=403, detail="Você não tem permissão para criar provas para turmas que não são suas")
 
     novo_gabarito = models.Gabarito(
-        turma_id=turma_ids[0] if turma_ids else None,
         titulo=data.get("titulo", data.get("assunto")),
         assunto=data.get("assunto"),
         disciplina=data.get("disciplina"),
         data_prova=data.get("data"),
-        num_questoes=int(data.get("questoes") or data.get("num_questoes") or 10),
-        respostas_corretas=respostas,
+        num_questoes=num_questoes,
+        respostas_corretas=dump_json_list(corretas),
         periodo=data.get("periodo")
     )
 
@@ -74,10 +73,10 @@ async def update_gabarito(gabarito_id: int, data: dict, user: users_db.User = De
         gabarito.num_questoes = int(data.get("questoes") or data.get("num_questoes") or gabarito.num_questoes)
     
     if "respostas" in data:
-        respostas = data.get("respostas")
-        if isinstance(respostas, list):
-            respostas = json.dumps(respostas)
-        gabarito.respostas_corretas = respostas
+        corretas = parse_json_list(data.get("respostas"), "respostas")
+        if corretas and gabarito.num_questoes and len(corretas) != gabarito.num_questoes:
+            raise HTTPException(status_code=422, detail=f"respostas deve ter {gabarito.num_questoes} itens")
+        gabarito.respostas_corretas = dump_json_list(corretas)
 
     if "periodo" in data:
         gabarito.periodo = data.get("periodo")
@@ -91,8 +90,6 @@ async def update_gabarito(gabarito_id: int, data: dict, user: users_db.User = De
 
         turmas = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids)).all()
         gabarito.turmas = turmas
-        if turma_ids:
-            gabarito.turma_id = turma_ids[0]
 
     db.commit()
     return {"message": "Gabarito atualizado com sucesso"}
@@ -111,7 +108,7 @@ async def get_gabaritos(user: users_db.User = Depends(get_current_user), db: Ses
         count = db.query(models.Resultado).filter(models.Resultado.gabarito_id == g.id).count()
         g_dict = {
             "id": g.id,
-            "turma_id": g.turma_id,
+            "turma_id": g.turmas[0].id if g.turmas else None,
             "turma_nome": ", ".join([t.nome for t in g.turmas]) if g.turmas else "N/A",
             "turma_ids": [t.id for t in g.turmas],
             "titulo": g.titulo,

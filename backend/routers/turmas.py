@@ -50,10 +50,16 @@ async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_
         
     turma = query.first()
     
-    if turma:
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
+
+    # Limpar registros relacionados para evitar FK violation
+    try:
+        db.query(models.Frequencia).filter(models.Frequencia.turma_id == turma_id).delete()
         db.delete(turma)
         db.commit()
         return {"message": "Turma excluída com sucesso"}
-    
-    # Se não encontrou (seja porque não existe ou porque não pertence ao user)
-    raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Erro ao excluir turma {turma_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao excluir turma: {str(e)}")
