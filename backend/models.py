@@ -50,16 +50,16 @@ class Turma(Base):
 gabarito_turma = Table(
     "gabarito_turma",
     Base.metadata,
-    Column("gabarito_id", Integer, ForeignKey("gabaritos.id"), primary_key=True),
-    Column("turma_id", Integer, ForeignKey("turmas.id"), primary_key=True),
+    Column("gabarito_id", Integer, ForeignKey("gabaritos.id", ondelete="CASCADE"), primary_key=True),
+    Column("turma_id", Integer, ForeignKey("turmas.id", ondelete="CASCADE"), primary_key=True),
 )
 
 # Tabela de associação para Aluno e Turma (Muitos-para-Muitos)
 aluno_turma = Table(
     "aluno_turma",
     Base.metadata,
-    Column("aluno_id", Integer, ForeignKey("alunos.id"), primary_key=True),
-    Column("turma_id", Integer, ForeignKey("turmas.id"), primary_key=True),
+    Column("aluno_id", Integer, ForeignKey("alunos.id", ondelete="CASCADE"), primary_key=True),
+    Column("turma_id", Integer, ForeignKey("turmas.id", ondelete="CASCADE"), primary_key=True),
 )
 
 class Aluno(Base):
@@ -98,8 +98,8 @@ class Resultado(Base):
     __tablename__ = "resultados"
 
     id = Column(Integer, primary_key=True, index=True)
-    aluno_id = Column(Integer, ForeignKey("alunos.id"))
-    gabarito_id = Column(Integer, ForeignKey("gabaritos.id"))
+    aluno_id = Column(Integer, ForeignKey("alunos.id", ondelete="CASCADE"))
+    gabarito_id = Column(Integer, ForeignKey("gabaritos.id", ondelete="CASCADE"))
     acertos = Column(Integer)
     nota = Column(Float)
     respostas_aluno = Column(Text, nullable=True) # JSON string das respostas do aluno
@@ -121,8 +121,8 @@ class Frequencia(Base):
     __tablename__ = "frequencia"
 
     id = Column(Integer, primary_key=True, index=True)
-    turma_id = Column(Integer, ForeignKey("turmas.id"))
-    aluno_id = Column(Integer, ForeignKey("alunos.id"))
+    turma_id = Column(Integer, ForeignKey("turmas.id", ondelete="CASCADE"))
+    aluno_id = Column(Integer, ForeignKey("alunos.id", ondelete="CASCADE"))
     data = Column(String) # YYYY-MM-DD
     presente = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -135,7 +135,7 @@ class Plano(Base):
     __tablename__ = "planos"
 
     id = Column(Integer, primary_key=True, index=True)
-    turma_id = Column(Integer, ForeignKey("turmas.id"))
+    turma_id = Column(Integer, ForeignKey("turmas.id", ondelete="CASCADE"))
     user_id = Column(Integer, ForeignKey("users.id"))
     titulo = Column(String)
     disciplina = Column(String, nullable=True)
@@ -151,7 +151,7 @@ class AulaPlanejada(Base):
     __tablename__ = "aulas_planejadas"
 
     id = Column(Integer, primary_key=True, index=True)
-    plano_id = Column(Integer, ForeignKey("planos.id"))
+    plano_id = Column(Integer, ForeignKey("planos.id", ondelete="CASCADE"))
     ordem = Column(Integer)
     titulo = Column(String)
     scheduled_date = Column(String)  # YYYY-MM-DD
@@ -166,7 +166,7 @@ class RegistroAula(Base):
     __tablename__ = "registros_aula"
 
     id = Column(Integer, primary_key=True, index=True)
-    aula_id = Column(Integer, ForeignKey("aulas_planejadas.id"))
+    aula_id = Column(Integer, ForeignKey("aulas_planejadas.id", ondelete="CASCADE"))
     user_id = Column(Integer, ForeignKey("users.id"))
     data_registro = Column(DateTime, default=datetime.utcnow)
     percepcoes = Column(Text, nullable=True)  # JSON: ["engajados", "duvida"]
@@ -180,7 +180,7 @@ class AnalyticsDaily(Base):
     __tablename__ = "analytics_daily"
 
     id = Column(Integer, primary_key=True, index=True)
-    turma_id = Column(Integer, ForeignKey("turmas.id"))
+    turma_id = Column(Integer, ForeignKey("turmas.id", ondelete="CASCADE"))
     data = Column(String)  # YYYY-MM-DD
     engajamento_score = Column(Float, default=0.0)  # 0-1
     alerta_score = Column(Float, default=0.0)  # 0-1
