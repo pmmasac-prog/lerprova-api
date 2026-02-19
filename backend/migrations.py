@@ -23,6 +23,8 @@ def run_migrations(engine):
         ("resultados", "status_list"),
         ("resultados", "confidence_scores"),
         ("planos", "dias_semana"),
+        ("aulas_planejadas", "metodologia_recurso"),
+        ("aulas_planejadas", "bncc_skills"),
         ("registros_aula", "percepcoes"),
         ("registros_aula", "ajustes_feitos"),
     ]

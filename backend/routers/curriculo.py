@@ -3,6 +3,8 @@ from typing import List, Optional
 import csv
 import os
 from pydantic import BaseModel
+from database import SessionLocal
+from models import BNCCSkill, BNCCCompetency
 
 router = APIRouter(prefix="/curriculo", tags=["curriculo"])
 
@@ -34,6 +36,25 @@ class CurriculumMethodology(CurriculoBase):
 class CurriculumResource(CurriculoBase):
     type: Optional[str] = None
     url: Optional[str] = None
+
+class BNCCSkillSchema(BaseModel):
+    id: int
+    code: str
+    description: str
+    area: Optional[str] = None
+    grade: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class BNCCCompetencySchema(BaseModel):
+    id: int
+    code: str
+    title: str
+    description: str
+
+    class Config:
+        from_attributes = True
 
 class CurriculumSuggestions(BaseModel):
     methodologies: List[CurriculumMethodology]
@@ -98,3 +119,25 @@ async def get_suggestions(topic_id: int):
     ]
     
     return CurriculumSuggestions(methodologies=suggested_meths, resources=suggested_res)
+
+@router.get("/bncc/skills", response_model=List[BNCCSkillSchema])
+async def search_skills(q: Optional[str] = None, subject_id: Optional[int] = None, grade: Optional[str] = None):
+    db = SessionLocal()
+    query = db.query(BNCCSkill)
+    if q:
+        query = query.filter(BNCCSkill.description.ilike(f"%{q}%") | BNCCSkill.code.ilike(f"%{q}%"))
+    if subject_id:
+        query = query.filter(BNCCSkill.subject_id == subject_id)
+    if grade:
+        query = query.filter(BNCCSkill.grade == grade)
+    
+    skills = query.limit(50).all()
+    db.close()
+    return skills
+
+@router.get("/bncc/competencies", response_model=List[BNCCCompetencySchema])
+async def get_competencies():
+    db = SessionLocal()
+    comps = db.query(BNCCCompetency).all()
+    db.close()
+    return comps

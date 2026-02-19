@@ -405,5 +405,31 @@ export const api = {
             headers: getAuthHeaders()
         });
         return response.json();
+    },
+
+    async searchBNCCSkills(q?: string, subjectId?: number, grade?: string) {
+        let url = `${API_URL}/curriculo/bncc/skills?`;
+        if (q) url += `q=${encodeURIComponent(q)}&`;
+        if (subjectId) url += `subject_id=${subjectId}&`;
+        if (grade) url += `grade=${encodeURIComponent(grade)}&`;
+
+        const response = await fetch(url, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
+    async getBNCCCompetencies() {
+        const response = await fetch(`${API_URL}/curriculo/bncc/competencies`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
+    async getCoberturaPedagogica(planoId: number) {
+        const response = await fetch(`${API_URL}/planos/${planoId}/cobertura-pedagogica`, {
+            headers: getAuthHeaders()
+        });
+        return response.json();
     }
 };

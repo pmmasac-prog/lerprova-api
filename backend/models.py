@@ -157,6 +157,8 @@ class AulaPlanejada(Base):
     titulo = Column(String)
     scheduled_date = Column(String)  # YYYY-MM-DD
     status = Column(String, default="pending")  # pending, done, skipped
+    metodologia_recurso = Column(JSON, nullable=True) # Lista de strings
+    bncc_skills = Column(JSON, nullable=True) # Lista de strings (códigos BNCC)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
@@ -189,3 +191,37 @@ class AnalyticsDaily(Base):
 
     # Relacionamentos
     turma = relationship("Turma")
+
+class BNCCSkill(Base):
+    __tablename__ = "bncc_skills"
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, index=True)
+    title = Column(String, nullable=True)
+    description = Column(Text)
+    area = Column(String, nullable=True)
+    subject_id = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
+    difficulty = Column(String, nullable=True)
+    tags = Column(String, nullable=True)
+    source = Column(String, nullable=True)
+    active = Column(Boolean, default=True)
+
+class BNCCCompetency(Base):
+    __tablename__ = "bncc_competencies"
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, index=True)
+    title = Column(String, nullable=True)
+    description = Column(Text)
+    area = Column(String, nullable=True)
+    subject_id = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
+    source = Column(String, nullable=True)
+    active = Column(Boolean, default=True)
+
+# Tabela de associação para Habilidade e Competência
+bncc_skill_competency = Table(
+    "bncc_skill_competency",
+    Base.metadata,
+    Column("skill_id", Integer, ForeignKey("bncc_skills.id", ondelete="CASCADE"), primary_key=True),
+    Column("competency_id", Integer, ForeignKey("bncc_competencies.id", ondelete="CASCADE"), primary_key=True),
+)

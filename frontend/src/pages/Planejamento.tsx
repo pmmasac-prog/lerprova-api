@@ -5,6 +5,7 @@ import { Plus, CheckCircle2, AlertCircle, BookOpen, Pencil } from 'lucide-react'
 import { api } from '../services/api';
 import './Planejamento.css';
 import { PlanejamentoStudio } from './PlanejamentoStudio';
+import { BNCCRadar } from '../components/BNCCRadar';
 
 interface Turma {
     id: number;
@@ -82,6 +83,7 @@ export const Planejamento: React.FC = () => {
     const [loadingTurmas, setLoadingTurmas] = useState(false);
     const [loadingPlanos, setLoadingPlanos] = useState(false);
     const [loadingAulas, setLoadingAulas] = useState(false);
+    const [cobertura, setCobertura] = useState<any>(null);
 
     const lastLoadToken = useRef(0);
 
@@ -154,6 +156,12 @@ export const Planejamento: React.FC = () => {
             const allAulas: Aula[] = await api.getPlanoAulas(planoId);
             if (token !== lastLoadToken.current) return;
             setAulas(allAulas);
+
+            // Load Pedagogical Coverage
+            try {
+                const cob = await api.getCoberturaPedagogica(planoId);
+                setCobertura(cob);
+            } catch (e) { console.error(e); }
         } catch (e) {
             console.error('Erro ao carregar detalhes do plano:', e);
         } finally {
@@ -310,6 +318,13 @@ export const Planejamento: React.FC = () => {
                             <div className="progress-bar-fill" style={{ width: `${currentPlano.progresso}%` }} />
                         </div>
                         <span className="progress-text">{currentPlano.progresso}%</span>
+                    </div>
+                )}
+
+                {cobertura && cobertura.total_habilidades > 0 && (
+                    <div className="pedagogical-radar-overlay">
+                        <div className="radar-header">Cobertura BNCC</div>
+                        <BNCCRadar data={cobertura} size={200} />
                     </div>
                 )}
             </header>

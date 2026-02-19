@@ -23,6 +23,8 @@ APP_TZ = ZoneInfo("America/Fortaleza")
 class AulaCreate(BaseModel):
     ordem: Optional[int] = None
     titulo: constr(min_length=1, strip_whitespace=True)
+    metodologia_recurso: Optional[List[str]] = Field(default_factory=list)
+    bncc_skills: Optional[List[str]] = Field(default_factory=list)
 
 
 class PlanoCreate(BaseModel):
@@ -225,6 +227,8 @@ async def create_plano(
             ordem=ordem,
             titulo=aula_in.titulo,
             scheduled_date=schedule[i].isoformat(),
+            metodologia_recurso=json.dumps(aula_in.metodologia_recurso, ensure_ascii=False) if aula_in.metodologia_recurso else None,
+            bncc_skills=json.dumps(aula_in.bncc_skills, ensure_ascii=False) if aula_in.bncc_skills else None,
             status="pending",
         )
         db.add(nova_aula)
@@ -328,6 +332,8 @@ async def get_plano_aulas(
             "ordem": a.ordem,
             "scheduled_date": a.scheduled_date,
             "status": a.status,
+            "metodologia_recurso": json.loads(a.metodologia_recurso) if a.metodologia_recurso else [],
+            "bncc_skills": json.loads(a.bncc_skills) if a.bncc_skills else [],
             "registros": [
                 {
                     "percepcoes": json.loads(r.percepcoes) if r.percepcoes else [],
