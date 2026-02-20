@@ -348,13 +348,24 @@ export const Gabarito: React.FC = () => {
                                                     </>
                                                 )}
                                             </div>
-                                            <div className="history-meta">
+                                            <div className="history-meta" style={{ marginBottom: '8px' }}>
                                                 <Calendar size={12} />
                                                 <span>{g.data}</span>
                                                 <span className="dot">•</span>
                                                 <span>{g.num_questoes} questões</span>
                                                 <span className="dot">•</span>
                                                 <span style={{ fontWeight: 'bold', color: '#10b981' }}>{(g as any).total_resultados || 0} correções</span>
+                                            </div>
+                                            <div className="history-answers" style={{ fontSize: '0.8rem', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                <span style={{ color: '#64748b', fontWeight: 'bold', marginRight: '4px' }}>RESPOSTAS:</span>
+                                                {(() => {
+                                                    try {
+                                                        const ans = JSON.parse(g.respostas_corretas);
+                                                        return Array.isArray(ans) ? ans.join(', ') : 'Erro ao carregar';
+                                                    } catch (e) {
+                                                        return 'Erro ao carregar';
+                                                    }
+                                                })()}
                                             </div>
                                         </div>
 
