@@ -220,20 +220,26 @@ export const Admin: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modal Cadastro - Ajustado para visual Admin */}
+            {/* Modal Cadastro - Visual Premium Emerald/Gold */}
             {showAddModal && (
                 <div className="modal-overlay">
-                    <div className="modal-content" style={{ background: '#0f1117', border: '1px solid var(--admin-emerald)', maxWidth: '600px' }}>
+                    <div className="admin-modal">
                         <div className="modal-header">
-                            <h2 className="admin-title" style={{ fontSize: '20px' }}>Novo Gestor / Professor</h2>
-                            <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white"><ArrowLeft /></button>
+                            <div>
+                                <h1 className="admin-title" style={{ fontSize: '20px' }}>Novo Gestor / Professor</h1>
+                                <p className="admin-subtitle">Credencie novos profissionais ao ecossistema</p>
+                            </div>
+                            <button onClick={() => setShowAddModal(false)} className="text-slate-500 hover:text-white transition-colors">
+                                <ArrowLeft size={24} />
+                            </button>
                         </div>
                         <form onSubmit={handleCreateUser} className="admin-form">
                             <div className="form-grid">
-                                <div className="form-group">
+                                <div className="form-group full-width">
                                     <label>Nome Completo</label>
                                     <input
                                         type="text"
+                                        className="admin-input"
                                         required
                                         value={newUser.nome}
                                         onChange={e => setNewUser({ ...newUser, nome: e.target.value })}
@@ -244,6 +250,7 @@ export const Admin: React.FC = () => {
                                     <label>Email de Acesso</label>
                                     <input
                                         type="email"
+                                        className="admin-input"
                                         required
                                         value={newUser.email}
                                         onChange={e => setNewUser({ ...newUser, email: e.target.value })}
@@ -254,6 +261,7 @@ export const Admin: React.FC = () => {
                                     <label>Senha Provisória</label>
                                     <input
                                         type="password"
+                                        className="admin-input"
                                         required
                                         value={newUser.password}
                                         onChange={e => setNewUser({ ...newUser, password: e.target.value })}
@@ -263,6 +271,7 @@ export const Admin: React.FC = () => {
                                 <div className="form-group">
                                     <label>Nível de Acesso</label>
                                     <select
+                                        className="admin-select"
                                         value={newUser.role}
                                         onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                                     >
@@ -274,24 +283,28 @@ export const Admin: React.FC = () => {
                                     <label>Instituição / Escola</label>
                                     <input
                                         type="text"
+                                        className="admin-input"
                                         value={newUser.escola}
                                         onChange={e => setNewUser({ ...newUser, escola: e.target.value })}
                                         placeholder="Ex: Colégio Objetivo"
                                     />
                                 </div>
-                                <div className="form-group">
-                                    <label>Disciplina</label>
+                                <div className="form-group full-width">
+                                    <label>Disciplina Principal</label>
                                     <input
                                         type="text"
+                                        className="admin-input"
                                         value={newUser.disciplina}
                                         onChange={e => setNewUser({ ...newUser, disciplina: e.target.value })}
-                                        placeholder="Ex: Matemática"
+                                        placeholder="Ex: Matemática, Física, Português..."
                                     />
                                 </div>
                             </div>
                             <div className="form-actions">
-                                <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancelar</button>
-                                <button type="submit" className="btn-primary">Criar Conta</button>
+                                <button type="button" className="btn-ghost" onClick={() => setShowAddModal(false)}>Cancelar</button>
+                                <button type="submit" className="btn-emerald" style={{ padding: '14px 32px' }}>
+                                    Confirmar Cadastro
+                                </button>
                             </div>
                         </form>
                     </div>

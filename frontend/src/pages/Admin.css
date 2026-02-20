@@ -193,3 +193,123 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
+
+/* Modals & Forms */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.admin-modal {
+    background: #0f1117;
+    border: 1px solid var(--admin-border);
+    border-radius: 32px;
+    width: 100%;
+    max-width: 650px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 32px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-form {
+    padding: 40px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-left: 4px;
+}
+
+.admin-input,
+.admin-select {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 16px;
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.admin-input:focus,
+.admin-select:focus {
+    border-color: var(--admin-emerald);
+    background: rgba(16, 185, 129, 0.05);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.admin-select option {
+    background: #0f1117;
+    color: #fff;
+}
+
+.form-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #64748b;
+    padding: 12px 24px;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
