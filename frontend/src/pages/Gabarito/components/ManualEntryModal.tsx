@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, User, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Save, User, ChevronRight, ArrowLeft, Search } from 'lucide-react';
 import { api } from '../../../services/api';
+import './ManualEntryModal.css';
 
 interface ManualEntryModalProps {
     gabarito: any;
@@ -27,19 +28,17 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
             setLoading(true);
             const tIds = gabarito.turma_ids || (gabarito.turma_id ? [gabarito.turma_id] : []);
 
-            // Carregar alunos e resultados em paralelo
             const [alunosArrays, resultsData] = await Promise.all([
                 Promise.all(tIds.map((tId: number) => api.getAlunosByTurma(tId))),
                 api.getResultadosByGabarito(gabarito.id)
             ]);
 
-            // Achatar lista de alunos e remover duplicatas
             const allAlunos = alunosArrays.flat();
             const uniqueAlunos = allAlunos.filter((a, index, self) =>
                 index === self.findIndex((t) => t.id === a.id)
             );
 
-            setAlunos(uniqueAlunos);
+            setAlunos(uniqueAlunos.sort((a, b) => a.nome.localeCompare(b.nome)));
             setResultados(resultsData);
         } catch (err) {
             console.error('Erro ao carregar dados:', err);
@@ -57,7 +56,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
 
     const handleSave = async () => {
         if (selectedAlunoId === null || manualNota === '') {
-            alert('Por favor, informe a nota e selecione um aluno.');
+            alert('Por favor, informe a nota.');
             return;
         }
 
@@ -67,29 +66,24 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
             const existingResult = resultados.find(r => r.aluno_id === selectedAlunoId);
 
             if (existingResult) {
-                // Se já existe, atualizamos
                 await api.updateResultado(existingResult.id, { nota: val });
             } else {
-                // Se não existe, criamos novo
                 const payload = {
                     aluno_id: selectedAlunoId,
-                    gabarito_id: gabarito.id, // Corrected from selectedGabaritoId to gabarito.id
+                    gabarito_id: gabarito.id,
                     nota: val
                 };
                 await api.addResultadoManual(payload);
             }
 
-            // Notificar sucesso e carregar dados
             if (onSuccess) onSuccess();
-            await loadData(); // Ensure data is reloaded after save
-
-            // Voltar para a lista em vez de fechar, para permitir lançar para outro aluno
+            await loadData();
             setStep(1);
             setSelectedAlunoId(null);
             setManualNota('');
         } catch (error) {
             console.error('Erro ao salvar nota:', error);
-            alert('Erro ao salvar nota. Verifique os dados.');
+            alert('Erro ao salvar nota.');
         } finally {
             setLoading(false);
         }
@@ -98,38 +92,38 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     const selectedAluno = alunos.find(a => a.id === selectedAlunoId);
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-container" style={{ maxWidth: '600px' }}>
-                <div className="modal-header">
-                    <div className="header-info-modal">
+        <div className="manual-entry-overlay" onClick={onClose}>
+            <div className="manual-entry-container" onClick={(e) => e.stopPropagation()}>
+                <div className="manual-entry-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         {step === 2 && (
-                            <button className="back-btn-modal" onClick={() => setStep(1)} title="Voltar para lista">
-                                <ArrowLeft size={18} />
+                            <button className="back-btn" onClick={() => setStep(1)} style={{ width: '32px', height: '32px', borderRadius: '50%' }}>
+                                <ArrowLeft size={16} />
                             </button>
                         )}
                         <div>
-                            <h2 className="modal-title">Lançamento de Nota</h2>
-                            <p className="modal-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} questões</p>
+                            <h2 className="manual-entry-title">Lançamento Manual</h2>
+                            <p className="manual-entry-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} q.</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="modal-body-p-0">
+                <div className="manual-entry-body">
                     {step === 1 ? (
-                        <div className="modal-inner">
-                            <label className="label">1. Selecione o Aluno</label>
-                            <div className="search-box">
-                                <User size={18} color="#94a3b8" />
+                        <>
+                            <div className="student-search-container">
+                                <Search className="student-search-icon" size={18} />
                                 <input
                                     type="text"
-                                    className="search-input"
-                                    placeholder="Buscar aluno pelo nome..."
+                                    className="student-search-input"
+                                    placeholder="Procurar aluno..."
                                     value={searchAluno}
                                     onChange={(e) => setSearchAluno(e.target.value)}
                                 />
                             </div>
-                            <div className="student-list-container">
-                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map(a => {
+
+                            <div className="manual-student-list">
+                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map((a, idx) => {
                                     const resultado = resultados.find(r => r.aluno_id === a.id);
                                     const hasNota = resultado !== undefined;
                                     const notaValue = hasNota ? parseFloat(resultado.nota) : 0;
@@ -138,64 +132,63 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                         <div
                                             key={a.id}
                                             onClick={() => handleSelectAluno(a.id)}
-                                            className={`student-item-row ${hasNota ? 'has-result' : ''}`}
+                                            className={`manual-student-item ${hasNota ? 'has-result' : ''}`}
                                         >
-                                            <div className="student-info-mini">
-                                                <div className="student-name-mini">{a.nome}</div>
-                                                <div className="student-code-mini">Cód: {a.codigo}</div>
+                                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', width: '20px' }}>
+                                                {(idx + 1).toString().padStart(2, '0')}
+                                            </span>
+                                            <div className="manual-student-avatar">
+                                                {a.nome.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className="manual-student-info">
+                                                <div className="manual-student-name">{a.nome}</div>
+                                                <div className="manual-student-code">#{a.codigo}</div>
                                             </div>
 
                                             {hasNota && (
-                                                <div className="student-nota-badge">
+                                                <div className="manual-nota-badge">
                                                     {notaValue.toFixed(1)}
                                                 </div>
                                             )}
-
-                                            <ChevronRight size={18} className="chevron-icon" />
+                                            <ChevronRight size={18} color="#334155" />
                                         </div>
                                     );
                                 })}
-                                {alunos.length === 0 && <p className="empty-text">Nenhum aluno encontrado para as turmas deste gabarito.</p>}
+                                {alunos.length === 0 && <p className="empty-hint">Nenhum aluno encontrado.</p>}
                             </div>
-
-                            <div className="modal-actions-footer">
-                                <button className="finish-btn w-full" onClick={onClose}>
-                                    Fechar Janela
-                                </button>
-                            </div>
-                        </div>
+                        </>
                     ) : (
-                        <div className="modal-inner">
-                            <div className="student-header-context">
-                                <div className="mini-stat-label">Aluno Selecionado</div>
-                                <div className="mini-stat-value">{selectedAluno?.nome}</div>
-                            </div>
+                        <div className="nota-entry-card">
+                            <div className="selected-student-label">Lançando para</div>
+                            <div className="selected-student-name">{selectedAluno?.nome}</div>
 
-                            <div className="nota-entry-container">
-                                <label className="label text-center block mb-6">
-                                    Nota Final (0 a 10)
-                                </label>
+                            <div className="nota-input-wrapper">
                                 <input
                                     type="text"
                                     autoFocus
-                                    className="nota-large-input"
+                                    className="nota-large-field"
                                     inputMode="decimal"
                                     placeholder="0.0"
                                     value={manualNota}
                                     onChange={(e) => setManualNota(e.target.value)}
                                 />
-                            </div>
-
-                            <div className="modal-actions-footer gap-4">
-                                <button className="finish-btn flex-1" onClick={() => setStep(1)}>
-                                    Alterar Aluno
-                                </button>
-                                <button className="save-btn flex-2" onClick={handleSave} disabled={loading}>
-                                    <Save size={20} />
-                                    <span>{loading ? 'Salvando...' : 'Gravar Nota'}</span>
-                                </button>
+                                <div className="nota-help-text">Nota Final (0-10)</div>
                             </div>
                         </div>
+                    )}
+                </div>
+
+                <div className="manual-entry-footer">
+                    {step === 1 ? (
+                        <button className="btn-back-manual" style={{ flex: 1 }} onClick={onClose}>Fechar</button>
+                    ) : (
+                        <>
+                            <button className="btn-back-manual" onClick={() => setStep(1)}>Voltar</button>
+                            <button className="btn-save-manual" onClick={handleSave} disabled={loading}>
+                                <Save size={18} />
+                                <span>{loading ? 'Gravando...' : 'Confirmar Nota'}</span>
+                            </button>
+                        </>
                     )}
                 </div>
             </div>
