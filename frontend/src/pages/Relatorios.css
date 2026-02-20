@@ -1,11 +1,11 @@
 /* ============================================
-   Relatórios — Premium Dark Theme (v2)
-   Melhorias aplicadas:
-   1) Hierarquia de urgência (alertas + destaque por risco)
-   2) Bloco de Insights (diagnóstico automático)
-   3) Ações de intervenção (CTAs além de exportar)
-   4) Ranking mais “pedagógico” (destaque para quem precisa)
-   5) Acessibilidade e estados (focus/disabled/loading)
+   Relatórios — Premium Dark Theme (v2.1)
+   Revisão focada em:
+   1) Evitar sobreposição do footer fixo (conteúdo não fica “cortado”)
+   2) Melhor adaptatividade (mobile estreito / tablets / desktop)
+   3) Reduzir “peso” visual no risco LOW (para o risco alto realmente destacar)
+   4) Melhor comportamento de botões em telas pequenas (wrap/scroll)
+   5) Safe-area (iOS) e consistência com barras inferiores
    ============================================ */
 
 /* Tokens */
@@ -30,14 +30,14 @@
     --amber: #f59e0b;
     --red: #ef4444;
 
-    --shadow: 0 14px 28px rgba(0, 0, 0, .35);
-    --shadow-soft: 0 10px 18px rgba(0, 0, 0, .25);
+    --shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 10px 18px rgba(0, 0, 0, 0.25);
 
     --radius-lg: 18px;
     --radius-md: 14px;
     --radius-sm: 12px;
 
-    --focus: 0 0 0 3px rgba(59, 130, 246, .18);
+    --focus: 0 0 0 3px rgba(59, 130, 246, 0.18);
 
     /* Risco (pedagógico) */
     --risk-high-bg: rgba(239, 68, 68, 0.10);
@@ -51,14 +51,27 @@
     --risk-low-bg: rgba(16, 185, 129, 0.10);
     --risk-low-br: rgba(16, 185, 129, 0.30);
     --risk-low-tx: #34d399;
+
+    /* NOVO: layout footer/bottom */
+    --bottom-nav: 70px;
+    /* ajuste conforme seu app */
+    --footer-reserve: 260px;
+    /* reserva padrão p/ não cortar conteúdo */
+}
+
+@media (max-width: 420px) {
+    :root {
+        --footer-reserve: 320px;
+        /* mobile estreito: footer pode crescer com wrap */
+    }
 }
 
 /* Base */
 .relatorios-container {
     background: var(--bg);
     min-height: 100vh;
-    padding-bottom: 132px;
-    /* mais espaço pois agora o footer tem 2 linhas (actions + export) */
+    padding-bottom: var(--footer-reserve);
+    /* evita conteúdo ficar por baixo do footer */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--text);
 }
@@ -80,6 +93,12 @@
 @media (min-width: 768px) {
     .relatorios-header {
         padding: 34px 48px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .relatorios-header {
+        padding: 18px 16px 12px;
     }
 }
 
@@ -156,6 +175,12 @@
     }
 }
 
+@media (max-width: 480px) {
+    .tab-bar {
+        padding: 10px 16px 10px;
+    }
+}
+
 .tab-item {
     flex: 1;
     display: flex;
@@ -218,8 +243,7 @@
 }
 
 /* ============================================
-   NOVO: Painel de Alertas (urgência)
-   Use .alert-strip + variações
+   Painel de Alertas (urgência)
    ============================================ */
 
 .alert-strip {
@@ -231,6 +255,22 @@
     border: 1px solid var(--border);
     background: rgba(26, 29, 39, 0.75);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, .02) inset;
+}
+
+@media (max-width: 420px) {
+    .alert-strip {
+        flex-direction: column;
+        /* evita aperto e ações escondidas */
+    }
+
+    .alert-actions {
+        width: 100%;
+    }
+
+    .alert-btn {
+        flex: 1;
+        justify-content: center;
+    }
 }
 
 .alert-icon {
@@ -332,8 +372,7 @@
 }
 
 /* ============================================
-   NOVO: Insights Grid (diagnóstico automático)
-   Use .insights-grid + .insight-card
+   Insights Grid (diagnóstico automático)
    ============================================ */
 
 .insights-grid {
@@ -427,7 +466,7 @@
     background: rgba(245, 158, 11, .10);
 }
 
-/* Stats Row (mantido, mas com hierarquia melhor) */
+/* Stats Row */
 .stats-row {
     display: flex;
     gap: 10px;
@@ -560,7 +599,8 @@
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 0 32px 0 36px;
+    padding: 0 42px 0 36px;
+    /* mais respiro pra seta (direita) */
     height: 42px;
     color: var(--text);
     font-size: 0.9rem;
@@ -568,6 +608,9 @@
     outline: none;
     cursor: pointer;
     appearance: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
@@ -662,7 +705,7 @@
     box-shadow: 0 10px 18px rgba(59, 130, 246, .22);
 }
 
-/* NOVO: Nota chips por risco (opcional) */
+/* Nota chips por risco (opcional) */
 .nota-chip.risk-high {
     border-color: var(--risk-high-br);
 }
@@ -686,7 +729,7 @@
 }
 
 /* ============================================
-   Ranking: agora com destaque para risco
+   Ranking
    ============================================ */
 
 .rank-row {
@@ -731,7 +774,7 @@
     font-weight: 700;
 }
 
-/* NOVO: label de risco no ranking */
+/* Label de risco no ranking */
 .risk-pill {
     display: inline-flex;
     align-items: center;
@@ -759,14 +802,15 @@
     color: var(--risk-mid-tx);
 }
 
+/* LOW mais neutro (reduz excesso visual) */
 .risk-pill.low {
-    border-color: var(--risk-low-br);
-    background: var(--risk-low-bg);
-    color: var(--risk-low-tx);
+    border-color: var(--border);
+    background: rgba(15, 17, 23, 0.35);
+    color: var(--text-2);
 }
 
 /* ============================================
-   Lista de alunos: agora com urgência e CTA
+   Lista de alunos
    ============================================ */
 
 .aluno-row {
@@ -793,7 +837,6 @@
     border-color: rgba(59, 130, 246, .35);
 }
 
-/* NOVO: estados de risco por performance/frequência */
 .aluno-row.risk-high {
     background: linear-gradient(90deg, rgba(239, 68, 68, 0.10), rgba(26, 29, 39, 0.85));
     border-color: rgba(239, 68, 68, 0.28);
@@ -804,9 +847,10 @@
     border-color: rgba(245, 158, 11, 0.26);
 }
 
+/* LOW mais neutro (reduz poluição visual) */
 .aluno-row.risk-low {
-    background: linear-gradient(90deg, rgba(16, 185, 129, 0.08), rgba(26, 29, 39, 0.85));
-    border-color: rgba(16, 185, 129, 0.22);
+    background: var(--panel);
+    border-color: var(--border);
 }
 
 .aluno-avatar {
@@ -824,7 +868,6 @@
     box-shadow: 0 0 0 1px rgba(59, 130, 246, .14) inset;
 }
 
-/* NOVO: avatar por risco */
 .aluno-row.risk-high .aluno-avatar {
     background: rgba(239, 68, 68, 0.16);
     color: var(--risk-high-tx);
@@ -837,10 +880,11 @@
     box-shadow: 0 0 0 1px rgba(245, 158, 11, .16) inset;
 }
 
+/* LOW neutro */
 .aluno-row.risk-low .aluno-avatar {
-    background: rgba(16, 185, 129, 0.16);
-    color: var(--risk-low-tx);
-    box-shadow: 0 0 0 1px rgba(16, 185, 129, .16) inset;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--blue);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, .14) inset;
 }
 
 .aluno-info {
@@ -850,6 +894,17 @@
     justify-content: space-between;
     gap: 10px;
     min-width: 0;
+}
+
+@media (max-width: 420px) {
+    .aluno-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .aluno-metrics {
+        justify-content: flex-start;
+    }
 }
 
 .aluno-left {
@@ -916,7 +971,7 @@
     color: #f87171;
 }
 
-/* NOVO: micro CTA no aluno */
+/* Micro CTA no aluno */
 .aluno-cta {
     height: 32px;
     padding: 0 12px;
@@ -975,12 +1030,12 @@
 }
 
 /* ============================================
-   Footer: agora com Ações + Exportação
+   Footer fixo (ações + export)
    ============================================ */
 
 .relatorios-footer {
     position: fixed;
-    bottom: 70px;
+    bottom: var(--bottom-nav);
     left: 0;
     right: 0;
     display: flex;
@@ -991,20 +1046,39 @@
     backdrop-filter: blur(14px);
     border-top: 1px solid var(--border);
     z-index: 900;
+
+    /* safe-area (iOS) */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 768px) {
     .relatorios-footer {
         padding: 16px 24px 22px;
+        padding-bottom: calc(22px + env(safe-area-inset-bottom));
     }
 }
 
-/* NOVO: linha de ações (intervenção) */
+/* Linha de ações */
 .footer-actions {
     display: flex;
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
+}
+
+/* NOVO: no mobile, evita footer virar 3–4 linhas (vira scroll horizontal) */
+@media (max-width: 480px) {
+    .footer-actions {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+
+    .footer-actions::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .footer-actions .action-btn {
@@ -1049,7 +1123,7 @@
     color: #f87171;
 }
 
-/* Linha de exportação (mantida, com melhor contraste) */
+/* Linha de exportação */
 .footer-export {
     display: flex;
     gap: 10px;
@@ -1099,7 +1173,7 @@
 }
 
 /* ============================================
-   Frequency Matrix (mantida + legibilidade)
+   Frequency Matrix
    ============================================ */
 
 .frequency-matrix-container {
@@ -1178,14 +1252,13 @@
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.28);
 }
 
-/* NOVO: status "late" (opcional, se você usar) */
 .status-dot.late {
     background: var(--amber);
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.28);
 }
 
 /* ============================================
-   Utilitários (opcionais)
+   Utilitários
    ============================================ */
 
 .divider-soft {
