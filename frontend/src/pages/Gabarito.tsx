@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-    Plus, Trash2, Camera, Clock,
-    BookOpen, Layout,
-    Save, Search, Upload, Download,
-    ClipboardList, PenLine, Keyboard,
-    Calendar, CheckSquare, ArrowLeft
-} from 'lucide-react';
+import { ClipboardList, Plus, Search, Download, Trash2, Save, PenLine, Keyboard, Clock, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload } from 'lucide-react';
 import { api } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
@@ -20,35 +14,33 @@ interface Turma {
 
 interface Gabarito {
     id: number;
-    assunto: string;
-    num_questoes: number;
-    turma_ids?: number[];
-    turma_id?: number;
+    turma_id: number;
     turma_nome?: string;
-    periodo: number;
-    data: string;
-    respostas_corretas: string;
+    titulo?: string;
+    assunto: string;
     disciplina?: string;
+    data: string;
+    num_questoes: number;
+    respostas_corretas: string;
+    turma_ids?: number[];
 }
 
-export function Gabarito() {
+export const Gabarito: React.FC = () => {
     const [viewMode, setViewMode] = useState<'history' | 'create'>('history');
     const [turmas, setTurmas] = useState<Turma[]>([]);
-    const [gabaritos, setGabaritos] = useState<Gabarito[]>([]);
-    const [searchText, setSearchText] = useState('');
-
-    // Form data
-    const [assunto, setAssunto] = useState('');
-    const [disciplina, setDisciplina] = useState('');
-    const [availableDisciplinas, setAvailableDisciplinas] = useState<string[]>([]);
-    const [data, setData] = useState(new Date().toLocaleDateString('pt-BR'));
     const [selectedTurmaIds, setSelectedTurmaIds] = useState<number[]>([]);
+    const [gabaritos, setGabaritos] = useState<Gabarito[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState('');
+    const [availableDisciplinas, setAvailableDisciplinas] = useState<string[]>([]);
+
+    // Form states
     const [numQuestions, setNumQuestions] = useState(10);
     const [answers, setAnswers] = useState<Record<number, string>>({});
-    const [periodo, setPeriodo] = useState<number>(1);
+    const [assunto, setAssunto] = useState('');
+    const [disciplina, setDisciplina] = useState('');
+    const [data, setData] = useState(new Date().toLocaleDateString('pt-BR'));
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [filterTurmaId, setFilterTurmaId] = useState<number | null>(null);
-    const [filterPeriodo, setFilterPeriodo] = useState<number | null>(null);
 
     // Printing & Scanning
     const [printData, setPrintData] = useState<{
@@ -79,57 +71,71 @@ export function Gabarito() {
 
     const loadData = async () => {
         try {
-            const [turmasData, gabaritosData] = await Promise.all([
+            setLoading(true);
+            const [turmasData, gabaritosData, disciplinasData] = await Promise.all([
                 api.getTurmas(),
-                api.getGabaritos()
+                api.getGabaritos(),
+                api.getDisciplinas()
             ]);
             setTurmas(turmasData);
             setGabaritos(gabaritosData);
-
-            const professorDisciplines = Array.from(new Set(turmasData.map((t: any) => t.disciplina).filter(Boolean)));
-            setAvailableDisciplinas(professorDisciplines as string[]);
+            setAvailableDisciplinas(disciplinasData);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const handleSelect = (qIdx: number, val: string) => {
+        setAnswers(prev => ({ ...prev, [qIdx]: val }));
     };
 
     const handleTurmaToggle = (id: number) => {
         setSelectedTurmaIds(prev =>
-            prev.includes(id) ? prev.filter(tid => tid !== id) : [...prev, id]
+            prev.includes(id) ? prev.filter(tId => tId !== id) : [...prev, id]
         );
     };
 
-    const handleAnswerChange = (qIndex: number, option: string) => {
-        setAnswers(prev => ({ ...prev, [qIndex]: option }));
-    };
-
     const handleSave = async () => {
-        if (!assunto || !disciplina || selectedTurmaIds.length === 0) {
-            alert('Preencha os campos obrigatórios (*)');
+        const totalAnswers = Object.keys(answers).length;
+        if (totalAnswers < numQuestions) {
+            alert('Por favor, preencha todas as respostas antes de salvar.');
+            return;
+        }
+
+        if (selectedTurmaIds.length === 0) {
+            alert('Por favor, selecione pelo menos uma turma.');
+            return;
+        }
+
+        if (!assunto.trim() || !disciplina.trim() || !data.trim()) {
+            alert('Por favor, preencha o assunto, disciplina e data.');
             return;
         }
 
         try {
-            const respostasArray = Array.from({ length: numQuestions }, (_, i) => answers[i] || '');
+            const gabaritoArray = Array.from({ length: numQuestions }).map((_, i) => answers[i]);
             const payload = {
+                turma_ids: selectedTurmaIds,
                 assunto,
                 disciplina,
                 data,
                 num_questoes: numQuestions,
-                respostas_corretas: JSON.stringify(respostasArray),
-                turma_ids: selectedTurmaIds,
-                periodo
+                respostas: gabaritoArray
             };
 
             if (editingId) {
                 await api.updateGabarito(editingId, payload);
+                alert('Gabarito atualizado com sucesso!');
             } else {
                 await api.addGabarito(payload);
+                alert('Gabarito salvo com sucesso!');
             }
 
-            setViewMode('history');
-            handleReset();
             loadData();
+            handleReset();
+            setViewMode('history');
         } catch (error) {
             console.error('Erro ao salvar gabarito:', error);
             alert('Erro ao salvar gabarito');
@@ -182,9 +188,7 @@ export function Gabarito() {
         }
 
         setBatchProcessing(false);
-        if (failCount > 0) {
-            alert(`Processamento em Lote concluído com falhas.\nSucesso: ${successCount}\nFalhas: ${failCount}`);
-        }
+        alert(`Processamento em Lote concluído!\nSucesso: ${successCount}\nFalhas: ${failCount}`);
         loadData();
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
@@ -197,7 +201,6 @@ export function Gabarito() {
         setData(new Date().toLocaleDateString('pt-BR'));
         setSelectedTurmaIds([]);
         setNumQuestions(10);
-        setPeriodo(1);
     };
 
     const handleEdit = (g: Gabarito) => {
@@ -206,7 +209,6 @@ export function Gabarito() {
         setDisciplina(g.disciplina || '');
         setData(g.data);
         setNumQuestions(g.num_questoes);
-        setPeriodo(g.periodo || 1);
 
         try {
             const parsedRespostas = JSON.parse(g.respostas_corretas);
@@ -228,123 +230,127 @@ export function Gabarito() {
         setViewMode('create');
     };
 
-    const filteredGabaritos = gabaritos.filter(g => {
-        const matchesSearch = (g.assunto?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-            (g.disciplina?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-            (g.turma_nome?.toLowerCase() || '').includes(searchText.toLowerCase());
+    const filteredGabaritos = gabaritos.filter(g =>
+        (g.assunto?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+        (g.disciplina?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+        (g.turma_nome?.toLowerCase() || '').includes(searchText.toLowerCase())
+    );
 
-        const matchesTurma = !filterTurmaId || g.turma_ids?.includes(filterTurmaId) || g.turma_id === filterTurmaId;
-        const matchesPeriodo = !filterPeriodo || g.periodo === filterPeriodo;
-
-        return matchesSearch && matchesTurma && matchesPeriodo;
-    });
+    const renderOption = (qIdx: number, option: string) => {
+        const isSelected = answers[qIdx] === option;
+        return (
+            <button
+                key={option}
+                className={`option-btn ${isSelected ? 'selected' : ''}`}
+                onClick={() => handleSelect(qIdx, option)}
+            >
+                {option}
+            </button>
+        );
+    };
 
     const handlePreparePrint = async (g: Gabarito) => {
         try {
-            const tIds = g.turma_ids || (g.turma_id ? [g.turma_id] : []);
-            const allStudents: any[] = [];
+            setLoading(true);
+            const items: { student: any, turmaNome: string }[] = [];
 
-            for (const tId of tIds) {
-                const sData = await api.getAlunosByTurma(tId);
-                const tName = turmas.find(t => t.id === tId)?.nome || 'Turma';
-                sData.forEach((s: any) => allStudents.push({ student: s, turmaNome: tName }));
+            // Determinar quais turmas processar
+            const tIds = g.turma_ids || (g.turma_id ? [g.turma_id] : []);
+
+            if (tIds.length === 0) {
+                // Se não tiver turma, imprime um genérico
+                items.push({ student: null, turmaNome: 'Geral' });
+            } else {
+                for (const tId of tIds) {
+                    const turma = turmas.find(t => t.id === tId);
+                    const alunos = await api.getAlunosByTurma(tId);
+
+                    if (alunos && alunos.length > 0) {
+                        alunos.forEach((a: any) => {
+                            items.push({ student: a, turmaNome: turma?.nome || 'Turma' });
+                        });
+                    } else {
+                        // Se a turma estiver vazia, imprime pelo menos um genérico para ela
+                        items.push({ student: null, turmaNome: turma?.nome || 'Turma' });
+                    }
+                }
             }
 
-            setPrintData({
-                gabarito: g,
-                items: allStudents.sort((a, b) => a.student.nome.localeCompare(b.student.nome))
-            });
-        } catch (err) {
-            console.error('Erro ao preparar impressão:', err);
+            setPrintData({ gabarito: g, items });
+        } catch (error) {
+            console.error('Erro ao preparar impressão:', error);
+            alert('Erro ao carregar lista de alunos para impressão.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="gabarito-container">
-            <header className="gabarito-header">
-                <div className="header-top">
-                    <div className="title-group">
-                        <div className="icon-bg icon-blue">
-                            <ClipboardList size={22} />
-                        </div>
-                        <div>
-                            <h1>Gabaritos</h1>
-                            <p>Gestão de avaliações e correções automáticas</p>
-                        </div>
+            <div className="gabarito-header">
+                <div className="header-info">
+                    <div className="icon-bg icon-bg-sm icon-green">
+                        <ClipboardList size={20} />
                     </div>
-                    <button
-                        className={`btn-primary-new ${viewMode === 'create' ? 'active' : ''}`}
-                        onClick={() => {
-                            if (viewMode === 'create') handleReset();
-                            setViewMode(viewMode === 'history' ? 'create' : 'history');
-                        }}
-                    >
-                        {viewMode === 'history' ? <Plus size={20} /> : <ArrowLeft size={20} />}
-                        <span>{viewMode === 'history' ? 'Novo Gabarito' : 'Voltar ao Histórico'}</span>
-                    </button>
+                    <h1 className="gabarito-title">Gabaritos</h1>
                 </div>
+                {editingId && (
+                    <div className="status-badge" style={{ background: '#3b82f6' }}>
+                        <span>Editando</span>
+                    </div>
+                )}
+            </div>
 
-                <div className="header-tabs">
-                    <button
-                        className={`tab-btn ${viewMode === 'history' ? 'active' : ''}`}
-                        onClick={() => setViewMode('history')}
-                    >
-                        Histórico de Provas
-                    </button>
-                    <button
-                        className={`tab-btn ${viewMode === 'create' ? 'active' : ''}`}
-                        onClick={() => setViewMode('create')}
-                    >
-                        {editingId ? 'Editar Gabarito' : 'Configurar Questões'}
-                    </button>
-                </div>
-            </header>
+            <div className="tab-container">
+                <button
+                    className={`tab ${viewMode === 'history' ? 'active' : ''}`}
+                    onClick={() => setViewMode('history')}
+                >
+                    <HistoryIcon size={18} />
+                    <span>Cadastrados</span>
+                </button>
+                <button
+                    className={`tab ${viewMode === 'create' ? 'active' : ''}`}
+                    onClick={() => setViewMode('create')}
+                >
+                    <Plus size={18} />
+                    <span>Novo Gabarito</span>
+                </button>
+            </div>
 
-            {viewMode === 'history' ? (
-                <div className="history-section">
-                    <div className="filters-bar">
-                        <div className="search-box">
-                            <Search size={18} />
+            <div className="gabarito-content">
+                {viewMode === 'history' ? (
+                    <div className="history-section">
+                        <div className="search-bar">
+                            <Search size={20} />
                             <input
                                 type="text"
-                                placeholder="Buscar por assunto ou disciplina..."
+                                placeholder="Buscar gabarito por assunto ou turma..."
                                 value={searchText}
                                 onChange={(e) => setSearchText(e.target.value)}
                             />
                         </div>
-                        <select
-                            className="filter-select"
-                            value={filterTurmaId || ''}
-                            onChange={(e) => setFilterTurmaId(e.target.value ? Number(e.target.value) : null)}
-                        >
-                            <option value="">Todas as Turmas</option>
-                            {turmas.map(t => (
-                                <option key={t.id} value={t.id}>{t.nome}</option>
-                            ))}
-                        </select>
-                        <select
-                            className="filter-select"
-                            value={filterPeriodo || ''}
-                            onChange={(e) => setFilterPeriodo(e.target.value ? Number(e.target.value) : null)}
-                        >
-                            <option value="">Todos Períodos</option>
-                            {[1, 2, 3, 4].map(p => (
-                                <option key={p} value={p}>{p}º Período</option>
-                            ))}
-                        </select>
-                    </div>
 
-                    <div className="history-grid">
-                        {filteredGabaritos.length > 0 ? (
+                        {loading ? (
+                            <p className="empty-text">Carregando...</p>
+                        ) : filteredGabaritos.length > 0 ? (
                             filteredGabaritos.map(g => (
                                 <div key={g.id} className="history-card">
-                                    <div className="card-top">
-                                        <div className="card-info">
-                                            <h3>{g.assunto}</h3>
-                                            <div className="card-meta">
-                                                <span className="discipline-badge">{g.disciplina}</span>
-                                                <span className="dot">•</span>
-                                                <span className="period-badge">{g.periodo}º Período</span>
+                                    <div className="history-header-row">
+                                        <div className="history-info">
+                                            <h3 className="history-turma">{g.titulo || g.assunto || 'Sem Título'}</h3>
+                                            <div className="history-meta">
+                                                <span>{g.assunto}</span>
+                                                {g.disciplina && (
+                                                    <>
+                                                        <span className="dot">•</span>
+                                                        <span>{g.disciplina}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="history-meta">
+                                                <Calendar size={12} />
+                                                <span>{g.data}</span>
                                                 <span className="dot">•</span>
                                                 <span>{g.num_questoes} questões</span>
                                                 <span className="dot">•</span>
@@ -366,14 +372,23 @@ export function Gabarito() {
                                     <div className="history-divider"></div>
 
                                     <div className="history-actions">
-                                        <button className="action-btn edit" onClick={() => handleEdit(g)} title="Editar Gabarito">
-                                            <PenLine size={20} />
+                                        <button className="action-btn edit" onClick={() => handleEdit(g)}>
+                                            <div className="icon-bg icon-bg-sm icon-blue">
+                                                <PenLine size={18} />
+                                            </div>
+                                            <span>Editar</span>
                                         </button>
-                                        <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)} title="Lançamento Manual de Notas">
-                                            <Keyboard size={20} />
+                                        <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)}>
+                                            <div className="icon-bg icon-bg-sm icon-orange">
+                                                <Keyboard size={18} />
+                                            </div>
+                                            <span>Manual</span>
                                         </button>
-                                        <button className="action-btn upload" onClick={() => fileInputRef.current?.click()} title="Envio de Fotos em Lote">
-                                            <Upload size={20} />
+                                        <button className="action-btn upload" onClick={() => fileInputRef.current?.click()}>
+                                            <div className="icon-bg icon-bg-sm icon-purple">
+                                                <Upload size={18} />
+                                            </div>
+                                            <span>Lote</span>
                                             <input
                                                 type="file"
                                                 ref={fileInputRef}
@@ -383,11 +398,17 @@ export function Gabarito() {
                                                 onChange={(e) => handleBatchUpload(e, g)}
                                             />
                                         </button>
-                                        <button className="action-btn download" onClick={() => handlePreparePrint(g)} title="Imprimir Cartões Resposta">
-                                            <Download size={20} />
+                                        <button className="action-btn download" onClick={() => handlePreparePrint(g)}>
+                                            <div className="icon-bg icon-bg-sm icon-indigo">
+                                                <Download size={18} />
+                                            </div>
+                                            <span>Cartões</span>
                                         </button>
-                                        <button className="action-btn delete" onClick={() => handleDelete(g.id)} title="Excluir Avaliação">
-                                            <Trash2 size={20} />
+                                        <button className="action-btn delete" onClick={() => handleDelete(g.id)}>
+                                            <div className="icon-bg icon-bg-sm icon-red">
+                                                <Trash2 size={18} />
+                                            </div>
+                                            <span>Excluir</span>
                                         </button>
                                     </div>
                                 </div>
@@ -404,166 +425,146 @@ export function Gabarito() {
                             </div>
                         )}
                     </div>
-                </div>
-            ) : (
-                <div className="create-section">
-                    <div className="config-card">
-                        <h2 className="section-title">Nova Avaliação</h2>
+                ) : (
+                    <div className="create-section">
+                        <div className="config-card">
+                            <h2 className="section-title">Nova Avaliação</h2>
 
-                        <label className="label">1. Selecione a(s) Turma(s) *</label>
-                        <div className="turma-scroll">
-                            {turmas.map(t => (
-                                <button
-                                    key={t.id}
-                                    className={`turma-badge ${selectedTurmaIds.includes(t.id) ? 'active' : ''}`}
-                                    onClick={() => handleTurmaToggle(t.id)}
-                                >
-                                    {t.nome}
-                                </button>
-                            ))}
-                        </div>
-
-                        <label className="label">2. Detalhes da Prova</label>
-
-                        <div className="input-group">
-                            <Layout size={20} />
-                            <input
-                                type="text"
-                                placeholder="Título (ex: Prova Bimestral) *"
-                                value={assunto}
-                                onChange={(e) => setAssunto(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="input-group">
-                            <BookOpen size={20} />
-                            <input
-                                type="text"
-                                placeholder="Disciplina (ex: Matemática) *"
-                                value={disciplina}
-                                onChange={(e) => setDisciplina(e.target.value)}
-                                list="disciplinas-list"
-                            />
-                            <datalist id="disciplinas-list">
-                                {availableDisciplinas.map(d => (
-                                    <option key={d} value={d} />
+                            <label className="label">1. Selecione a(s) Turma(s) *</label>
+                            <div className="turma-scroll">
+                                {turmas.map(t => (
+                                    <button
+                                        key={t.id}
+                                        className={`turma-badge ${selectedTurmaIds.includes(t.id) ? 'active' : ''}`}
+                                        onClick={() => handleTurmaToggle(t.id)}
+                                    >
+                                        {t.nome}
+                                    </button>
                                 ))}
-                            </datalist>
-                        </div>
+                            </div>
 
-                        <div className="row-group">
+                            <label className="label">2. Detalhes da Prova</label>
+
                             <div className="input-group">
-                                <Calendar size={20} />
+                                <Layout size={20} />
                                 <input
                                     type="text"
-                                    placeholder="Data (dd/mm/aaaa)"
-                                    value={data}
-                                    onChange={(e) => setData(e.target.value)}
+                                    placeholder="Título (ex: Prova Bimestral) *"
+                                    value={assunto}
+                                    onChange={(e) => setAssunto(e.target.value)}
                                 />
                             </div>
+
                             <div className="input-group">
-                                <Clock size={20} />
-                                <select
-                                    value={periodo}
-                                    onChange={(e) => setPeriodo(Number(e.target.value))}
-                                >
-                                    <option value={1}>1º Período</option>
-                                    <option value={2}>2º Período</option>
-                                    <option value={3}>3º Período</option>
-                                    <option value={4}>4º Período</option>
-                                </select>
+                                <BookOpen size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="Disciplina (ex: Matemática) *"
+                                    value={disciplina}
+                                    onChange={(e) => setDisciplina(e.target.value)}
+                                    list="disciplinas-list"
+                                />
+                                <datalist id="disciplinas-list">
+                                    {availableDisciplinas.map(d => <option key={d} value={d} />)}
+                                </datalist>
+                            </div>
+
+                            <div className="input-row">
+                                <div className="input-group">
+                                    <Calendar size={20} />
+                                    <input
+                                        type="text"
+                                        placeholder="Data *"
+                                        value={data}
+                                        onChange={(e) => setData(e.target.value)}
+                                    />
+                                </div>
+                                <div className="input-group">
+                                    <CheckSquare size={20} />
+                                    <input
+                                        type="number"
+                                        placeholder="Qtd. Questões"
+                                        value={numQuestions}
+                                        onChange={(e) => {
+                                            const n = parseInt(e.target.value) || 0;
+                                            setNumQuestions(Math.min(n, 100));
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="input-group">
-                            <CheckSquare size={20} />
-                            <label style={{ marginRight: '15px', color: '#94a3b8' }}>Nº de Questões:</label>
-                            <select
-                                value={numQuestions}
-                                onChange={(e) => setNumQuestions(Number(e.target.value))}
-                            >
-                                {[10, 15, 20, 25, 30, 40, 50].map(n => (
-                                    <option key={n} value={n}>{n} questões</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="questions-card">
-                        <h2 className="section-title">Gabarito Oficial</h2>
                         <div className="questions-grid">
                             {Array.from({ length: numQuestions }).map((_, i) => (
                                 <div key={i} className="question-row">
-                                    <span className="q-number">#{String(i + 1).padStart(2, '0')}</span>
-                                    <div className="options-group">
-                                        {['A', 'B', 'C', 'D', 'E'].map(opt => (
-                                            <button
-                                                key={opt}
-                                                className={`opt-btn ${answers[i] === opt ? 'selected' : ''}`}
-                                                onClick={() => handleAnswerChange(i, opt)}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
+                                    <span className="question-num">{String(i + 1).padStart(2, '0')}</span>
+                                    <div className="options">
+                                        {['A', 'B', 'C', 'D', 'E'].map(opt => renderOption(i, opt))}
                                     </div>
                                 </div>
                             ))}
                         </div>
-
-                        <div className="footer-actions-create">
-                            <button className="save-btn-large" onClick={handleSave}>
-                                <Save size={22} />
-                                <span>{editingId ? 'Salvar Alterações' : 'Criar Gabarito Oficial'}</span>
-                            </button>
-                        </div>
                     </div>
+                )}
+            </div>
+
+            {viewMode === 'create' && (
+                <div className="gabarito-footer">
+                    <button className="save-btn" onClick={handleSave}>
+                        <Save size={20} />
+                        <span>{editingId ? 'Atualizar Gabarito' : 'Salvar Gabarito'}</span>
+                    </button>
+                    {editingId && (
+                        <button className="reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#94a3b8' }}>
+                            <span>Cancelar Edição</span>
+                        </button>
+                    )}
                 </div>
             )}
 
-            {activeScanner && (
-                <ScannerModal
-                    gabaritoId={activeScanner.id}
-                    numQuestions={activeScanner.numQuestions}
-                    onClose={() => {
-                        setActiveScanner(null);
-                        loadData();
-                    }}
-                />
-            )}
-
-            {manualEntryGabarito && (
-                <ManualEntryModal
-                    gabarito={manualEntryGabarito}
-                    turmas={turmas}
-                    onClose={() => {
-                        setManualEntryGabarito(null);
-                        loadData();
-                    }}
-                    onSuccess={() => { }}
-                />
-            )}
-
+            {/* Hidden Printable Area */}
             <div style={{ display: 'none' }}>
                 {printData && (
                     <GabaritoTemplate
                         ref={printRef}
-                        gabarito={printData.gabarito as any}
+                        gabarito={printData.gabarito}
                         students={printData.items}
                     />
                 )}
             </div>
 
+            {/* Scanner Modal */}
+            {activeScanner && (
+                <ScannerModal
+                    onClose={() => setActiveScanner(null)}
+                    gabaritoId={activeScanner.id}
+                    numQuestions={activeScanner.numQuestions}
+                    onSuccess={() => loadData()}
+                />
+            )}
+
+            {/* Manual Entry Modal */}
+            {manualEntryGabarito && (
+                <ManualEntryModal
+                    gabarito={manualEntryGabarito}
+                    turmas={turmas}
+                    onClose={() => setManualEntryGabarito(null)}
+                    onSuccess={() => {
+                        alert('Resultado gravado com sucesso!');
+                        loadData();
+                    }}
+                />
+            )}
+
             {/* Batch Processing Overlay */}
-            {
-                batchProcessing && (
-                    <div className="batch-overlay">
-                        <div className="batch-loader">
-                            <div className="spinner"></div>
-                            <p>Processando lote de provas... Por favor, aguarde.</p>
-                        </div>
+            {batchProcessing && (
+                <div className="batch-overlay">
+                    <div className="batch-loader">
+                        <div className="spinner"></div>
+                        <p>Processando lote de provas... Por favor, aguarde.</p>
                     </div>
-                )
-            }
+                </div>
+            )}
         </div>
     );
-}
+};
