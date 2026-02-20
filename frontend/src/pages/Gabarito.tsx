@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardList, Plus, Search, Download, Trash2, Save, PenLine, Keyboard, Clock, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload } from 'lucide-react';
+import { ClipboardList, Plus, Search, Download, Trash2, Save, PenLine, Keyboard, BookOpen, Calendar, Layout, CheckSquare, Camera, History as HistoryIcon, Upload } from 'lucide-react';
 import { api } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
