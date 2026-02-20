@@ -53,6 +53,21 @@ def run_migrations(engine):
                             logger.info(f"Coluna '{col}' convertida para JSONB.")
 
             # Outras migrações ad-hoc se necessário...
+            # Migração para Workflow de Revisão OMR (Etapa 4)
+            columns_resultados = [c["name"] for c in inspector.get_columns("resultados")]
+            
+            if "needs_review" not in columns_resultados:
+                logger.info("Adicionando coluna 'needs_review' em 'resultados'...")
+                conn.execute(text("ALTER TABLE resultados ADD COLUMN needs_review BOOLEAN DEFAULT FALSE"))
+                
+            if "review_reasons" not in columns_resultados:
+                res_type = "JSONB" if is_postgres else "JSON"
+                logger.info(f"Adicionando coluna 'review_reasons' ({res_type}) em 'resultados'...")
+                conn.execute(text(f"ALTER TABLE resultados ADD COLUMN review_reasons {res_type} NULL"))
+                
+            if "review_status" not in columns_resultados:
+                logger.info("Adicionando coluna 'review_status' em 'resultados'...")
+                conn.execute(text("ALTER TABLE resultados ADD COLUMN review_status VARCHAR DEFAULT 'confirmed'"))
             
     except Exception as e:
         logger.error(f"FALHA CRÍTICA NA MIGRAÇÃO: {e}")
