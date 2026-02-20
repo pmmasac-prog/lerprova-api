@@ -13,26 +13,35 @@
 /* Header */
 .turma-detail-header {
     display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px 20px;
+    background: rgba(15, 17, 23, 0.85);
+    /* Glass effect */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    z-index: 100;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+}
+
+.header-navigation-row {
+    display: flex;
     align-items: center;
     gap: 16px;
-    padding: 28px 24px;
-    background: linear-gradient(to bottom, #11141d, #0f1117);
-    border-bottom: 1px solid #1e293b;
-    margin-bottom: 0;
+    width: 100%;
 }
 
-@media (min-width: 768px) {
-    .turma-detail-header {
-        padding: 36px 48px;
-    }
-}
-
-.back-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    border: 1px solid #1e293b;
-    background: #1a1d27;
+.back-btn-modern {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
     color: #94a3b8;
     display: flex;
     align-items: center;
@@ -42,28 +51,75 @@
     flex-shrink: 0;
 }
 
-.back-btn:hover {
-    background: #242836;
-    color: #e2e8f0;
-    border-color: #334155;
-    transform: translateX(-2px);
+.back-btn-modern:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
-.header-info {
+.header-main-content {
     flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 14px;
     min-width: 0;
 }
 
-.turma-detail-title {
+.turma-detail-title-premium {
     color: #f8fafc;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
     letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
+
+.turma-quick-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.meta-item {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.meta-divider {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #334155;
+}
+
+.header-actions-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.header-actions-scroll::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+
+@media (min-width: 768px) {
+    .turma-detail-header {
+        padding: 36px 48px;
+    }
+}
+
+
 
 .turma-detail-subtitle {
     color: #64748b;
@@ -72,11 +128,7 @@
     font-weight: 500;
 }
 
-.header-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-}
+
 
 /* Action Buttons */
 .action-btn {

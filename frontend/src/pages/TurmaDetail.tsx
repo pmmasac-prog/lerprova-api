@@ -131,21 +131,7 @@ export const TurmaDetail: React.FC = () => {
         setFrequenciaState(newState);
     };
 
-    // ... deletes and other handlers ...
 
-    const handleDeleteTurma = async () => {
-        if (!confirm('Deseja realmente excluir esta turma? Todos os alunos serão removidos.')) return;
-
-        try {
-            if (id) {
-                await api.deleteTurma(parseInt(id));
-                navigate('/dashboard/turmas');
-            }
-        } catch (error) {
-            console.error('Erro ao excluir turma:', error);
-            alert('Erro ao excluir turma');
-        }
-    };
 
     const handleAddAluno = async () => {
         if (!newAluno.nome || !newAluno.codigo) {
@@ -299,26 +285,24 @@ export const TurmaDetail: React.FC = () => {
     return (
         <div className="turma-detail-container">
             {/* Header */}
-            <div className="turma-detail-header">
-                <button className="back-btn" onClick={() => navigate('/dashboard/turmas')}>
-                    <ArrowLeft size={18} />
-                </button>
-                <div className="header-info">
-                    <div className="icon-bg-sm icon-purple">
-                        <Users size={18} />
-                    </div>
-                    <div>
-                        <h1 className="turma-detail-title">{turma.nome}</h1>
-                        <div className="turma-simple-stats">
-                            <span>{alunos.length} Alunos</span>
-                            <span className="dot-separator">•</span>
-                            <span>{gabaritos.length} Gabaritos</span>
-                            <span className="dot-separator">•</span>
-                            <span className="media-highlight">Média: 0.0</span>
+            <div className="turma-detail-header sticky-header">
+                <div className="header-navigation-row">
+                    <button className="back-btn-modern" onClick={() => navigate('/dashboard/turmas')}>
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div className="header-main-content">
+                        <div className="title-group">
+                            <h1 className="turma-detail-title-premium">{turma.nome}</h1>
+                            <div className="turma-quick-meta">
+                                <span className="meta-item"><Users size={14} /> {alunos.length} Alunos</span>
+                                <span className="meta-divider"></span>
+                                <span className="meta-item"><BookOpen size={14} /> {gabaritos.length} Gabaritos</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className="header-actions">
+
+                <div className="header-actions-scroll">
                     <button
                         className="action-btn blue"
                         onClick={() => fileInputRef.current?.click()}
@@ -346,9 +330,7 @@ export const TurmaDetail: React.FC = () => {
                         <User size={16} />
                         <span>Aluno+</span>
                     </button>
-                    <button className="action-btn danger" onClick={handleDeleteTurma}>
-                        <Trash2 size={16} />
-                    </button>
+
                 </div>
             </div>
 
