@@ -386,7 +386,8 @@ class OMREngine:
     def detect_anchors_only(self, image_base64):
         """
         Detecta âncoras rapidamente para feedback em tempo real (Modo Alinhamento).
-        Normaliza rotação e redimensiona para o espaço alvo (1120x1600).
+        Preserva a proporção (aspect ratio) da imagem e retorna coordenadas RELATIVAS (0.0 a 1.0),
+        permitindo ao Frontend desenhar o polígono SVG perfeitamente por cima do videoRef.
         """
         try:
             img_data = base64.b64decode(image_base64.split(',')[-1])
@@ -396,9 +397,7 @@ class OMREngine:
             if image is None:
                 return {"success": False, "error": "Imagem inválida"}
             
-            # Redimensionar para o espaço fixo de calibração
-            target_w, target_h = 1120, 1600
-            image = cv2.resize(image, (target_w, target_h))
+            H, W = image.shape[:2]
 
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -407,27 +406,23 @@ class OMREngine:
             anchors = self.detect_anchors_robust(thresh, gray)
             
             if len(anchors) == 4:
-                # Patch 3: Retornar âncoras no espaço 1120x1600 (espaço fixo do PDF)
-                norm_anchors = []
+                # Retornar coordenadas relativas (0 a 1)
+                rel_anchors = []
                 for (x, y) in anchors:
-                    # Como já estamos no 1120x1600, retornamos os valores brutos para o SVG usar viewBox
-                    norm_anchors.append([round(x, 1), round(y, 1)])
-                
-                # Cálculo rápido de confiança
-                confidence = 0.95 
+                    rel_anchors.append([round(x / W, 4), round(y / H, 4)])
                 
                 return {
                     "success": True,
                     "anchors_found": 4,
-                    "anchors": norm_anchors,
-                    "confidence": confidence
+                    "anchors": rel_anchors,
+                    "confidence": 0.95
                 }
             
             return {
                 "success": False, 
                 "anchors_found": len(anchors), 
                 "confidence": 0.0,
-                "anchors": [[round(x, 1), round(y, 1)] for (x,y) in (anchors if anchors else [])]
+                "anchors": [[round(x / W, 4), round(y / H, 4)] for (x, y) in (anchors if anchors else [])]
             }
         except Exception as e:
             return {"success": False, "error": str(e)}

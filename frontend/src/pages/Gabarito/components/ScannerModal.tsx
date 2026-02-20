@@ -80,33 +80,37 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
 
             const video = videoRef.current;
             const canvas = pollCanvasRef.current;
-            // Resolução baixa leve só pro radar (mantendo ~aspecto retrato)
-            canvas.width = 560;
-            canvas.height = 800;
-            const ctx = canvas.getContext('2d');
 
-            if (ctx && video.videoWidth > 0) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = canvas.toDataURL('image/jpeg', 0.6); // Compressão alta
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                // Preservar aspect ratio real da câmera para evitar distorção (que quebra a circularidade no OMR)
+                const videoRatio = video.videoWidth / video.videoHeight;
+                canvas.width = 480; // Resolução leve pro Radar
+                canvas.height = 480 / videoRatio;
 
-                try {
-                    const radar = await api.scanAnchors({ image: imageData });
-                    if (radar.success && radar.anchors_found === 4) {
-                        setAnchors(radar.anchors);
-                        setTrackingScore(prev => Math.min(prev + 20, 100)); // Acumula pontuação de instabilidade
-                        trackingScoreRef.current = Math.min(trackingScoreRef.current + 20, 100);
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = canvas.toDataURL('image/jpeg', 0.6); // Compressão alta
 
-                        // ===== Auto-Capture Magic =====
-                        if (trackingScoreRef.current >= 100 && !processing) {
-                            captureAndProcess();
+                    try {
+                        const radar = await api.scanAnchors({ image: imageData });
+                        if (radar.success && radar.anchors_found === 4) {
+                            setAnchors(radar.anchors);
+                            setTrackingScore(prev => Math.min(prev + 20, 100)); // Acumula pontuação de instabilidade
+                            trackingScoreRef.current = Math.min(trackingScoreRef.current + 20, 100);
+
+                            // ===== Auto-Capture Magic =====
+                            if (trackingScoreRef.current >= 100 && !processing) {
+                                captureAndProcess();
+                            }
+                        } else {
+                            setAnchors([]);
+                            setTrackingScore(prev => Math.max(prev - 40, 0)); // Reseta rápido se perder
+                            trackingScoreRef.current = Math.max(trackingScoreRef.current - 40, 0);
                         }
-                    } else {
-                        setAnchors([]);
-                        setTrackingScore(prev => Math.max(prev - 40, 0)); // Reseta rápido se perder
-                        trackingScoreRef.current = Math.max(trackingScoreRef.current - 40, 0);
+                    } catch (e) {
+                        // Ignora erros silenciosos do radar
                     }
-                } catch (e) {
-                    // Ignora erros silenciosos do radar
                 }
             }
         };
@@ -195,7 +199,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10
                                 }}>
                                     <polygon
-                                        points={anchors.map(pt => `${(pt[0] / 1120) * videoRef.current!.offsetWidth},${(pt[1] / 1600) * videoRef.current!.offsetHeight}`).join(' ')}
+                                        points={anchors.map(pt => `${pt[0] * videoRef.current!.offsetWidth},${pt[1] * videoRef.current!.offsetHeight}`).join(' ')}
                                         fill="rgba(16, 185, 129, 0.2)"
                                         stroke="#10b981"
                                         strokeWidth="3"
@@ -204,8 +208,8 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                                     {anchors.map((pt, i) => (
                                         <circle
                                             key={i}
-                                            cx={(pt[0] / 1120) * videoRef.current!.offsetWidth}
-                                            cy={(pt[1] / 1600) * videoRef.current!.offsetHeight}
+                                            cx={pt[0] * videoRef.current!.offsetWidth}
+                                            cy={pt[1] * videoRef.current!.offsetHeight}
                                             r="6"
                                             fill="#10b981"
                                         />
