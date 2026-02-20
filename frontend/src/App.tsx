@@ -62,6 +62,7 @@ function App() {
         <Route path="/admin" element={<PrivateRoute><AdminLayout><AdminDashboard /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/users" element={<PrivateRoute><AdminLayout><Admin /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
 
         {/* Redirecionamento legado */}
         <Route path="/dashboard/admin" element={<Navigate to="/admin" replace />} />
