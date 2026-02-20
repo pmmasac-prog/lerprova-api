@@ -172,9 +172,20 @@ async def notify_professor(payload: dict, admin_user = Depends(verify_admin), db
     
     if not prof:
         raise HTTPException(status_code=404, detail="Professor não encontrado")
+    
+    # Criar a notificação real no banco de dados
+    nova_notificacao = models.Notification(
+        user_id=prof.id,
+        title=payload.get("title", "Pendência Identificada"),
+        message=payload.get("message", "Você tem pendências que precisam de sua atenção no sistema."),
+        type=payload.get("type", "warning")
+    )
+    
+    db.add(nova_notificacao)
+    db.commit()
         
     return {
         "status": "success",
         "message": f"Professor {prof.nome} foi notificado com sucesso!",
-        "channel": "email/push"
+        "channel": "db/push"
     }

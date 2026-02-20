@@ -20,7 +20,7 @@ import models
 import users_db
 from database import engine, SessionLocal
 from migrations import run_migrations
-from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard
+from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications
 
 # Inicializar Banco de Dados
 run_migrations(engine)  # Garantir bootstrap inicial
@@ -66,6 +66,7 @@ app.include_router(admin.router)
 app.include_router(planejamento.router)
 app.include_router(curriculo.router)
 app.include_router(dashboard.router)
+app.include_router(notifications.router)
 
 @app.get("/health")
 async def health_check():

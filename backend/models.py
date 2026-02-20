@@ -225,3 +225,17 @@ bncc_skill_competency = Table(
     Column("skill_id", Integer, ForeignKey("bncc_skills.id", ondelete="CASCADE"), primary_key=True),
     Column("competency_id", Integer, ForeignKey("bncc_competencies.id", ondelete="CASCADE"), primary_key=True),
 )
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    title = Column(String)
+    message = Column(Text)
+    type = Column(String, default="info") # info, warning, success, error
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relacionamentos
+    user = relationship("User")

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, CheckCircle2, Info, ArrowLeft } from 'lucide-react';
 import { api } from '../../../services/api';
+import './EditResultadoModal.css';
 
 interface EditResultadoModalProps {
     resultado: any;
@@ -53,127 +54,133 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
         if (overrideNota) {
             return { acertos: '-', nota: manualNota || '0.0' };
         }
-        let acertos = 0;
+        let acertosCountValue = 0;
         const total = correctAnswers.length;
         answers.forEach((ans, idx) => {
-            if (ans === correctAnswers[idx]) acertos++;
+            if (ans === correctAnswers[idx]) acertosCountValue++;
         });
-        const nota = total > 0 ? (acertos / total) * 10 : 0;
-        return { acertos, nota: nota.toFixed(1) };
+        const notaValue = total > 0 ? (acertosCountValue / total) * 10 : 0;
+        return { acertos: acertosCountValue, nota: notaValue.toFixed(1) };
     };
 
-    const { acertos, nota } = calculatePreview();
+    const preview = calculatePreview();
 
     return (
         <div className="modal-overlay">
-            <div className="modal-container" style={{ maxWidth: '800px' }}>
-                <div className="modal-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button className="back-btn-modal" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
-                            <ArrowLeft size={16} />
+            <div className="edit-modal-container">
+                <div className="edit-modal-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <button className="back-circle-btn" onClick={onClose} title="Voltar">
+                            <ArrowLeft size={18} />
                         </button>
                         <div>
-                            <h2>Corrigir Resultado</h2>
-                            <p className="admin-subtitle">{resultado.aluno.nome} • {gabarito.titulo || gabarito.assunto}</p>
+                            <h2 className="edit-modal-title">Corrigir Resultado</h2>
+                            <p className="edit-modal-subtitle">
+                                {resultado.aluno?.nome || 'Aluno'} • {gabarito.titulo || gabarito.assunto}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="admin-form">
-                    <div className="stats-row" style={{ marginBottom: '20px', background: '#f8fafc' }}>
-                        <div className="mini-stat">
-                            <div className="mini-stat-value">{acertos}</div>
+                <div className="edit-modal-body">
+                    <div className="edit-stats-grid">
+                        <div className="mini-stat-card">
+                            <div className="mini-stat-value">{preview.acertos}</div>
                             <div className="mini-stat-label">Acertos</div>
                         </div>
-                        <div className="mini-stat">
-                            <div className={`nota-badge ${parseFloat(nota) >= 7 ? 'success' : (parseFloat(nota) >= 5 ? 'warning' : 'danger')}`} style={{ fontSize: '20px', padding: '10px 20px' }}>
-                                {nota}
+                        <div className="mini-stat-card">
+                            <div className={`nota-badge-large ${parseFloat(preview.nota) >= 7 ? 'success' : (parseFloat(preview.nota) >= 5 ? 'warning' : 'danger')}`}>
+                                {preview.nota}
                             </div>
-                            <div className="mini-stat-label">Nota Atual</div>
+                            <div className="mini-stat-label">Nota Calculada</div>
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '20px', padding: '15px', background: overrideNota ? '#fff7ed' : '#f1f5f9', borderRadius: '12px', border: overrideNota ? '1px solid #fdba74' : '1px solid transparent' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div className={`override-section ${overrideNota ? 'active' : ''}`}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <input
                                 type="checkbox"
                                 id="override"
                                 checked={overrideNota}
                                 onChange={(e) => setOverrideNota(e.target.checked)}
-                                style={{ width: '18px', height: '18px' }}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                             />
-                            <label htmlFor="override" style={{ fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
+                            <label htmlFor="override" style={{ fontWeight: 700, color: '#f1f5f9', cursor: 'pointer', fontSize: '14px' }}>
                                 Sobrescrever nota final manualmente
                             </label>
                         </div>
                         {overrideNota && (
-                            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontSize: '13px', color: '#64748b' }}>Nova Nota:</span>
+                            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '32px' }}>
+                                <span style={{ fontSize: '14px', color: '#94a3b8' }}>Nota Manual:</span>
                                 <input
                                     type="text"
                                     value={manualNota}
                                     onChange={(e) => setManualNota(e.target.value)}
-                                    style={{ width: '80px', padding: '8px', borderRadius: '8px', border: '2px solid #f97316', textAlign: 'center', fontWeight: 'bold' }}
+                                    style={{
+                                        width: '100px',
+                                        padding: '10px',
+                                        borderRadius: '10px',
+                                        border: '2px solid #f59e0b',
+                                        background: '#1a1d27',
+                                        color: '#fff',
+                                        textAlign: 'center',
+                                        fontSize: '18px',
+                                        fontWeight: '800'
+                                    }}
+                                    placeholder="0.0"
                                 />
-                                <span style={{ fontSize: '11px', color: '#f97316' }}>⚠️ Ignorará as respostas abaixo para o cálculo.</span>
+                                <div style={{ flex: 1, fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <AlertCircle size={14} />
+                                    <span>As respostas abaixo serão ignoradas no cálculo final.</span>
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="info-alert" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '12px', marginBottom: '20px', display: 'flex', gap: '10px', color: '#1d4ed8' }}>
-                        <Info size={20} />
-                        <span style={{ fontSize: '13px' }}>As alterações nas respostas recalcularão automaticamente a nota do aluno.</span>
-                    </div>
+                    {!overrideNota && (
+                        <div className="info-banner">
+                            <Info size={18} />
+                            <span>Clique nas opções abaixo para alterar as respostas. A nota será atualizada instantaneamente.</span>
+                        </div>
+                    )}
 
-                    <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
-                            {correctAnswers.map((correta, idx) => (
-                                <div key={idx} style={{
-                                    padding: '12px',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '16px',
-                                    background: answers[idx] === correta ? '#f0fdf4' : (answers[idx] ? '#fef2f2' : 'white')
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', fontWeight: 800 }}>
-                                        <span color="#64748b">Questão {idx + 1}</span>
-                                        {answers[idx] === correta ? <CheckCircle2 size={14} color="#10b981" /> : (answers[idx] ? <AlertCircle size={14} color="#ef4444" /> : null)}
+                    <div className="questions-scroll-area">
+                        <div className="questions-grid">
+                            {correctAnswers.map((correta, idx) => {
+                                const isCorrect = answers[idx] === correta;
+                                return (
+                                    <div key={idx} className={`question-edit-card ${answers[idx] ? (isCorrect ? 'correct' : 'wrong') : ''}`}>
+                                        <div className="question-footer" style={{ marginBottom: '8px', marginTop: 0 }}>
+                                            <span style={{ color: '#94a3b8' }}>Questão {idx + 1}</span>
+                                            {answers[idx] && (isCorrect ? <CheckCircle2 size={14} color="#10b981" /> : <AlertCircle size={14} color="#ef4444" />)}
+                                        </div>
+                                        <div className="options-row">
+                                            {['A', 'B', 'C', 'D', 'E'].map(opt => (
+                                                <button
+                                                    key={opt}
+                                                    onClick={() => handleSelectOption(idx, opt)}
+                                                    className={`option-btn ${answers[idx] === opt ? (opt === correta ? 'selected correct' : 'selected wrong') : ''}`}
+                                                >
+                                                    {opt}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="question-footer">
+                                            <span>Gabarito: <strong style={{ color: '#10b981' }}>{correta}</strong></span>
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                        {['A', 'B', 'C', 'D', 'E'].map(opt => (
-                                            <button
-                                                key={opt}
-                                                onClick={() => handleSelectOption(idx, opt)}
-                                                style={{
-                                                    width: '24px',
-                                                    height: '24px',
-                                                    borderRadius: '50%',
-                                                    border: '1px solid #e2e8f0',
-                                                    fontSize: '10px',
-                                                    fontWeight: 800,
-                                                    background: answers[idx] === opt ? (opt === correta ? '#10b981' : '#ef4444') : 'white',
-                                                    color: answers[idx] === opt ? 'white' : '#64748b',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div style={{ marginTop: '8px', fontSize: '10px', color: '#64748b' }}>
-                                        Correção: <strong>{correta}</strong>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div className="form-actions">
-                        <button className="reset-btn" onClick={onClose} style={{ background: '#f1f5f9', color: '#64748b' }}>
-                            Descartar
+                    <div className="edit-modal-actions">
+                        <button className="btn-discard" onClick={onClose}>
+                            Cancelar
                         </button>
-                        <button className="save-btn" onClick={handleSave} disabled={loading}>
+                        <button className="btn-confirm" onClick={handleSave} disabled={loading}>
                             <Save size={18} />
-                            <span>{loading ? 'Salvando...' : 'Confirmar Correção'}</span>
+                            <span>{loading ? 'Salvando...' : 'Salvar Alterações'}</span>
                         </button>
                     </div>
                 </div>
