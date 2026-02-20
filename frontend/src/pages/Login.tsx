@@ -24,7 +24,11 @@ export const Login: React.FC = () => {
                     localStorage.setItem('user', JSON.stringify(res.user));
                 }
                 console.log("Login realizado com sucesso!");
-                navigate('/dashboard');
+                if (res.user?.role === 'admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 setError(res.detail || res.error || 'Falha na autenticação');
             }

@@ -34,14 +34,20 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const HomeRedirect = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  return <Navigate to="/dashboard" replace />;
+};
+
 function App() {
   const token = localStorage.getItem('token');
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <Login />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/login" element={token ? <HomeRedirect /> : <Login />} />
+        <Route path="/" element={token ? <HomeRedirect /> : <Navigate to="/login" replace />} />
 
         {/* Professor Routes */}
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /><TabNavigation /></PrivateRoute>} />

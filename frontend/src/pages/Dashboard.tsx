@@ -95,8 +95,12 @@ export const Dashboard: React.FC = () => {
     const firstName = user.nome?.split(' ')[0] || 'Professor(a)';
 
     useEffect(() => {
+        if (isAdmin) {
+            navigate('/admin');
+            return;
+        }
         loadDashboard();
-    }, []);
+    }, [isAdmin]);
 
     const loadDashboard = async () => {
         try {
