@@ -14,22 +14,7 @@ export const RankingTurma: React.FC<RankingTurmaProps> = (props) => {
     const { turma, resultados, loading, overallStats } = props;
     return (
         <div className="tab-content">
-            {/* Stats compactos */}
-            <div className="stats-row">
-                <div className="mini-stat">
-                    <div className="mini-stat-value">{overallStats.media}</div>
-                    <div className="mini-stat-label">Média</div>
-                </div>
-                <div className="mini-stat">
-                    <div className="mini-stat-value">{(parseFloat(overallStats.media) >= 7 ? 100 : 0)}%</div>
-                    {/* Note: This logic might need refinement based on how overallStats is passed */}
-                    <div className="mini-stat-label">Aprovação</div>
-                </div>
-                <div className="mini-stat">
-                    <div className="mini-stat-value">{overallStats.total}</div>
-                    <div className="mini-stat-label">Total</div>
-                </div>
-            </div>
+
 
             <div className="card">
                 <div className="card-header">
