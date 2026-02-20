@@ -78,47 +78,57 @@
     flex-shrink: 0;
 }
 
-/* Icon Buttons */
-.action-icon-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+/* Action Buttons */
+.action-btn {
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 10px;
     border: 1px solid #1e293b;
     background: #1a1d27;
     color: #94a3b8;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.action-icon-btn:hover {
+.action-btn span {
+    white-space: nowrap;
+}
+
+.action-btn:hover {
     background: #242836;
     color: #e2e8f0;
     border-color: #334155;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
-.action-icon-btn.blue:hover {
+.action-btn.blue:hover {
     color: #3b82f6;
     border-color: #1e3a5f;
     background: rgba(59, 130, 246, 0.1);
 }
 
-.action-icon-btn.calendar:hover {
+.action-btn.calendar:hover {
     color: #f59e0b;
     border-color: #78350f;
     background: rgba(245, 158, 11, 0.1);
 }
 
-.action-icon-btn.danger:hover {
+.action-btn.danger {
+    padding: 0 10px;
+}
+
+.action-btn.danger:hover {
     color: #ef4444;
     border-color: #7f1d1d;
     background: rgba(239, 68, 68, 0.1);
 }
 
-.action-icon-btn.add:hover {
+.action-btn.add:hover {
     color: #10b981;
     border-color: #065f46;
     background: rgba(16, 185, 129, 0.1);
@@ -157,45 +167,26 @@
 }
 
 /* Stats Row */
-.turma-stats {
-    display: flex;
-    gap: 16px;
-    padding: 24px;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.turma-stats::-webkit-scrollbar {
-    display: none;
-}
-
-@media (min-width: 768px) {
-    .turma-stats {
-        padding: 28px 48px;
-    }
-}
-
-.stat-item {
-    flex: 1;
-    min-width: 140px;
-    padding: 18px;
-    background: #1a1d27;
-    border: 1px solid #1e293b;
-    border-radius: 18px;
+.turma-simple-stats {
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
+    gap: 8px;
+    margin-top: 4px;
 }
 
-.stat-item:hover {
-    border-color: #334155;
+.turma-simple-stats span {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
-.stat-item span {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #f8fafc;
+.dot-separator {
+    color: #334155 !important;
+}
+
+.media-highlight {
+    color: #10b981 !important;
+    font-weight: 700 !important;
 }
 
 /* Section */

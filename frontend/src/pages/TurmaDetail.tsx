@@ -304,24 +304,28 @@ export const TurmaDetail: React.FC = () => {
                     <ArrowLeft size={18} />
                 </button>
                 <div className="header-info">
-                    <div className="icon-bg icon-bg-sm icon-purple">
+                    <div className="icon-bg-sm icon-purple">
                         <Users size={18} />
                     </div>
                     <div>
                         <h1 className="turma-detail-title">{turma.nome}</h1>
-                        {turma.disciplina && (
-                            <p className="turma-detail-subtitle">{turma.disciplina}</p>
-                        )}
+                        <div className="turma-simple-stats">
+                            <span>{alunos.length} Alunos</span>
+                            <span className="dot-separator">•</span>
+                            <span>{gabaritos.length} Gabaritos</span>
+                            <span className="dot-separator">•</span>
+                            <span className="media-highlight">Média: 0.0</span>
+                        </div>
                     </div>
                 </div>
                 <div className="header-actions">
                     <button
-                        className="action-icon-btn blue"
+                        className="action-btn blue"
                         onClick={() => fileInputRef.current?.click()}
-                        title="Importar CSV"
                         disabled={importing}
                     >
-                        {importing ? <div className="spinner-small" /> : <FileUp size={18} />}
+                        {importing ? <div className="spinner-small" /> : <FileUp size={16} />}
+                        <span>Importar</span>
                     </button>
                     <input
                         type="file"
@@ -330,40 +334,21 @@ export const TurmaDetail: React.FC = () => {
                         accept=".csv"
                         onChange={handleImportCSV}
                     />
-                    <button className="action-icon-btn calendar" onClick={() => setShowFrequenciaModal(true)} title="Frequência">
-                        <Calendar size={18} />
+                    <button className="action-btn calendar" onClick={() => setShowFrequenciaModal(true)}>
+                        <Calendar size={16} />
+                        <span>Frequência</span>
                     </button>
-                    <button className="action-icon-btn blue" onClick={() => navigate(`/dashboard/planejamento?turmaId=${id}`)} title="Planejamento">
-                        <BookOpen size={18} />
+                    <button className="action-btn blue" onClick={() => navigate(`/dashboard/planejamento?turmaId=${id}`)}>
+                        <BookOpen size={16} />
+                        <span>Plano</span>
                     </button>
-                    <button className="action-icon-btn add" onClick={() => setShowAddAlunoModal(true)} title="Adicionar Aluno">
-                        <User size={18} />
+                    <button className="action-btn add" onClick={() => setShowAddAlunoModal(true)}>
+                        <User size={16} />
+                        <span>Aluno+</span>
                     </button>
-                    <button className="action-icon-btn danger" onClick={handleDeleteTurma} title="Excluir Turma">
-                        <Trash2 size={18} />
+                    <button className="action-btn danger" onClick={handleDeleteTurma}>
+                        <Trash2 size={16} />
                     </button>
-                </div>
-            </div>
-
-            {/* Stats */}
-            <div className="turma-stats">
-                <div className="stat-item">
-                    <div className="icon-bg icon-bg-sm icon-blue">
-                        <User size={18} />
-                    </div>
-                    <span>{alunos.length} Alunos</span>
-                </div>
-                <div className="stat-item">
-                    <div className="icon-bg icon-bg-sm icon-purple">
-                        <FileText size={18} />
-                    </div>
-                    <span>0 Gabaritos</span>
-                </div>
-                <div className="stat-item">
-                    <div className="icon-bg icon-bg-sm icon-green">
-                        <BarChart3 size={18} />
-                    </div>
-                    <span>Média: 0.0</span>
                 </div>
             </div>
 
