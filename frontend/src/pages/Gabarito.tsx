@@ -374,19 +374,19 @@ export const Gabarito: React.FC = () => {
                                     <div className="history-actions">
                                         <button className="action-btn edit" onClick={() => handleEdit(g)}>
                                             <div className="icon-bg icon-bg-sm icon-blue">
-                                                <PenLine size={18} />
+                                                <PenLine size={20} />
                                             </div>
                                             <span>Editar</span>
                                         </button>
                                         <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)}>
                                             <div className="icon-bg icon-bg-sm icon-orange">
-                                                <Keyboard size={18} />
+                                                <Keyboard size={20} />
                                             </div>
                                             <span>Manual</span>
                                         </button>
                                         <button className="action-btn upload" onClick={() => fileInputRef.current?.click()}>
                                             <div className="icon-bg icon-bg-sm icon-purple">
-                                                <Upload size={18} />
+                                                <Upload size={20} />
                                             </div>
                                             <span>Lote</span>
                                             <input
@@ -400,13 +400,13 @@ export const Gabarito: React.FC = () => {
                                         </button>
                                         <button className="action-btn download" onClick={() => handlePreparePrint(g)}>
                                             <div className="icon-bg icon-bg-sm icon-indigo">
-                                                <Download size={18} />
+                                                <Download size={20} />
                                             </div>
                                             <span>Cartões</span>
                                         </button>
                                         <button className="action-btn delete" onClick={() => handleDelete(g.id)}>
                                             <div className="icon-bg icon-bg-sm icon-red">
-                                                <Trash2 size={18} />
+                                                <Trash2 size={20} />
                                             </div>
                                             <span>Excluir</span>
                                         </button>
