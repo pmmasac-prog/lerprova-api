@@ -249,7 +249,14 @@ export const api = {
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            return { success: false, error: result.detail || "Erro ao processar imagem." };
+        }
+        
+        return result;
     },
     // Admin Endpoints
     admin: {
