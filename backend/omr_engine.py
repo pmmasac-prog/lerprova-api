@@ -107,8 +107,8 @@ class OMREngine:
             _, buffer_orig = cv2.imencode('.jpg', img_original, [cv2.IMWRITE_JPEG_QUALITY, 85])
             original_base64 = base64.b64encode(buffer_orig).decode('utf-8')
             
-            # Redimensionar para resolução de processamento
-            img = cv2.resize(img_original, (self.target_width, self.target_height))
+            # Utiliza a imagem em formato original sem encolhê-la para não distorcer as âncoras
+            img = img_original.copy()
             
             # ===== 1.1 DECODIFICAÇÃO DE IDENTIDADE (QR CODE) =====
             # Tentar decodificar o QR Code na imagem original para maior precisão
@@ -162,6 +162,21 @@ class OMREngine:
             
             # ===== 4. CORREÇÃO DE PERSPECTIVA (HOMOGRAFIA) =====
             rect = self.order_points(np.array(anchors))
+            
+            tl, tr, br, bl = rect
+            width_top = np.linalg.norm(tr - tl)
+            width_bottom = np.linalg.norm(br - bl)
+            
+            if width_bottom == 0 or width_top == 0:
+                return {"success": False, "error": "Perspectiva inválida (divisão por zero). Refaça a foto."}
+                
+            ratio = width_top / width_bottom
+            if ratio < 0.75 or ratio > 1.25:
+                return {
+                    "success": False, 
+                    "error": "Folha muito inclinada ou âncoras erradas detectadas localmente. Refaça a foto com o celular mais paralelo ao papel."
+                }
+
             warped = self.four_point_transform(img, rect)
             
             # Limpeza de memória imediata
@@ -284,7 +299,7 @@ class OMREngine:
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < (H * W * 0.0003) or area > (H * W * 0.03):
+            if area < (H * W * 0.0015) or area > (H * W * 0.03):
                 continue
             
             # Filtro de Forma: Circularidade ou Quadrado
@@ -309,6 +324,16 @@ class OMREngine:
             if is_square:
                 x, y, w, h = cv2.boundingRect(cnt)
                 cX, cY = x + w//2, y + h//2
+                
+            margin = 0.18
+            valid = (
+                (cX < W*margin and cY < H*margin) or
+                (cX > W*(1-margin) and cY < H*margin) or
+                (cX > W*(1-margin) and cY > H*(1-margin)) or
+                (cX < W*margin and cY > H*(1-margin))
+            )
+            if not valid:
+                continue
 
             candidates.append({"cx": cX, "cy": cY, "area": area, "score": max(circ, 0.9 if is_square else 0)})
 
