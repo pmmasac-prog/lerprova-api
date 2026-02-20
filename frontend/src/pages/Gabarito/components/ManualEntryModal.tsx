@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, ChevronRight, ArrowLeft, Search } from 'lucide-react';
+import { Save, ChevronRight, ArrowLeft, User } from 'lucide-react';
 import { api } from '../../../services/api';
-import './ManualEntryModal.css';
 
 interface ManualEntryModalProps {
     gabarito: any;
@@ -92,38 +91,39 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     const selectedAluno = alunos.find(a => a.id === selectedAlunoId);
 
     return (
-        <div className="manual-entry-overlay" onClick={onClose}>
-            <div className="manual-entry-container" onClick={(e) => e.stopPropagation()}>
-                <div className="manual-entry-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-container" style={{ maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <div className="header-info-modal">
                         {step === 2 && (
-                            <button className="back-btn" onClick={() => setStep(1)} style={{ width: '32px', height: '32px', borderRadius: '50%' }}>
-                                <ArrowLeft size={16} />
+                            <button className="back-btn-modal" onClick={() => setStep(1)} title="Voltar para lista">
+                                <ArrowLeft size={18} />
                             </button>
                         )}
                         <div>
-                            <h2 className="manual-entry-title">Lançamento Manual</h2>
-                            <p className="manual-entry-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} q.</p>
+                            <h2 className="modal-title">Lançamento de Nota</h2>
+                            <p className="modal-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} q.</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="manual-entry-body">
+                <div className="modal-body-p-0">
                     {step === 1 ? (
-                        <>
-                            <div className="student-search-container">
-                                <Search className="student-search-icon" size={18} />
+                        <div className="modal-inner">
+                            <label className="label">1. Selecione o Aluno</label>
+                            <div className="search-box">
+                                <User size={18} color="#94a3b8" />
                                 <input
                                     type="text"
-                                    className="student-search-input"
-                                    placeholder="Procurar aluno..."
+                                    className="search-input"
+                                    placeholder="Buscar aluno pelo nome..."
                                     value={searchAluno}
                                     onChange={(e) => setSearchAluno(e.target.value)}
                                 />
                             </div>
 
-                            <div className="manual-student-list">
-                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map((a, idx) => {
+                            <div className="student-list-container">
+                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map((a) => {
                                     const resultado = resultados.find(r => r.aluno_id === a.id);
                                     const hasNota = resultado !== undefined;
                                     const notaValue = hasNota ? parseFloat(resultado.nota) : 0;
@@ -132,63 +132,65 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                         <div
                                             key={a.id}
                                             onClick={() => handleSelectAluno(a.id)}
-                                            className={`manual-student-item ${hasNota ? 'has-result' : ''}`}
+                                            className={`student-item-row ${hasNota ? 'has-result' : ''}`}
                                         >
-                                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', width: '20px' }}>
-                                                {(idx + 1).toString().padStart(2, '0')}
-                                            </span>
-                                            <div className="manual-student-avatar">
-                                                {a.nome.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            <div className="manual-student-info">
-                                                <div className="manual-student-name">{a.nome}</div>
-                                                <div className="manual-student-code">#{a.codigo}</div>
+                                            <div className="student-info-mini">
+                                                <div className="student-name-mini">{a.nome}</div>
+                                                <div className="student-code-mini">#{a.codigo}</div>
                                             </div>
 
-                                            {hasNota && (
-                                                <div className="manual-nota-badge">
-                                                    {notaValue.toFixed(1)}
-                                                </div>
-                                            )}
-                                            <ChevronRight size={18} color="#334155" />
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                {hasNota && (
+                                                    <div className="student-nota-badge">
+                                                        {notaValue.toFixed(1)}
+                                                    </div>
+                                                )}
+                                                <ChevronRight size={16} color="#64748b" />
+                                            </div>
                                         </div>
                                     );
                                 })}
-                                {alunos.length === 0 && <p className="empty-hint">Nenhum aluno encontrado.</p>}
+                                {alunos.length === 0 && <p className="empty-hint" style={{ padding: '20px', textAlign: 'center' }}>Nenhum aluno encontrado.</p>}
                             </div>
-                        </>
-                    ) : (
-                        <div className="nota-entry-card">
-                            <div className="selected-student-label">Lançando para</div>
-                            <div className="selected-student-name">{selectedAluno?.nome}</div>
 
-                            <div className="nota-input-wrapper">
+                            <div className="modal-actions-footer">
+                                <button className="finish-btn" style={{ width: '100%' }} onClick={onClose}>
+                                    Fechar Janela
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="modal-inner">
+                            <div className="student-header-context">
+                                <div className="mini-stat-label">Aluno Selecionado</div>
+                                <div className="mini-stat-value" style={{ fontSize: '1.2rem', color: '#f8fafc' }}>{selectedAluno?.nome}</div>
+                            </div>
+
+                            <div className="nota-entry-container">
+                                <label className="label" style={{ marginBottom: '20px' }}>
+                                    Nota Final (0 a 10)
+                                </label>
                                 <input
                                     type="text"
                                     autoFocus
-                                    className="nota-large-field"
+                                    className="nota-large-input"
                                     inputMode="decimal"
                                     placeholder="0.0"
                                     value={manualNota}
                                     onChange={(e) => setManualNota(e.target.value)}
                                 />
-                                <div className="nota-help-text">Nota Final (0-10)</div>
+                            </div>
+
+                            <div className="modal-actions-footer" style={{ gap: '12px', background: 'transparent', padding: '24px 0 0 0' }}>
+                                <button className="finish-btn" style={{ flex: 1 }} onClick={() => setStep(1)}>
+                                    Voltar
+                                </button>
+                                <button className="save-btn" style={{ flex: 2 }} onClick={handleSave} disabled={loading}>
+                                    <Save size={20} />
+                                    <span>{loading ? 'Salvando...' : 'Gravar Nota'}</span>
+                                </button>
                             </div>
                         </div>
-                    )}
-                </div>
-
-                <div className="manual-entry-footer">
-                    {step === 1 ? (
-                        <button className="btn-back-manual" style={{ flex: 1 }} onClick={onClose}>Fechar</button>
-                    ) : (
-                        <>
-                            <button className="btn-back-manual" onClick={() => setStep(1)}>Voltar</button>
-                            <button className="btn-save-manual" onClick={handleSave} disabled={loading}>
-                                <Save size={18} />
-                                <span>{loading ? 'Gravando...' : 'Confirmar Nota'}</span>
-                            </button>
-                        </>
                     )}
                 </div>
             </div>

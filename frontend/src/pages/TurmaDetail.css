@@ -81,18 +81,19 @@
 /* Action Buttons */
 .action-btn {
     height: 38px;
-    padding: 0 16px;
-    border-radius: 10px;
-    border: 1px solid #1e293b;
-    background: #1a1d27;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
     color: #94a3b8;
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.85rem;
-    font-weight: 600;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.8rem;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
 }
 
 .action-btn span {
@@ -100,22 +101,23 @@
 }
 
 .action-btn:hover {
-    background: #242836;
-    color: #e2e8f0;
-    border-color: #334155;
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .action-btn.blue:hover {
     color: #3b82f6;
-    border-color: #1e3a5f;
     background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
 }
 
 .action-btn.calendar:hover {
     color: #f59e0b;
-    border-color: #78350f;
     background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
 }
 
 .action-btn.danger {
@@ -124,14 +126,14 @@
 
 .action-btn.danger:hover {
     color: #ef4444;
-    border-color: #7f1d1d;
     background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
 }
 
 .action-btn.add:hover {
     color: #10b981;
-    border-color: #065f46;
     background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
 }
 
 /* Icon BGs */
