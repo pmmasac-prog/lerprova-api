@@ -156,6 +156,7 @@ class OMREngine:
                 self._log_debug_event(img_original, error_msg, {"anchors_found": len(anchors)})
                 return {
                     "success": False,
+                    "quality": "reject",
                     "error": f"{error_msg} Alinhe as 4 bolinhas pretas nos cantos.",
                     "anchors_found": len(anchors)
                 }
@@ -168,12 +169,17 @@ class OMREngine:
             width_bottom = np.linalg.norm(br - bl)
             
             if width_bottom == 0 or width_top == 0:
-                return {"success": False, "error": "Perspectiva inválida (divisão por zero). Refaça a foto."}
+                return {
+                    "success": False, 
+                    "quality": "reject", 
+                    "error": "Perspectiva inválida (divisão por zero). Refaça a foto."
+                }
                 
             ratio = width_top / width_bottom
             if ratio < 0.75 or ratio > 1.25:
                 return {
                     "success": False, 
+                    "quality": "reject",
                     "error": "Folha muito inclinada ou âncoras erradas detectadas localmente. Refaça a foto com o celular mais paralelo ao papel."
                 }
 
@@ -192,6 +198,7 @@ class OMREngine:
             if sum(1 for x in ratios if x > 0.10) < 3:
                 return {
                     "success": False, 
+                    "quality": "reject",
                     "error": "Alinhamento inválido (cantos não conferem). Refaça a foto.", 
                     "anchors_found": 4
                 }
@@ -202,14 +209,33 @@ class OMREngine:
             # ===== 6. VALIDAÇÃO POR QUESTÃO =====
             validated_results = self.validate_questions(bubble_results)
             
-            # ===== 7. GERAÇÃO DE RETORNO OTIMIZADO =====
+            # ===== 7. DEFINICAO DA QUALIDADE DA LEITURA =====
+            # Qualquer anomalia marca a prova para revisão humana invés de travar a API
+            avg_conf = validated_results['avg_confidence']
+            status_counts = validated_results['status_counts']
+            
+            review_reasons = []
+            if status_counts.get("invalid", 0) > 0:
+                review_reasons.append("invalid_marks")
+            if status_counts.get("ambiguous", 0) > 2:
+                review_reasons.append("too_many_ambiguous")
+            if avg_conf < 0.75:
+                review_reasons.append("low_confidence")
+                
+            needs_review = len(review_reasons) > 0
+            quality = "review" if needs_review else "ok"
+            
+            # ===== 8. GERAÇÃO DE RETORNO OTIMIZADO E PADRONIZADO =====
             response = {
                 "success": True,
+                "quality": quality,
+                "needs_review": needs_review,
+                "review_reasons": review_reasons,
                 "answers": validated_results['answers'],
                 "confidence_scores": validated_results['confidence_scores'],
                 "question_status": validated_results['status_list'],
-                "status_counts": validated_results['status_counts'],
-                "avg_confidence": validated_results['avg_confidence'],
+                "status_counts": status_counts,
+                "avg_confidence": avg_conf,
                 "anchors_detected": True,
                 "anchors_found": 4,
                 "qr_data": qr_data
@@ -496,6 +522,39 @@ class OMREngine:
         
         M = cv2.getPerspectiveTransform(rect, dst)
         return cv2.warpPerspective(image, M, (self.target_width, self.target_height))
+
+    def _masked_ratio(self, roi):
+        """
+        Mede a densidade de pixels pretos usando uma máscara circular perfeita 
+        para o centro (bolha) e um anel ao redor (fundo/borda), ignorando 
+        os cantos quadrados do ROI que não fazem parte da bolha.
+        """
+        H, W = roi.shape[:2]
+        center = (W // 2, H // 2)
+        radius_inner = int(min(W, H) * 0.35)  # 70% do tamanho para o disco central
+        radius_outer = int(min(W, H) * 0.48)  # Anel quase tocando a borda
+        
+        # Máscara do disco central (onde o aluno pinta)
+        mask_inner = np.zeros((H, W), dtype=np.uint8)
+        cv2.circle(mask_inner, center, radius_inner, 255, -1)
+        
+        # Máscara do anel de fundo (para medir sujeira/borracha)
+        mask_outer = np.zeros((H, W), dtype=np.uint8)
+        cv2.circle(mask_outer, center, radius_outer, 255, -1)
+        cv2.circle(mask_outer, center, radius_inner + 2, 0, -1) # Furo no meio
+        
+        # Contar pixels na imagem binarizada usando as máscaras
+        inner_pixels = cv2.countNonZero(cv2.bitwise_and(roi, mask_inner))
+        inner_area = cv2.countNonZero(mask_inner)
+        
+        outer_pixels = cv2.countNonZero(cv2.bitwise_and(roi, mask_outer))
+        outer_area = cv2.countNonZero(mask_outer)
+        
+        fill_ratio = inner_pixels / float(inner_area) if inner_area > 0 else 0.0
+        bg_ratio = outer_pixels / float(outer_area) if outer_area > 0 else 0.0
+        
+        return fill_ratio, bg_ratio
+    
     
     def read_bubbles_by_density(self, warped, num_questions, layout_version="v1"):
         """
@@ -545,28 +604,19 @@ class OMREngine:
                 
                 roi = thresh[y1:y2, x1:x2]
                 if roi.size == 0:
-                    density = 0.0
+                    fill_ratio, bg_ratio = 0.0, 0.0
                 else:
-                    density = cv2.countNonZero(roi) / float(roi.size)
+                    fill_ratio, bg_ratio = self._masked_ratio(roi)
                 
-                # Classificar
-                marked = density >= marked_thr
-                ambiguous = (amb_thr <= density < marked_thr)
-                
-                # Calcular confiança
-                if marked:
-                    confidence = min(1.0, density / 0.5)
-                elif ambiguous:
-                    confidence = 0.5
-                else:
-                    confidence = max(0.0, 1.0 - (density / amb_thr)) if amb_thr > 0 else 0.0
+                # Score normalizado pune bolhas muito rascunhadas/apagadas
+                score = max(0.0, fill_ratio - bg_ratio)
                 
                 bubbles_data.append({
                     'option': options[j],
-                    'density': density,
-                    'marked': marked,
-                    'ambiguous': ambiguous,
-                    'confidence': confidence,
+                    'density': fill_ratio, # Mantido para debug/compatibilidade visual
+                    'fill_ratio': fill_ratio,
+                    'bg_ratio': bg_ratio,
+                    'score': score,
                     'coords': (x1, y1, x2, y2)
                 })
             
@@ -579,56 +629,58 @@ class OMREngine:
     
     def validate_questions(self, bubble_results):
         """
-        Lógica de Densidade Relativa (Z-Score): Compara a bolha com seus vizinhos de linha.
-        Também anota final_status/final_conf/final_index na question_data para o audit_map.
+        Lógica de Densidade Relativa por Score e Margem.
+        Compara o Score da opção mais pintada (Top 1) com a segunda mais pintada (Top 2).
+        Anota final_status/final_conf/final_index na question_data para o audit_map.
         """
-        answers = []
-        confidence_scores = []
-        status_list = []
-        status_counts = {"valid": 0, "blank": 0, "invalid": 0, "ambiguous": 0}
-        
+        # Para simplificar, vou extrair regras do engine (podem vir do JSON de layout futuramente)
+        marked_thr = 0.15   # Acima disso, consideramos que tem tinta real
+        amb_thr = 0.08      # Abaixo disso, é sujeira ou nada (em branco)
+        margin_thr = 0.06   # Diferença mínima entre Top 1 e Top 2 para não ser ambíguo
+
         for question_data in bubble_results:
             bubbles = question_data['bubbles']
-            densities = np.array([b['density'] for b in bubbles])
             
-            avg_d = np.mean(densities) if len(densities) > 0 else 0
-            max_d = np.max(densities) if len(densities) > 0 else 0
-            std_d = np.std(densities) if len(densities) > 0 else 0
+            # Ordenar bolhas por score do maior para o menor
+            sorted_bubbles = sorted(bubbles, key=lambda b: b['score'], reverse=True)
             
-            # Uma bolha é marcada se:
-            # 1. Tiver densidade absoluta mínima (ex: 0.18)
-            # 2. Estiver a pelo menos 2 desvios padrão da média da linha
-            marked_indices = []
-            for i, d in enumerate(densities):
-                is_marked = d > 0.18 and d > (avg_d + 2 * std_d)
-                bubbles[i]['marked'] = is_marked
-                if is_marked:
-                    marked_indices.append(i)
-
-            # Classificação de Status
-            if len(marked_indices) == 0:
+            top1_b = sorted_bubbles[0]
+            top2_b = sorted_bubbles[1] if len(sorted_bubbles) > 1 else None
+            
+            top1_score = top1_b['score']
+            top2_score = top2_b['score'] if top2_b else 0.0
+            
+            margin = top1_score - top2_score
+            
+            # 1. Checar se está em branco (o Top 1 é tão fraco que não chega nem a rascunho)
+            if top1_score < amb_thr:
                 status = "blank"
-                ans = None
-                conf = 1.0
-                final_idx = None
-            elif len(marked_indices) == 1:
-                idx = marked_indices[0]
-                final_idx = idx
-                # Se a segunda maior densidade for muito próxima, é ambíguo
-                other_densities = np.delete(densities, idx)
-                if len(other_densities) > 0 and max_d - np.max(other_densities) < 0.10:
-                    status = "ambiguous"
-                    conf = 0.5
-                else:
-                    status = "valid"
-                    # Confiança baseada na distância relativa da média
-                    conf = min(1.0, (max_d / (avg_d + 0.01)) / 4.0)
-                ans = bubbles[idx]['option']
-            else:
-                status = "invalid"
                 ans = None
                 conf = 0.0
                 final_idx = None
+            
+            # 2. Checar múltiplas marcações reais (Top 1 e Top 2 estão pintados de verdade)
+            elif top2_score >= marked_thr:
+                status = "invalid"  # Aluno pintou duas claras
+                ans = None
+                conf = 0.0
+                final_idx = None
+                
+            # 3. Checar ambiguidade (Top 1 e Top 2 estão muito próximos, ex: borrado)
+            elif top2_score >= amb_thr and margin < margin_thr:
+                status = "ambiguous"
+                ans = top1_b['option']
+                # Tenta ajudar a revisão fornecendo a opção mais provável
+                conf = max(0.0, margin / margin_thr) # Confiança proporcional à margem
+                final_idx = bubbles.index(top1_b)
+                
+            # 4. Válido e claro (Top 1 se destaca)
+            else:
+                status = "valid"
+                ans = top1_b['option']
+                # Se a margem for maior que 3x a margem mínima, confiança é 1.0 (perfeita)
+                conf = min(1.0, margin / (margin_thr * 3)) if margin_thr > 0 else 1.0
+                final_idx = bubbles.index(top1_b)
 
             # Anotar na question_data para o audit_map usar
             question_data["final_status"] = status
@@ -672,7 +724,8 @@ class OMREngine:
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (255, 100, 0), 2)
             
             elif status == "invalid":
-                marked_bubbles = [b for b in question_data['bubbles'] if b['marked']]
+                # Se for inválido, pinta de vermelho as bolhas que atingiram o limiar "marked_thr" de ambiguidade (as múltiplas marcações)
+                marked_bubbles = [b for b in question_data['bubbles'] if b.get('score', 0) > 0.15]
                 for bubble in marked_bubbles:
                     x1, y1, x2, y2 = bubble['coords']
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 0, 255), 3)
@@ -681,14 +734,14 @@ class OMREngine:
                 bubble = question_data['bubbles'][final_idx]
                 x1, y1, x2, y2 = bubble['coords']
                 
-                if status == "valid" and conf >= self.MIN_CONFIDENCE:
+                if status == "valid":
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 0), 3)
                 else:
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 255), 3)
             
             else:
                 # Fallback para questões não validadas (ex: bubble_results sem validate)
-                marked_bubbles = [b for b in question_data['bubbles'] if b['marked']]
+                marked_bubbles = [b for b in question_data['bubbles'] if b.get('score', 0) > 0.15]
                 for bubble in marked_bubbles:
                     x1, y1, x2, y2 = bubble['coords']
                     cv2.rectangle(audit_img, (x1, y1), (x2, y2), (0, 255, 0), 3)

@@ -24,6 +24,11 @@ class ProcessRequest(BaseModel):
     gabarito_id: Optional[int] = None
     aluno_id: Optional[int] = None
 
+class ReviewRequest(BaseModel):
+    resultado_id: int
+    respostas_corrigidas: list[Optional[str]]
+    confirmar: bool = True
+
 # ===== Segurança: API Key sem default hardcoded =====
 API_KEY_SECRET = os.getenv("API_KEY_SECRET")
 
@@ -86,8 +91,10 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
     try:
         layout_version = "v1"
         result = omr.process_image(req.image, num_questions=req.num_questions, layout_version=layout_version)
-        if not result.get("success"):
-            raise HTTPException(status_code=422, detail=result.get("error", "Falha no processamento da imagem."))
+        
+        # Só bloqueia hard se for erro estrutural ou falta de âncoras (quality = reject)
+        if result.get("quality") == "reject" or not result.get("success"):
+            raise HTTPException(status_code=422, detail=result.get("error", "Falha catastrófica no processamento da imagem."))
 
         # ===== 1. QR Code e Identificação =====
         qr = result.get("qr_data")
@@ -144,21 +151,28 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
         detectadas = (detectadas + [None] * total)[:total]
         corretas = (corretas + [None] * total)[:total]
 
-        # ===== 5. Qualidade OMR: rejeita leituras ruins =====
-        status_counts = result.get("status_counts") or {}
+        # ===== 5. Qualidade OMR: Extrair métricas unificadas =====
+        # As lógicas de rejeição migraram pro Engine (Etapas 2 e 3).
+        # Aqui apenas repassamos o que o OMR Engine decidiu.
+        quality = result.get("quality", "ok")
+        needs_review = result.get("needs_review", False)
+        review_reasons = result.get("review_reasons", [])
         avg_conf = float(result.get("avg_confidence") or 0.0)
-
-        if status_counts.get("invalid", 0) > 0:
-            raise HTTPException(
-                status_code=422, 
-                detail=f"Marcação múltipla detectada. Refaça a foto. (Métricas: {json.dumps(status_counts)})"
-            )
-            
-        if status_counts.get("ambiguous", 0) > 3 or avg_conf < 0.75:
-            raise HTTPException(
-                status_code=422, 
-                detail=f"Leitura com baixa confiança ({avg_conf:.2f}). Refaça a foto. (Métricas: {json.dumps(status_counts)})"
-            )
+        status_counts = result.get("status_counts") or {}
+        
+        # Telemetria (Etapa 6)
+        logger.info(json.dumps({
+            "event": "omr_scan_quality",
+            "quality": quality,
+            "avg_conf": round(avg_conf, 3),
+            "invalid_count": status_counts.get("invalid", 0),
+            "ambiguous_count": status_counts.get("ambiguous", 0),
+            "blank_count": status_counts.get("blank", 0),
+            "anchors_found": result.get("anchors_found", 0),
+            "layout_version": layout_version,
+            "aluno_id": aluno_id if aluno_id else "unknown",
+            "gabarito_id": gabarito_id if gabarito_id else "unknown"
+        }))
 
         # ===== 6. Cálculo de acertos baseado no total do gabarito =====
         acertos = sum(
@@ -175,20 +189,29 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
                 models.Resultado.gabarito_id == gabarito.id
             ).first()
             
+            
             audit_data = {
                 "status_list": json.dumps(result.get("question_status")),
                 "confidence_scores": json.dumps(result.get("confidence_scores")),
                 "avg_confidence": avg_conf,
                 "layout_version": layout_version,
                 "anchors_found": int(result.get("anchors_found") or 0),
+                "needs_review": needs_review,
+                "review_reasons": json.dumps(review_reasons) if review_reasons else None,
+                "review_status": "pending" if needs_review else "confirmed"
             }
+            
+            # TODO: Add needs_review and related fields to the models.Resultado schema
+            # Ignoraremos a inserção desses campos novos no DB por enquanto se causarem crash
+            # mas o dicionário já está preparado. Apenas limitando set attrs:
+            db_audit_data = {k:v for k,v in audit_data.items() if hasattr(models.Resultado, k)}
             
             if resultado_existente:
                 resultado_existente.acertos = acertos
                 resultado_existente.nota = nota
                 resultado_existente.respostas_aluno = dump_json_list(detectadas)
                 resultado_existente.data_correcao = datetime.utcnow()
-                for k, v in audit_data.items():
+                for k, v in db_audit_data.items():
                     setattr(resultado_existente, k, v)
                 db.commit()
                 db.refresh(resultado_existente)
@@ -201,15 +224,27 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
                     nota=nota,
                     respostas_aluno=dump_json_list(detectadas),
                     data_correcao=datetime.utcnow(),
-                    **audit_data
+                    **db_audit_data
                 )
                 db.add(novo_resultado)
                 db.commit()
                 db.refresh(novo_resultado)
                 resultado_id = novo_resultado.id
 
+        # Determinar a próxima ação para o frontend guiar a UX
+        if quality == "ok":
+            next_action = "confirm"
+        elif quality == "review":
+            next_action = "review"
+        else:
+            next_action = "retake"
+
         return {
             "success": True,
+            "quality": quality,
+            "needs_review": needs_review,
+            "review_reasons": review_reasons,
+            "next_action": next_action,
             "aluno_id": aluno_id,
             "aluno_nome": aluno.nome if aluno else "Digitalizado (Não Identificado)",
             "gabarito_id": gabarito_id,
@@ -226,3 +261,57 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
     except Exception as e:
         logger.error(f"Erro no processamento de prova: {e}")
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+
+@router.post("/provas/revisar")
+def revisar_prova(req: ReviewRequest, db: Session = Depends(get_db), current_user: users_db.User = Depends(get_current_user)):
+    """
+    Endpoint para professores revisarem e confirmarem provas que caíram em 'needs_review'.
+    Recalcula a nota com as edições manuais e encerra o fluxo OMR.
+    """
+    resultado = db.query(models.Resultado).filter(models.Resultado.id == req.resultado_id).first()
+    if not resultado:
+        raise HTTPException(status_code=404, detail="Resultado não encontrado.")
+        
+    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == resultado.gabarito_id).first()
+    if not gabarito:
+        raise HTTPException(status_code=404, detail="Gabarito original não encontrado.")
+    
+    # Validar acesso do professor (checar se resultado é de aluno de uma turma dele)
+    # TODO: Implementar verificação rigorosa de ACL se necessário.
+        
+    respostas_gabarito = parse_json_list(gabarito.respostas_corretas)
+    novas_respostas = req.respostas_corrigidas
+    
+    # Recalcular pontuação
+    total = len(respostas_gabarito)
+    corretas = [r.strip().upper() if r else None for r in novas_respostas]
+    corretas = (corretas + [None] * total)[:total]
+    
+    acertos = sum(
+        1 for r_aluno, r_gab in zip(corretas, respostas_gabarito)
+        if r_aluno and r_gab and r_aluno == r_gab
+    )
+    nota = (acertos / total) * 10 if total > 0 else 0
+    
+    # Atualizar o banco
+    resultado.respostas_aluno = dump_json_list(corretas)
+    resultado.acertos = acertos
+    resultado.nota = nota
+    resultado.data_correcao = datetime.utcnow()
+    
+    if req.confirmar:
+        # Só marcamos como concluído se a flag for enviada. Em rascunhos, manter pending.
+        if hasattr(resultado, "needs_review"):
+            resultado.needs_review = False
+            resultado.review_status = "confirmed"
+            
+    db.commit()
+    db.refresh(resultado)
+    
+    return {
+        "success": True,
+        "message": "Revisão salva com sucesso!",
+        "resultado_id": resultado.id,
+        "acertos": acertos,
+        "nota": round(nota, 1)
+    }

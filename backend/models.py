@@ -113,6 +113,11 @@ class Resultado(Base):
     avg_confidence = Column(Float, default=0.0)
     layout_version = Column(String, nullable=True)
     anchors_found = Column(Integer, default=0)
+    
+    # Workflow de Revisão OMR Profissional
+    needs_review = Column(Boolean, default=False)
+    review_reasons = Column(String, nullable=True)     # JSON string com os motivos ("invalid_marks", "low_confidence", etc)
+    review_status = Column(String, default="confirmed") # "pending", "confirmed", "discarded"
 
     # Relacionamentos
     aluno = relationship("Aluno", back_populates="resultados")
