@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, User, ChevronRight, ArrowLeft, Search } from 'lucide-react';
+import { Save, ChevronRight, ArrowLeft, Search } from 'lucide-react';
 import { api } from '../../../services/api';
 import './ManualEntryModal.css';
 
