@@ -271,7 +271,13 @@ class OMREngine:
         Versão Profissional: Suporta âncoras circulares (legado) e quadradas (novas).
         """
         H, W = thresh.shape[:2]
-        _, strict_thresh = cv2.threshold(gray, 70, 255, cv2.THRESH_BINARY_INV)
+        # Usar adaptiveThreshold no lugar de um valor duro de 70 para garantir suporte a múltiplas iluminações
+        strict_thresh = cv2.adaptiveThreshold(
+            gray, 255, 
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+            cv2.THRESH_BINARY_INV, 
+            31, 10
+        )
         
         contours, _ = cv2.findContours(strict_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         candidates = []
@@ -290,8 +296,8 @@ class OMREngine:
             is_square = len(approx) == 4 and cv2.isContourConvex(approx)
 
             # Aceita se for redondo o suficiente OU um quadrado robusto
-            if circ < 0.65 and not is_square:
-                continue 
+            if circ < 0.50 and not is_square: # Reduzido circ de 0.65 para 0.50 para tolerar estiramento da câmera
+                continue
 
             M = cv2.moments(cnt)
             if M["m00"] == 0:
