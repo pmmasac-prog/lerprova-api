@@ -44,12 +44,12 @@
     background: #3b82f6;
     color: white;
     border: none;
-    padding: 6px;
+    padding: 4px;
     cursor: pointer;
     transition: all 0.2s;
-    height: 32px;
-    width: 32px;
-    border-radius: 8px;
+    height: 28px;
+    width: 28px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
