@@ -249,15 +249,30 @@ export const api = {
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        
+
         const result = await response.json();
-        
+
         if (!response.ok) {
             return { success: false, error: result.detail || "Erro ao processar imagem." };
         }
-        
+
         return result;
     },
+
+    async scanAnchors(data: { image: string }) {
+        const response = await fetch(`${API_URL}/provas/scan-anchors`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            return { success: false, anchors_found: 0, anchors: [] };
+        }
+
+        return response.json();
+    },
+
     // Admin Endpoints
     admin: {
         listUsers: async () => {

@@ -29,6 +29,9 @@ class ReviewRequest(BaseModel):
     respostas_corrigidas: list[Optional[str]]
     confirmar: bool = True
 
+class ScanAnchorsRequest(BaseModel):
+    image: str
+
 # ===== Segurança: API Key sem default hardcoded =====
 API_KEY_SECRET = os.getenv("API_KEY_SECRET")
 
@@ -85,6 +88,18 @@ async def process_omr_preview(data: dict, x_api_key: str = Header(None)):
         return {"success": False, "error": "Imagem não enviada"}
         
     return omr.detect_anchors_only(image_base64)
+
+@router.post("/provas/scan-anchors")
+async def scan_anchors(req: ScanAnchorsRequest, current_user: users_db.User = Depends(get_current_user)):
+    """
+    Endpoint ultrarrápido (Radar) que apenas detecta se as 4 âncoras estão presentes
+    e bem posicionadas na foto do cliente AR, sem processar QR Code ou bolhas.
+    """
+    if not req.image:
+        return {"success": False, "error": "Imagem vazia"}
+    
+    # O OMREngine já tem um método detect_anchors_only leve e otimizado para isso.
+    return omr.detect_anchors_only(req.image)
 
 @router.post("/provas/processar")
 async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), current_user: users_db.User = Depends(get_current_user)):
