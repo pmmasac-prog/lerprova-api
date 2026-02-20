@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import './GabaritoTemplate.css';
 
@@ -26,7 +26,7 @@ interface GabaritoTemplateProps {
 export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps>(({ gabarito, students }, ref) => {
     return (
         <div ref={ref}>
-            {students.map(({ student, turmaNome }, index) => {
+            {students.map(({ student, turmaNome }) => {
                 const qrData = JSON.stringify({
                     aid: student.id,
                     gid: gabarito.id
