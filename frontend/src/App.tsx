@@ -9,6 +9,8 @@ import { TurmaDetail } from './pages/TurmaDetail';
 import { Debug } from './pages/Debug';
 import { TabNavigation } from './components/TabNavigation';
 import { Admin } from './pages/Admin';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminSidebar } from './components/AdminSidebar';
 import { Planejamento } from './pages/Planejamento';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -17,6 +19,19 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
+};
+
+const AdminLayout = ({ children }: { children: React.ReactNode }) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  return (
+    <div className="admin-layout" style={{ display: 'flex' }}>
+      <AdminSidebar />
+      <main style={{ marginLeft: '260px', width: 'calc(100% - 260px)', minHeight: '100vh', background: '#0b0e14' }}>
+        {children}
+      </main>
+    </div>
+  );
 };
 
 function App() {
@@ -28,30 +43,22 @@ function App() {
         <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
+        {/* Professor Routes */}
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /><TabNavigation /></PrivateRoute>} />
         <Route path="/dashboard/turmas" element={<PrivateRoute><Turmas /><TabNavigation /></PrivateRoute>} />
         <Route path="/dashboard/turma/:id" element={<PrivateRoute><TurmaDetail /><TabNavigation /></PrivateRoute>} />
-        <Route path="/dashboard/relatorios" element={
-          <PrivateRoute>
-            <TabNavigation />
-            <Relatorios />
-          </PrivateRoute>
-        } />
-        <Route path="/dashboard/gabarito" element={
-          <PrivateRoute>
-            <TabNavigation />
-            <Gabarito />
-          </PrivateRoute>
-        } />
-        <Route path="/dashboard/planejamento" element={
-          <PrivateRoute>
-            <TabNavigation />
-            <Planejamento />
-          </PrivateRoute>
-        } />
-
+        <Route path="/dashboard/relatorios" element={<PrivateRoute><TabNavigation /><Relatorios /></PrivateRoute>} />
+        <Route path="/dashboard/gabarito" element={<PrivateRoute><TabNavigation /><Gabarito /></PrivateRoute>} />
+        <Route path="/dashboard/planejamento" element={<PrivateRoute><TabNavigation /><Planejamento /></PrivateRoute>} />
         <Route path="/dashboard/debug" element={<PrivateRoute><Debug /></PrivateRoute>} />
-        <Route path="/dashboard/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<PrivateRoute><AdminLayout><AdminDashboard /></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/users" element={<PrivateRoute><AdminLayout><Admin /></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
+
+        {/* Redirecionamento legado */}
+        <Route path="/dashboard/admin" element={<Navigate to="/admin" replace />} />
       </Routes>
     </Router >
   );

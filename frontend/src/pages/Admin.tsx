@@ -99,46 +99,46 @@ export const Admin: React.FC = () => {
         <div className="admin-container">
             <div className="admin-header">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400">
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="admin-title">Painel de Administração</h1>
-                        <p className="admin-subtitle">Gerenciamento global de usuários e professores</p>
+                        <h1 className="admin-title">Portal Administrativo</h1>
+                        <p className="admin-subtitle">Inteligência e Gestão de Ecossistema</p>
                     </div>
                 </div>
-                <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                <button className="btn-emerald" onClick={() => setShowAddModal(true)}>
                     <UserPlus size={18} />
-                    <span>Novo Professor</span>
+                    <span>Cadastrar Professor</span>
                 </button>
             </div>
 
             <div className="admin-stats-bar">
                 <div className="admin-stat">
-                    <div className="icon-bg icon-blue icon-bg-sm">
-                        <Users size={18} />
+                    <div className="icon-bg icon-emerald">
+                        <Users size={24} />
                     </div>
                     <div className="stat-info">
-                        <span className="label">Total Usuários</span>
-                        <span className="value">{users.length}</span>
+                        <span className="label">Engajamento Total</span>
+                        <span className="value">{users.length} Usuários</span>
                     </div>
                 </div>
                 <div className="admin-stat">
-                    <div className="icon-bg icon-purple icon-bg-sm">
-                        <Shield size={18} />
+                    <div className="icon-bg icon-gold">
+                        <Shield size={24} />
                     </div>
                     <div className="stat-info">
                         <span className="label">Administradores</span>
-                        <span className="value">{users.filter(u => u.role === 'admin').length}</span>
+                        <span className="value">{users.filter(u => u.role === 'admin').length} Ativos</span>
                     </div>
                 </div>
                 <div className="admin-stat">
-                    <div className="icon-bg icon-green icon-bg-sm">
-                        <School size={18} />
+                    <div className="icon-bg icon-emerald" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                        <School size={24} />
                     </div>
                     <div className="stat-info">
-                        <span className="label">Escolas Ativas</span>
-                        <span className="value">{new Set(users.map(u => u.escola)).size}</span>
+                        <span className="label">Escolas Vinculadas</span>
+                        <span className="value">{new Set(users.map(u => u.escola)).size} Unidades</span>
                     </div>
                 </div>
             </div>
@@ -164,10 +164,10 @@ export const Admin: React.FC = () => {
                         <thead>
                             <tr>
                                 <th>Nome / Email</th>
-                                <th>Papel</th>
-                                <th>Escola / Disciplina</th>
-                                <th>Plano</th>
-                                <th>Ações</th>
+                                <th>Acesso</th>
+                                <th>Instituição / Disciplina</th>
+                                <th>Status Plano</th>
+                                <th>Gestão</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,7 +176,7 @@ export const Admin: React.FC = () => {
                                     <tr key={u.id}>
                                         <td>
                                             <div className="user-info-cell">
-                                                <div className="user-avatar">
+                                                <div className="user-avatar" style={{ background: u.role === 'admin' ? 'var(--admin-gold)' : 'var(--admin-emerald)' }}>
                                                     {u.nome.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
@@ -187,21 +187,21 @@ export const Admin: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`role-badge ${u.role}`}>
-                                                {u.role.toUpperCase()}
+                                                {u.role === 'admin' ? 'GESTOR' : 'PROFESSOR'}
                                             </span>
                                         </td>
                                         <td>
-                                            <p className="escola-text">{u.escola || 'Não informada'}</p>
-                                            <p className="disciplina-text text-xs text-slate-400">{u.disciplina}</p>
+                                            <p className="escola-text">{u.escola || 'Plataforma Global'}</p>
+                                            <p className="disciplina-text text-xs text-slate-400">{u.disciplina || 'Geral'}</p>
                                         </td>
                                         <td>
-                                            <span className={`plan-badge ${u.plan_type}`}>
-                                                {u.plan_type.toUpperCase()}
+                                            <span className={`plan-badge ${u.plan_type} ${u.plan_type === 'premium' ? 'text-amber-500' : ''}`}>
+                                                {u.plan_type?.toUpperCase() || 'FREE'}
                                             </span>
                                         </td>
                                         <td>
                                             <div className="action-btns">
-                                                <button className="icon-btn delete" onClick={() => handleDeleteUser(u.id)} disabled={u.id === currentUser.id}>
+                                                <button className="icon-btn delete" onClick={() => handleDeleteUser(u.id)} disabled={u.id === currentUser.id} style={{ color: '#ef4444' }}>
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
@@ -210,8 +210,8 @@ export const Admin: React.FC = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={5} className="empty-row">
-                                        Nenhum usuário encontrado.
+                                    <td colSpan={5} className="empty-row text-center py-10 text-slate-500">
+                                        Nenhum registro encontrado no ecossistema.
                                     </td>
                                 </tr>
                             )}
@@ -220,13 +220,13 @@ export const Admin: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modal Cadastro */}
+            {/* Modal Cadastro - Ajustado para visual Admin */}
             {showAddModal && (
                 <div className="modal-overlay">
-                    <div className="modal-container">
+                    <div className="modal-content" style={{ background: '#0f1117', border: '1px solid var(--admin-emerald)', maxWidth: '600px' }}>
                         <div className="modal-header">
-                            <h2>Cadastrar Novo Professor</h2>
-                            <button onClick={() => setShowAddModal(false)}><ArrowLeft /></button>
+                            <h2 className="admin-title" style={{ fontSize: '20px' }}>Novo Gestor / Professor</h2>
+                            <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white"><ArrowLeft /></button>
                         </div>
                         <form onSubmit={handleCreateUser} className="admin-form">
                             <div className="form-grid">
