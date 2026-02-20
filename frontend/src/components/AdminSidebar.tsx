@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, ShieldAlert, LogOut, Settings, Award } from 'lucide-react';
-import './Admin.css';
+import '../pages/Admin.css';
 
 export const AdminSidebar: React.FC = () => {
     const navigate = useNavigate();
