@@ -87,7 +87,7 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
         layout_version = "v1"
         result = omr.process_image(req.image, num_questions=req.num_questions, layout_version=layout_version)
         if not result.get("success"):
-            return result
+            raise HTTPException(status_code=422, detail=result.get("error", "Falha no processamento da imagem."))
 
         # ===== 1. QR Code e Identificação =====
         qr = result.get("qr_data")
@@ -100,7 +100,7 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
 
             # Validação cruzada: QR gid deve bater com gabarito_id informado
             if req.gabarito_id and qr_gid and qr_gid != req.gabarito_id:
-                return {"success": False, "error": "QR Code não corresponde ao gabarito selecionado."}
+                raise HTTPException(status_code=422, detail="QR Code não corresponde ao gabarito selecionado.")
 
             if qr_gid:
                 gabarito_id = qr_gid
@@ -108,7 +108,7 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
                 aluno_id = qr_aid
             
         if not gabarito_id:
-            return {"success": False, "error": "Identificação falhou: Gabarito não encontrado via QR Code e não informado manualmente."}
+            raise HTTPException(status_code=422, detail="Identificação falhou: Gabarito não encontrado via QR Code e não informado manualmente.")
 
         # ===== 2. Autorização: professor só corrige seus gabaritos =====
         if current_user.role != "admin":
@@ -120,7 +120,7 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
             gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
 
         if not gabarito:
-            return {"success": False, "error": f"Gabarito ID {gabarito_id} não encontrado ou acesso negado."}
+            raise HTTPException(status_code=422, detail=f"Gabarito ID {gabarito_id} não encontrado ou acesso negado.")
 
         # ===== 3. Validação cruzada: aluno pertence às turmas do gabarito =====
         aluno = None
@@ -131,7 +131,7 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
                 models.Aluno.turmas.any(models.Turma.id.in_(turma_ids_gabarito))
             ).first()
             if not aluno:
-                return {"success": False, "error": "Aluno não pertence às turmas deste gabarito."}
+                raise HTTPException(status_code=422, detail="Aluno não pertence às turmas deste gabarito.")
 
         # ===== 4. Parse robusto das respostas corretas =====
         corretas = parse_json_list(gabarito.respostas_corretas, "gabarito.respostas_corretas")
@@ -149,18 +149,16 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
         avg_conf = float(result.get("avg_confidence") or 0.0)
 
         if status_counts.get("invalid", 0) > 0:
-            return {
-                "success": False, 
-                "error": "Marcação múltipla detectada. Refaça a foto.", 
-                "status_counts": status_counts
-            }
+            raise HTTPException(
+                status_code=422, 
+                detail=f"Marcação múltipla detectada. Refaça a foto. (Métricas: {json.dumps(status_counts)})"
+            )
+            
         if status_counts.get("ambiguous", 0) > 3 or avg_conf < 0.75:
-            return {
-                "success": False, 
-                "error": "Leitura com baixa confiança. Refaça a foto.", 
-                "status_counts": status_counts, 
-                "avg_confidence": avg_conf
-            }
+            raise HTTPException(
+                status_code=422, 
+                detail=f"Leitura com baixa confiança ({avg_conf:.2f}). Refaça a foto. (Métricas: {json.dumps(status_counts)})"
+            )
 
         # ===== 6. Cálculo de acertos baseado no total do gabarito =====
         acertos = sum(
@@ -223,6 +221,8 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
             "audit_map": result.get("audit_map")
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erro no processamento de prova: {e}")
-        return {"success": False, "error": f"Erro interno: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
