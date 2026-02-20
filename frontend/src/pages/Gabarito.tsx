@@ -308,9 +308,6 @@ export const Gabarito: React.FC = () => {
                             <ArrowLeft size={20} />
                         </button>
                     )}
-                    <div className="icon-bg icon-bg-sm icon-green">
-                        <ClipboardList size={20} />
-                    </div>
                     <h1 className="gabarito-title">Gabaritos</h1>
                 </div>
                 {editingId && (
@@ -424,19 +421,13 @@ export const Gabarito: React.FC = () => {
 
                                     <div className="history-actions">
                                         <button className="action-btn edit" onClick={() => handleEdit(g)} title="Editar">
-                                            <div className="icon-bg icon-bg-sm icon-blue">
-                                                <Edit3 size={18} />
-                                            </div>
+                                            <Edit3 size={18} />
                                         </button>
                                         <button className="action-btn manual" onClick={() => setManualEntryGabarito(g)} title="Lançamento Manual">
-                                            <div className="icon-bg icon-bg-sm icon-orange">
-                                                <Edit3 size={18} />
-                                            </div>
+                                            <Edit3 size={18} />
                                         </button>
                                         <button className="action-btn upload" onClick={() => fileInputRef.current?.click()} title="Envio em Lote">
-                                            <div className="icon-bg icon-bg-sm icon-purple">
-                                                <Upload size={18} />
-                                            </div>
+                                            <Upload size={18} />
                                             <input
                                                 type="file"
                                                 ref={fileInputRef}
@@ -447,14 +438,10 @@ export const Gabarito: React.FC = () => {
                                             />
                                         </button>
                                         <button className="action-btn download" onClick={() => handlePreparePrint(g)} title="Imprimir Cartões">
-                                            <div className="icon-bg icon-bg-sm icon-indigo">
-                                                <Download size={18} />
-                                            </div>
+                                            <Download size={18} />
                                         </button>
                                         <button className="action-btn delete" onClick={() => handleDelete(g.id)} title="Excluir">
-                                            <div className="icon-bg icon-bg-sm icon-red">
-                                                <Trash2 size={18} />
-                                            </div>
+                                            <Trash2 size={18} />
                                         </button>
                                     </div>
                                 </div>

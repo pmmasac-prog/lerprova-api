@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Save, User, ChevronRight, ArrowLeft } from 'lucide-react';
 import { api } from '../../../services/api';
 
 interface ManualEntryModalProps {
@@ -101,129 +101,96 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
         <div className="modal-overlay">
             <div className="modal-container" style={{ maxWidth: '600px' }}>
                 <div className="modal-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="header-info-modal">
                         {step === 2 && (
-                            <button className="back-btn-modal" onClick={() => setStep(1)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
-                                <ArrowLeft size={16} />
+                            <button className="back-btn-modal" onClick={() => setStep(1)} title="Voltar para lista">
+                                <ArrowLeft size={18} />
                             </button>
                         )}
                         <div>
-                            <h2>Lançamento de Nota</h2>
-                            <p className="admin-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} questões</p>
+                            <h2 className="modal-title">Lançamento de Nota</h2>
+                            <p className="modal-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} questões</p>
                         </div>
                     </div>
-                    <button className="close-btn" onClick={onClose}><X /></button>
                 </div>
 
-                <div className="admin-form">
+                <div className="modal-body-p-0">
                     {step === 1 ? (
-                        <div className="step-selection">
+                        <div className="modal-inner">
                             <label className="label">1. Selecione o Aluno</label>
-                            <div className="search-box" style={{ marginBottom: '15px' }}>
+                            <div className="search-box">
                                 <User size={18} color="#94a3b8" />
                                 <input
                                     type="text"
+                                    className="search-input"
                                     placeholder="Buscar aluno pelo nome..."
                                     value={searchAluno}
                                     onChange={(e) => setSearchAluno(e.target.value)}
                                 />
                             </div>
-                            <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+                            <div className="student-list-container">
                                 {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map(a => {
                                     const resultado = resultados.find(r => r.aluno_id === a.id);
                                     const hasNota = resultado !== undefined;
                                     const notaValue = hasNota ? parseFloat(resultado.nota) : 0;
-                                    const notaColor = notaValue > 5.9 ? '#2563eb' : '#dc2626'; // Azul ou Vermelho
 
                                     return (
                                         <div
                                             key={a.id}
                                             onClick={() => handleSelectAluno(a.id)}
-                                            style={{
-                                                padding: '12px 15px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                borderBottom: '1px solid #f1f5f9',
-                                                transition: 'all 0.2s',
-                                                background: hasNota ? '#f8fafc' : 'transparent'
-                                            }}
-                                            className="student-item"
+                                            className={`student-item-row ${hasNota ? 'has-result' : ''}`}
                                         >
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: 700, color: '#1e293b' }}>{a.nome}</div>
-                                                <div style={{ fontSize: '11px', color: '#64748b' }}>Cód: {a.codigo}</div>
+                                            <div className="student-info-mini">
+                                                <div className="student-name-mini">{a.nome}</div>
+                                                <div className="student-code-mini">Cód: {a.codigo}</div>
                                             </div>
 
                                             {hasNota && (
-                                                <div style={{
-                                                    marginRight: '15px',
-                                                    padding: '4px 10px',
-                                                    borderRadius: '8px',
-                                                    background: 'white',
-                                                    border: `1px solid ${notaColor}`,
-                                                    color: notaColor,
-                                                    fontWeight: '800',
-                                                    fontSize: '14px'
-                                                }}>
+                                                <div className="student-nota-badge">
                                                     {notaValue.toFixed(1)}
                                                 </div>
                                             )}
 
-                                            <ChevronRight size={18} color="#94a3b8" />
+                                            <ChevronRight size={18} className="chevron-icon" />
                                         </div>
                                     );
                                 })}
-                                {alunos.length === 0 && <p style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Nenhum aluno encontrado para as turmas deste gabarito.</p>}
+                                {alunos.length === 0 && <p className="empty-text">Nenhum aluno encontrado para as turmas deste gabarito.</p>}
                             </div>
 
-                            <div className="form-actions" style={{ marginTop: '20px' }}>
-                                <button className="reset-btn" onClick={onClose} style={{ width: '100%', background: '#f1f5f9', color: '#1e293b' }}>
+                            <div className="modal-actions-footer">
+                                <button className="finish-btn w-full" onClick={onClose}>
                                     Fechar Janela
                                 </button>
                             </div>
                         </div>
                     ) : (
-                        <div className="step-answers">
-                            <div className="stats-row" style={{ marginBottom: '30px', background: '#f8fafc', padding: '20px' }}>
-                                <div className="mini-stat">
-                                    <div className="mini-stat-value" style={{ fontSize: '18px' }}>{selectedAluno?.nome}</div>
-                                    <div className="mini-stat-label">Aluno Selecionado</div>
-                                </div>
+                        <div className="modal-inner">
+                            <div className="student-header-context">
+                                <div className="mini-stat-label">Aluno Selecionado</div>
+                                <div className="mini-stat-value">{selectedAluno?.nome}</div>
                             </div>
 
-                            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                                <label className="label" style={{ fontSize: '16px', marginBottom: '20px', display: 'block' }}>
-                                    Digite a Nota Final (0 a 10)
+                            <div className="nota-entry-container">
+                                <label className="label text-center block mb-6">
+                                    Nota Final (0 a 10)
                                 </label>
                                 <input
                                     type="text"
                                     autoFocus
+                                    className="nota-large-input"
                                     inputMode="decimal"
                                     placeholder="0.0"
                                     value={manualNota}
                                     onChange={(e) => setManualNota(e.target.value)}
-                                    style={{
-                                        width: '150px',
-                                        height: '80px',
-                                        fontSize: '48px',
-                                        textAlign: 'center',
-                                        border: '3px solid #3b82f6',
-                                        borderRadius: '20px',
-                                        fontWeight: '900',
-                                        color: '#1e293b',
-                                        boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.2)',
-                                        outline: 'none'
-                                    }}
                                 />
                             </div>
 
-                            <div className="form-actions" style={{ marginTop: '40px' }}>
-                                <button className="reset-btn" onClick={() => setStep(1)} style={{ background: '#f1f5f9', color: '#64748b' }}>
+                            <div className="modal-actions-footer gap-4">
+                                <button className="finish-btn flex-1" onClick={() => setStep(1)}>
                                     Alterar Aluno
                                 </button>
-                                <button className="save-btn" onClick={handleSave} disabled={loading} style={{ padding: '0 30px' }}>
+                                <button className="save-btn flex-2" onClick={handleSave} disabled={loading}>
                                     <Save size={20} />
                                     <span>{loading ? 'Salvando...' : 'Gravar Nota'}</span>
                                 </button>
