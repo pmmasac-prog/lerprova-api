@@ -376,17 +376,20 @@ export const TurmaDetail: React.FC = () => {
 
                 {alunos.length > 0 ? (
                     <div className="alunos-list-container">
-                        {alunos.sort((a, b) => a.nome.localeCompare(b.nome)).map(aluno => (
+                        {alunos.sort((a, b) => a.nome.localeCompare(b.nome)).map((aluno, index) => (
                             <div key={aluno.id} className="aluno-row" onClick={() => handleAlunoClick(aluno)}>
-                                <div className="aluno-avatar-small">
-                                    {aluno.nome.substring(0, 2).toUpperCase()}
-                                </div>
-                                <div className="aluno-info-row">
-                                    <span className="aluno-name-row">{aluno.nome}</span>
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <span className="aluno-code-row">#{aluno.codigo}</span>
-                                        <ChevronRight size={16} className="aluno-action-icon" />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', width: '20px' }}>
+                                        {(index + 1).toString().padStart(2, '0')}
+                                    </span>
+                                    <div className="aluno-avatar-small">
+                                        {aluno.nome.substring(0, 2).toUpperCase()}
                                     </div>
+                                    <span className="aluno-name-row">{aluno.nome}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span className="aluno-code-row">#{aluno.codigo}</span>
+                                    <ChevronRight size={16} className="aluno-action-icon" />
                                 </div>
                             </div>
                         ))}
