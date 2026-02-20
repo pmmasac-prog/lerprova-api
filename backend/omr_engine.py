@@ -103,11 +103,6 @@ class OMREngine:
             if img_original is None:
                 return {"success": False, "error": "Imagem vazia ou corrompida"}
             
-            # Garantir orientação Portrait (se a câmera mandou num formato de paisagem)
-            h, w = img_original.shape[:2]
-            if w > h:
-                img_original = cv2.rotate(img_original, cv2.ROTATE_90_CLOCKWISE)
-            
             # Salvar original para auditoria
             _, buffer_orig = cv2.imencode('.jpg', img_original, [cv2.IMWRITE_JPEG_QUALITY, 85])
             original_base64 = base64.b64encode(buffer_orig).decode('utf-8')
@@ -349,11 +344,6 @@ class OMREngine:
 
             if image is None:
                 return {"success": False, "error": "Imagem inválida"}
-
-            # Patch 4: Forçar Orientação Portrait (Patch de Orientação)
-            h, w = image.shape[:2]
-            if w > h:
-                image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
             
             # Redimensionar para o espaço fixo de calibração
             target_w, target_h = 1120, 1600
@@ -445,22 +435,30 @@ class OMREngine:
         return True
     
     def order_points(self, pts):
-        """Ordena pontos: TL, TR, BR, BL (sentido horário) de forma robusta a inclinações"""
-        # Ordenar os 4 pontos com base no Y (cima para baixo)
-        y_sorted = pts[np.argsort(pts[:, 1])]
+        """Ordena pontos: TL, TR, BR, BL (sentido horário) de forma robusta a inclinações
+        Garante que a aresta entre os 2 primeiros pontos seja uma aresta curta (Topo do retrato).
+        """
+        # 1. Obter o centro geométrico
+        center = np.mean(pts, axis=0)
         
-        # Os dois primeiros são os do topo (Top-Left e Top-Right)
-        top_pts = y_sorted[:2]
-        # Os dois últimos são os de baixo (Bottom-Left e Bottom-Right)
-        bottom_pts = y_sorted[2:]
+        # 2. Ordenar pontos em sentido horário usando atan2
+        angles = np.arctan2(pts[:, 1] - center[1], pts[:, 0] - center[0])
+        pts_sorted = pts[np.argsort(angles)]
         
-        # Ordenar os do topo pelo X (Esquerda para Direita)
-        tl, tr = top_pts[np.argsort(top_pts[:, 0])]
-        
-        # Ordenar os de baixo pelo X (Esquerda para Direita)
-        bl, br = bottom_pts[np.argsort(bottom_pts[:, 0])]
-        
-        return np.array([tl, tr, br, bl], dtype="float32")
+        # 3. Descobrir qual aresta é a mais longa
+        distances = []
+        for i in range(4):
+            p_next = pts_sorted[(i + 1) % 4]
+            dist = np.linalg.norm(pts_sorted[i] - p_next)
+            distances.append(dist)
+            
+        # 4. Aresta 0 é pts_sorted[0] -> pts_sorted[1]
+        # Queremos forçar o formato Retrato, ou seja, Aresta Superior (0) deve ser menor que Lateral (1)
+        if distances[0] > distances[1]:
+            # Aresta 0 é longa, então rotaciona o array em 1 para que a aresta 0 passe a ser a curta (Top)
+            pts_sorted = np.roll(pts_sorted, -1, axis=0)
+            
+        return np.array(pts_sorted, dtype="float32")
     
     def four_point_transform(self, image, rect):
         """Aplica transformação de perspectiva (homografia)"""
