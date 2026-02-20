@@ -103,6 +103,11 @@ class OMREngine:
             if img_original is None:
                 return {"success": False, "error": "Imagem vazia ou corrompida"}
             
+            # Garantir orientação Portrait (se a câmera mandou num formato de paisagem)
+            h, w = img_original.shape[:2]
+            if w > h:
+                img_original = cv2.rotate(img_original, cv2.ROTATE_90_CLOCKWISE)
+            
             # Salvar original para auditoria
             _, buffer_orig = cv2.imencode('.jpg', img_original, [cv2.IMWRITE_JPEG_QUALITY, 85])
             original_base64 = base64.b64encode(buffer_orig).decode('utf-8')
