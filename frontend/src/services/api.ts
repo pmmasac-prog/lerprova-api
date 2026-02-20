@@ -279,10 +279,24 @@ export const api = {
             });
             return res.json();
         },
-        deleteUser: async (userId: number) => {
+        async deleteUser(userId: number) {
             const res = await fetch(`${API_URL}/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders()
+            });
+            return res.json();
+        },
+        async listPendencias() {
+            const res = await fetch(`${API_URL}/admin/pendencias`, {
+                headers: getAuthHeaders()
+            });
+            return res.json();
+        },
+        async notificarProfessor(professorId: number) {
+            const res = await fetch(`${API_URL}/admin/notificar`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ professor_id: professorId })
             });
             return res.json();
         }

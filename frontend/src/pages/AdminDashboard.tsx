@@ -5,7 +5,9 @@ import './Admin.css';
 
 export const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<any>(null);
+    const [pendencias, setPendencias] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [notifying, setNotifying] = useState<number | null>(null);
 
     useEffect(() => {
         loadDashboardData();
@@ -14,12 +16,28 @@ export const AdminDashboard: React.FC = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            const data = await api.getDashboardOperacional();
-            setStats(data);
+            const [statsData, pendenciasData] = await Promise.all([
+                api.getDashboardOperacional(),
+                api.admin.listPendencias()
+            ]);
+            setStats(statsData);
+            setPendencias(pendenciasData);
         } catch (error) {
             console.error('Erro ao carregar dashboard admin:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleNotificar = async (profId: number) => {
+        try {
+            setNotifying(profId);
+            await api.admin.notificarProfessor(profId);
+            alert('Professor notificado com sucesso!');
+        } catch (error) {
+            alert('Falha ao notificar professor.');
+        } finally {
+            setNotifying(null);
         }
     };
 
@@ -33,6 +51,9 @@ export const AdminDashboard: React.FC = () => {
                     <p className="admin-subtitle">Monitoramento de atividades e engajamento em tempo real</p>
                 </div>
                 <div className="flex gap-3">
+                    <button className="btn-emerald" onClick={loadDashboardData} style={{ padding: '8px 16px', fontSize: '12px' }}>
+                        ATUALIZAR DADOS
+                    </button>
                     <div className="status-indicator">
                         <div className="dot animate-pulse" />
                         <span>SISTEMA ONLINE</span>
@@ -71,6 +92,53 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="admin-dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+                {/* Widget de Auditoria de Pendências */}
+                <div className="admin-content card">
+                    <div className="card-header p-4" style={{ borderBottom: '1px solid var(--admin-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h3 className="admin-title" style={{ fontSize: '18px' }}>Atenção Necessária</h3>
+                            <p className="admin-subtitle" style={{ fontSize: '11px' }}>Professores com tarefas pendentes</p>
+                        </div>
+                        <span className="role-badge admin" style={{ fontSize: '10px' }}>{pendencias.length} ALERTAS</span>
+                    </div>
+                    <div className="p-4">
+                        {pendencias.length > 0 ? (
+                            pendencias.map((item: any, idx: number) => (
+                                <div key={idx} className="activity-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                    <div>
+                                        <p className="user-name" style={{ fontSize: '14px' }}>{item.nome}</p>
+                                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                                            {item.detalhes.provas_sem_nota > 0 && (
+                                                <span style={{ fontSize: '10px', color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                    {item.detalhes.provas_sem_nota} Provas
+                                                </span>
+                                            )}
+                                            {item.detalhes.aulas_esquecidas > 0 && (
+                                                <span style={{ fontSize: '10px', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                    {item.detalhes.aulas_esquecidas} Aulas
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="btn-emerald"
+                                        onClick={() => handleNotificar(item.professor_id)}
+                                        disabled={notifying === item.professor_id}
+                                        style={{ padding: '6px 12px', fontSize: '11px', boxShadow: 'none' }}
+                                    >
+                                        {notifying === item.professor_id ? 'Notificando...' : 'NOTIFICAR'}
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-10">
+                                <Zap size={32} className="text-emerald-500 mb-2 mx-auto opacity-20" />
+                                <p className="text-slate-500">Tudo em dia no ecossistema!</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 <div className="admin-content card">
                     <div className="card-header p-4" style={{ borderBottom: '1px solid var(--admin-border)' }}>
                         <h3 className="admin-title" style={{ fontSize: '18px' }}>Atividade do Ecossistema</h3>
@@ -89,21 +157,6 @@ export const AdminDashboard: React.FC = () => {
                         ) : (
                             <p className="text-slate-500 py-10 text-center">Nenhuma atividade detectada nas últimas horas.</p>
                         )}
-                    </div>
-                </div>
-
-                <div className="admin-content card">
-                    <div className="card-header p-4" style={{ borderBottom: '1px solid var(--admin-border)' }}>
-                        <h3 className="admin-title" style={{ fontSize: '18px' }}>Distribuição de Licenças</h3>
-                    </div>
-                    <div className="p-6 text-center">
-                        <div style={{ position: 'relative', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ position: 'absolute', width: '150px', height: '150px', borderRadius: '50%', border: '8px solid var(--admin-emerald)', borderTopColor: 'transparent', transform: 'rotate(45deg)' }} />
-                            <div>
-                                <span style={{ fontSize: '32px', fontWeight: '800', display: 'block' }}>{stats?.percentual_premium || '0%'}</span>
-                                <span style={{ fontSize: '10px', color: '#64748b' }}>PREMIUM USERS</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
