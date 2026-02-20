@@ -440,15 +440,22 @@ class OMREngine:
         return True
     
     def order_points(self, pts):
-        """Ordena pontos: TL, TR, BR, BL (sentido horário)"""
-        rect = np.zeros((4, 2), dtype="float32")
-        s = pts.sum(axis=1)
-        rect[0] = pts[np.argmin(s)]  # TL (menor soma)
-        rect[2] = pts[np.argmax(s)]  # BR (maior soma)
-        diff = np.diff(pts, axis=1)
-        rect[1] = pts[np.argmin(diff)]  # TR (menor diferença)
-        rect[3] = pts[np.argmax(diff)]  # BL (maior diferença)
-        return rect
+        """Ordena pontos: TL, TR, BR, BL (sentido horário) de forma robusta a inclinações"""
+        # Ordenar os 4 pontos com base no Y (cima para baixo)
+        y_sorted = pts[np.argsort(pts[:, 1])]
+        
+        # Os dois primeiros são os do topo (Top-Left e Top-Right)
+        top_pts = y_sorted[:2]
+        # Os dois últimos são os de baixo (Bottom-Left e Bottom-Right)
+        bottom_pts = y_sorted[2:]
+        
+        # Ordenar os do topo pelo X (Esquerda para Direita)
+        tl, tr = top_pts[np.argsort(top_pts[:, 0])]
+        
+        # Ordenar os de baixo pelo X (Esquerda para Direita)
+        bl, br = bottom_pts[np.argsort(bottom_pts[:, 0])]
+        
+        return np.array([tl, tr, br, bl], dtype="float32")
     
     def four_point_transform(self, image, rect):
         """Aplica transformação de perspectiva (homografia)"""
