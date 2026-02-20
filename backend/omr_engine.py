@@ -6,7 +6,6 @@ import base64
 import time
 import math
 from pathlib import Path
-from pyzbar import pyzbar
 
 def _circularity(cnt):
     peri = cv2.arcLength(cnt, True)
@@ -250,20 +249,21 @@ class OMREngine:
 
     def decode_qr(self, image):
         """
-        Detecta e decodifica QR Codes na imagem.
+        Detecta e decodifica QR Codes na imagem usando OpenCV.
         """
         try:
-            barcodes = pyzbar.decode(image)
-            for barcode in barcodes:
-                if barcode.type == 'QRCODE':
-                    data = barcode.data.decode('utf-8')
-                    try:
-                        return json.loads(data)
-                    except:
-                        return data
+            detector = cv2.QRCodeDetector()
+            # O detector retorna: (data, bbox, straight_qrcode)
+            data, bbox, _ = detector.detectAndDecode(image)
+            
+            if data:
+                try:
+                    return json.loads(data)
+                except:
+                    return data
             return None
         except Exception as e:
-            print(f"Erro ao decodificar QR Code: {e}")
+            print(f"Erro ao decodificar QR Code (OpenCV): {e}")
             return None
     
     def detect_anchors_robust(self, thresh, gray):
