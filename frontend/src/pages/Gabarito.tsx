@@ -31,7 +31,7 @@ interface Gabarito {
     disciplina?: string;
 }
 
-export default function GabaritoPage() {
+export function Gabarito() {
     const [viewMode, setViewMode] = useState<'history' | 'create'>('history');
     const [turmas, setTurmas] = useState<Turma[]>([]);
     const [gabaritos, setGabaritos] = useState<Gabarito[]>([]);
