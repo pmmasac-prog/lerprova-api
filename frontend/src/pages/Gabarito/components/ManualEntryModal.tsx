@@ -17,7 +17,6 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
     const [selectedAlunoId, setSelectedAlunoId] = useState<number | null>(null);
     const [manualNota, setManualNota] = useState<string>('');
     const [loading, setLoading] = useState(false);
-    const [searchAluno, setSearchAluno] = useState('');
 
     useEffect(() => {
         loadData();
@@ -115,19 +114,8 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                 <div className="manual-entry-body" style={{ padding: step === 1 ? '24px' : '32px' }}>
                     {step === 1 ? (
                         <>
-                            <div className="student-search-container">
-                                <User className="student-search-icon" size={18} />
-                                <input
-                                    type="text"
-                                    className="student-search-input"
-                                    placeholder="Buscar aluno pelo nome..."
-                                    value={searchAluno}
-                                    onChange={(e) => setSearchAluno(e.target.value)}
-                                />
-                            </div>
-
                             <div className="manual-student-list">
-                                {alunos.filter(a => a.nome.toLowerCase().includes(searchAluno.toLowerCase())).map((a) => {
+                                {alunos.map((a) => {
                                     const resultado = resultados.find(r => r.aluno_id === a.id);
                                     const hasNota = resultado !== undefined;
                                     const notaValue = hasNota ? parseFloat(resultado.nota) : 0;
