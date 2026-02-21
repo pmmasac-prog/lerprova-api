@@ -170,27 +170,23 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
         <div className="scanner-overlay">
             <div className="scanner-container">
                 <div className="scanner-header">
-                    <h3>Corrigir Prova</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button className="btn-text-nav" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>
-                            <ArrowLeft size={14} /> Sair
-                        </button>
-                        <button className="close-btn" onClick={onClose}><X /></button>
-                    </div>
+                    <button className="close-btn" onClick={onClose}><X size={20} /></button>
+                    <h3>Scanner AR</h3>
+                    <div style={{ width: '44px' }}></div> {/* Spacer for symmetry */}
                 </div>
 
-                <div className="scanner-body">
+                <div className="scanner-body" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     {!result ? (
                         <div className="camera-view">
                             <video ref={videoRef} autoPlay playsInline muted />
 
                             {/* Overlay de Enquadramento */}
-                            <div className="frame-overlay">
+                            <div className={`frame-overlay ${anchors.length === 4 ? 'active' : ''}`}>
                                 <div className="corner tl"></div>
                                 <div className="corner tr"></div>
                                 <div className="corner bl"></div>
                                 <div className="corner br"></div>
-                                <div className="scan-line"></div>
+                                {anchors.length < 4 && <div className="scan-line"></div>}
                             </div>
 
                             {/* SVG de Realidade Aumentada (Polígono Verde) */}
@@ -218,36 +214,46 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                             )}
 
                             {error && (
-                                <div className="scanner-error" style={{ zIndex: 20 }}>
-                                    <AlertCircle size={20} />
+                                <div className="scanner-error">
+                                    <AlertCircle size={18} />
                                     <span>{error}</span>
                                 </div>
                             )}
 
-                            <div className="scanner-instructions" style={{ zIndex: 20 }}>
+                            <div className="scanner-instructions">
                                 <Info size={16} />
-                                <span>{anchors.length === 4 ? trackingScore >= 100 ? "Segure Firme..." : "Quase Perfeito!" : "Enquadre as 4 bolinhas pretas nos cantos do visor."}</span>
+                                <span>{anchors.length === 4 ? trackingScore >= 100 ? "Processando..." : "Segure Firme..." : "Enquadre os 4 cantos na área verde"}</span>
                             </div>
-
-                            {/* Barra de Progresso Auto-Capture */}
-                            {anchors.length === 4 && (
-                                <div className="auto-capture-progress" style={{ width: '80%', height: '8px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px', margin: '0 auto', marginTop: '10px', zIndex: 20, position: 'relative' }}>
-                                    <div style={{ width: `${trackingScore}%`, height: '100%', background: '#10b981', borderRadius: '4px', transition: 'width 0.3s ease' }}></div>
-                                </div>
-                            )}
 
                             <button
                                 className={`capture-btn ${processing ? 'loading' : ''}`}
                                 onClick={captureAndProcess}
                                 disabled={!isCameraReady || processing}
-                                style={{ zIndex: 20 }}
+                                aria-label="Capturar Imagem"
                             >
-                                {processing ? <RefreshCw className="spin" /> : <Camera />}
-                                <span>{processing ? 'Analisando OMR...' : 'Captura Manual'}</span>
+                                {processing && <RefreshCw className="spin" size={24} />}
                             </button>
+
+                            {/* Barra de Progresso Auto-Capture */}
+                            {anchors.length === 4 && (
+                                <div className="auto-capture-progress" style={{
+                                    position: 'absolute',
+                                    bottom: '30px',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    width: '120px',
+                                    height: '6px',
+                                    background: 'rgba(255,255,255,0.2)',
+                                    borderRadius: '3px',
+                                    zIndex: 60,
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ width: `${trackingScore}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }}></div>
+                                </div>
+                            )}
                         </div>
                     ) : (
-                        <div className="result-view">
+                        <div className="result-view" style={{ overflowY: 'auto', flex: 1 }}>
                             <div className="result-card">
                                 <CheckCircle size={48} color="#10b981" />
                                 <h2>Nota: {result.nota}</h2>
