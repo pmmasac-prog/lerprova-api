@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Camera, RefreshCw, CheckCircle, AlertCircle, Info, ArrowLeft } from 'lucide-react';
+import { X, RefreshCw, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { api } from '../../../services/api';
 import './ScannerModal.css';
 
