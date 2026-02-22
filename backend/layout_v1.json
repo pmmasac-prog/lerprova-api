@@ -1,14 +1,28 @@
 {
-    "version": "v1-antigravity-refined",
+    "version": "v1-2col-a4",
     "warped_size": {
         "w": 1120,
         "h": 1600
     },
     "thresholds": {
-        "marked": 0.20,
-        "ambiguous": 0.10
+        "marked": 0.18,
+        "ambiguous": 0.08
     },
-    "roi_size_pct_of_width": 0.035,
+    "roi_size_pct_of_width": 0.028,
+    "num_columns": 2,
+    "x_offsets_pct": [
+        0.048,
+        0.540
+    ],
+    "x_centers_pct": [
+        0.072,
+        0.125,
+        0.178,
+        0.231,
+        0.284
+    ],
+    "y_start_pct": 0.32,
+    "y_end_pct": 0.92,
     "options": [
         "A",
         "B",
@@ -16,14 +30,5 @@
         "D",
         "E"
     ],
-    "x_centers_pct": [
-        0.245,
-        0.318,
-        0.392,
-        0.465,
-        0.538
-    ],
-    "y_start_pct": 0.21,
-    "y_end_pct": 0.88,
     "num_questions": 25
 }

@@ -240,6 +240,29 @@ class OMREngine:
                 "anchors_found": 4,
                 "qr_data": qr_data
             }
+
+            # ===== 9. SALVAR DIAGNÓSTICOS (DIAGNÓSTICOS PERMANENTES) =====
+            try:
+                diag_dir = Path(__file__).parent / "diagnostics"
+                if not diag_dir.exists():
+                    diag_dir.mkdir(parents=True, exist_ok=True)
+                
+                timestamp = int(time.time() * 1000)
+                prefix = f"scan_{timestamp}_{'success' if quality == 'ok' else 'check'}"
+                
+                # Salvar Original
+                cv2.imwrite(str(diag_dir / f"{prefix}_orig.jpg"), img_original)
+                
+                # Salvar Warped (Retificada)
+                cv2.imwrite(str(diag_dir / f"{prefix}_warped.jpg"), warped)
+                
+                # Salvar Audit (Com marcações)
+                audit_map = self.generate_audit_map(warped, bubble_results, num_questions)
+                cv2.imwrite(str(diag_dir / f"{prefix}_audit.jpg"), audit_map)
+                
+                logger.debug(f"Diagnostics saved to {diag_dir}")
+            except Exception as e:
+                logger.error(f"Erro ao salvar diagnósticos: {e}")
             
             if return_images:
                 _, buffer_warped = cv2.imencode('.jpg', warped, [cv2.IMWRITE_JPEG_QUALITY, 70])
@@ -249,7 +272,9 @@ class OMREngine:
                 response["original_image"] = f"data:image/jpg;base64,{original_base64}"
             
             if return_audit:
-                audit_map = self.generate_audit_map(warped, bubble_results, num_questions)
+                # Se não geramos antes nos diagnósticos, gera agora
+                if 'audit_map' not in locals():
+                    audit_map = self.generate_audit_map(warped, bubble_results, num_questions)
                 _, buffer_audit = cv2.imencode('.jpg', audit_map, [cv2.IMWRITE_JPEG_QUALITY, 70])
                 response["audit_map"] = f"data:image/jpg;base64,{base64.b64encode(buffer_audit).decode('utf-8')}"
             
@@ -583,42 +608,52 @@ class OMREngine:
             25, 10
         )
         
+        num_cols = int(layout.get("num_columns", 1))
+        x_offsets_pct = layout.get("x_offsets_pct", [0.0]) # Percentual de deslocamento de cada coluna
+        
         results = []
-        for i in range(num_questions):
-            y_center = (y_start_pct + (i * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
-            bubbles_data = []
+        
+        # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
+        # Isso significa que ele preenche Linha 1: Q1, Q2 | Linha 2: Q3, Q4...
+        # Precisamos de um loop que percorra as linhas e depois as colunas dentro da linha
+        num_rows = math.ceil(num_questions / num_cols)
+        
+        q_idx = 0
+        for row in range(num_rows):
+            y_center = (y_start_pct + (row * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
             
-            for j, x_pct in enumerate(x_centers_pct):
-                x_center = x_pct * self.target_width
+            for col in range(num_cols):
+                if q_idx >= num_questions:
+                    break
+                    
+                col_offset_pct = x_offsets_pct[col] if col < len(x_offsets_pct) else 0.0
+                bubbles_data = []
                 
-                # Definir ROI
-                x1 = max(0, int(x_center - roi_size/2))
-                y1 = max(0, int(y_center - roi_size/2))
-                x2 = min(self.target_width, x1 + roi_size)
-                y2 = min(self.target_height, y1 + roi_size)
-                
-                roi = thresh[y1:y2, x1:x2]
-                if roi.size == 0:
-                    fill_ratio, bg_ratio = 0.0, 0.0
-                else:
+                for j, x_pct_rel in enumerate(x_centers_pct):
+                    # Coordenada X absoluta = (Offset da Coluna + Posição Relativa da Bolha) * Largura
+                    x_center = (col_offset_pct + x_pct_rel) * self.target_width
+                    
+                    # Definir ROI
+                    x1 = max(0, int(x_center - roi_size/2))
+                    y1 = max(0, int(y_center - roi_size/2))
+                    x2 = min(self.target_width, x1 + roi_size)
+                    y2 = min(self.target_height, y1 + roi_size)
+                    
+                    roi = thresh[y1:y2, x1:x2]
+                    
                     fill_ratio, bg_ratio = self._masked_ratio(roi)
+                    bubbles_data.append({
+                        'option': options[j],
+                        'score': fill_ratio,
+                        'bg_score': bg_ratio,
+                        'coords': [x1, y1, x2, y2]
+                    })
                 
-                # Score normalizado pune bolhas muito rascunhadas/apagadas
-                score = max(0.0, fill_ratio - bg_ratio)
-                
-                bubbles_data.append({
-                    'option': options[j],
-                    'density': fill_ratio, # Mantido para debug/compatibilidade visual
-                    'fill_ratio': fill_ratio,
-                    'bg_ratio': bg_ratio,
-                    'score': score,
-                    'coords': (x1, y1, x2, y2)
+                results.append({
+                    'question': q_idx + 1,
+                    'bubbles': bubbles_data
                 })
-            
-            results.append({
-                'question_idx': i,
-                'bubbles': bubbles_data
-            })
+                q_idx += 1
         
         return results
     
