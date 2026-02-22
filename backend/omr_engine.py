@@ -1,11 +1,5 @@
-import json
-import os
-import cv2
-import numpy as np
-import base64
-import time
-import math
-from pathlib import Path
+import logging
+logger = logging.getLogger("omr")
 
 def _circularity(cnt):
     peri = cv2.arcLength(cnt, True)
@@ -68,7 +62,7 @@ class OMREngine:
             print(f"Erro ao carregar layout {version_str}: {e}")
             return default_layout
         
-    def process_image(self, image_base64, num_questions=10, return_images=True, return_audit=True, layout_version=None):
+    def process_image(self, image_base64, num_questions=None, return_images=True, return_audit=True, layout_version=None):
         """
         Processa uma imagem de cartão-resposta seguindo as melhores práticas de OMR profissional.
         
@@ -88,9 +82,15 @@ class OMREngine:
         """
         try:
             # ===== 0. SELEÇÃO DE LAYOUT =====
-            version_str = str(layout_version) if layout_version else "v1"
+            # Selecionar layout_version v1.1-a4-calibrated se não informado
+            version_str = str(layout_version) if layout_version else "v1.1-a4-calibrated"
             current_layout = self.load_layout(version_str)
             
+            # Fallback para num_questions do layout se não informado
+            layout_nq = int(current_layout.get("num_questions", 25))
+            if num_questions is None:
+                num_questions = layout_nq
+
             # Atualizar dimensões baseadas no layout escolhido
             t_width = self.target_width
             t_height = self.target_height
@@ -207,7 +207,7 @@ class OMREngine:
             bubble_results = self.read_bubbles_by_density(warped, num_questions, version_str)
             
             # ===== 6. VALIDAÇÃO POR QUESTÃO =====
-            validated_results = self.validate_questions(bubble_results)
+            validated_results = self.validate_questions(bubble_results, version_str)
             
             # ===== 7. DEFINICAO DA QUALIDADE DA LEITURA =====
             # Qualquer anomalia marca a prova para revisão humana invés de travar a API
@@ -592,23 +592,13 @@ class OMREngine:
         y_start_pct = float(layout["y_start_pct"])
         y_end_pct = float(layout["y_end_pct"])
 
-        # usa num_questions do request, mas você pode travar no layout se quiser
-        y_step_pct = (y_end_pct - y_start_pct) / float(num_questions)
-        roi_size = int(self.target_width * float(layout["roi_size_pct_of_width"]))
-
-        # Pré-processar imagem warped
-        gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        gray_clahe = clahe.apply(gray)
-        blurred = cv2.GaussianBlur(gray_clahe, (3, 3), 0)
-        thresh = cv2.adaptiveThreshold(
-            blurred, 255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY_INV,
-            25, 10
-        )
-        
         num_cols = int(layout.get("num_columns", 1))
+        # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
+        # Isso significa que ele preenche Linha 1: Q1, Q2 | Linha 2: Q3, Q4...
+        num_rows = math.ceil(num_questions / num_cols)
+        
+        y_step_pct = (y_end_pct - y_start_pct) / float(num_rows)
+        roi_size = int(self.target_width * float(layout.get("roi_size_pct_of_width", 0.028)))
         x_offsets_pct = layout.get("x_offsets_pct", [0.0]) # Percentual de deslocamento de cada coluna
         
         results = []
@@ -616,8 +606,6 @@ class OMREngine:
         # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
         # Isso significa que ele preenche Linha 1: Q1, Q2 | Linha 2: Q3, Q4...
         # Precisamos de um loop que percorra as linhas e depois as colunas dentro da linha
-        num_rows = math.ceil(num_questions / num_cols)
-        
         q_idx = 0
         for row in range(num_rows):
             y_center = (y_start_pct + (row * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
@@ -657,15 +645,17 @@ class OMREngine:
         
         return results
     
-    def validate_questions(self, bubble_results):
+    def validate_questions(self, bubble_results, layout_version="v1"):
         """
         Lógica de Densidade Relativa por Score e Margem.
         Compara o Score da opção mais pintada (Top 1) com a segunda mais pintada (Top 2).
         Anota final_status/final_conf/final_index na question_data para o audit_map.
         """
-        # Para simplificar, vou extrair regras do engine (podem vir do JSON de layout futuramente)
-        marked_thr = 0.15   # Acima disso, consideramos que tem tinta real
-        amb_thr = 0.08      # Abaixo disso, é sujeira ou nada (em branco)
+        layout = self.load_layout(layout_version)
+        thr = layout.get("thresholds", {})
+        
+        marked_thr = float(thr.get("marked", 0.15))   # Acima disso, consideramos que tem tinta real
+        amb_thr = float(thr.get("ambiguous", 0.08))      # Abaixo disso, é sujeira ou nada (em branco)
         margin_thr = 0.06   # Diferença mínima entre Top 1 e Top 2 para não ser ambíguo
 
         answers = []

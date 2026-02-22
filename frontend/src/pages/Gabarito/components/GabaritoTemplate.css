@@ -21,23 +21,23 @@
 }
 
 .tl {
-    top: 5mm;
-    left: 5mm;
+    top: 8mm;
+    left: 8mm;
 }
 
 .tr {
-    top: 5mm;
-    right: 5mm;
+    top: 8mm;
+    right: 8mm;
 }
 
 .bl {
-    bottom: 5mm;
-    left: 5mm;
+    bottom: 8mm;
+    left: 8mm;
 }
 
 .br {
-    bottom: 5mm;
-    right: 5mm;
+    bottom: 8mm;
+    right: 8mm;
 }
 
 .template-header {
@@ -47,12 +47,18 @@
     border-bottom: 2px solid #000;
     padding-bottom: 5mm;
     margin-bottom: 10mm;
+    min-height: 45mm;
 }
 
 .template-title {
     font-size: 18pt;
     font-weight: bold;
     margin: 0 0 5mm 0;
+}
+
+.exam-info {
+    max-height: 24mm;
+    overflow: hidden;
 }
 
 .exam-info p {
@@ -168,10 +174,11 @@
     }
 
     .printable-page {
+        width: 210mm;
+        height: 297mm;
         margin: 0;
+        padding: 20mm;
         box-shadow: none;
-        width: 100%;
-        height: 100%;
     }
 
     .gabarito-container,

@@ -1,0 +1,202 @@
+Objetivo: alinhar **Template + CSS + OMR + Layout** para leitura estável em 2 colunas A4 calibrado.
+
+---
+
+## 1️⃣ `omr.py`
+
+### ✅ A) Corrigir cálculo vertical (ERRO CRÍTICO)
+
+Substituir dentro de `read_bubbles_by_density`:
+
+```python
+y_step_pct = (y_end_pct - y_start_pct) / float(num_questions)
+```
+
+Por:
+
+```python
+num_rows = math.ceil(num_questions / num_cols)
+y_step_pct = (y_end_pct - y_start_pct) / float(num_rows)
+```
+
+E garantir que `num_rows` seja calculado antes.
+
+---
+
+### ✅ B) Usar número de questões do layout se não vier no request
+
+Em `process_image`, substituir início:
+
+```python
+def process_image(self, image_base64, num_questions=10, ...
+```
+
+Por:
+
+```python
+def process_image(self, image_base64, num_questions=None, ...
+```
+
+E logo após carregar o layout:
+
+```python
+layout_nq = int(current_layout.get("num_questions", 25))
+if num_questions is None:
+    num_questions = layout_nq
+```
+
+---
+
+### ✅ C) Usar thresholds do layout na validação
+
+Alterar assinatura:
+
+```python
+validated_results = self.validate_questions(bubble_results)
+```
+
+Para:
+
+```python
+validated_results = self.validate_questions(bubble_results, version_str)
+```
+
+E modificar método:
+
+```python
+def validate_questions(self, bubble_results, layout_version="v1"):
+    layout = self.load_layout(layout_version)
+    thr = layout.get("thresholds", {})
+    marked_thr = float(thr.get("marked", 0.15))
+    amb_thr = float(thr.get("ambiguous", 0.08))
+    margin_thr = 0.06
+```
+
+Remover valores fixos antigos.
+
+---
+
+### ✅ D) Adicionar logger (evita erro silencioso)
+
+No topo do arquivo:
+
+```python
+import logging
+logger = logging.getLogger("omr")
+```
+
+---
+
+### ✅ E) Garantir nome correto do layout
+
+Arquivo deve se chamar:
+
+```
+layout_v1.1-a4-calibrated.json
+```
+
+E chamar o engine com:
+
+```python
+layout_version="v1.1-a4-calibrated"
+```
+
+---
+
+## 2️⃣ `GabaritoTemplate.tsx`
+
+### ✅ A) Melhorar QR para leitura estável
+
+Alterar:
+
+```tsx
+<QRCodeSVG value={qrData} size={80} level="M" />
+```
+
+Para:
+
+```tsx
+<QRCodeSVG value={qrData} size={96} level="Q" includeMargin />
+```
+
+---
+
+Nada mais precisa mudar no TSX.
+
+---
+
+## 3️⃣ `GabaritoTemplate.css`
+
+### ✅ A) Fixar tamanho real A4 na impressão (OBRIGATÓRIO)
+
+Adicionar:
+
+```css
+@page {
+  size: A4;
+  margin: 0;
+}
+```
+
+E alterar bloco print para:
+
+```css
+@media print {
+  .printable-page{
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 20mm;
+    box-shadow: none;
+  }
+}
+```
+
+---
+
+### ✅ B) Aumentar distância das fiduciais (evitar corte de impressora)
+
+Alterar 5mm para 8mm:
+
+```css
+.tl { top: 8mm; left: 8mm; }
+.tr { top: 8mm; right: 8mm; }
+.bl { bottom: 8mm; left: 8mm; }
+.br { bottom: 8mm; right: 8mm; }
+```
+
+---
+
+### ✅ C) Evitar variação de altura do header
+
+Adicionar:
+
+```css
+.template-header { min-height: 45mm; }
+.exam-info { max-height: 24mm; overflow: hidden; }
+```
+
+---
+
+## 4️⃣ Layout JSON
+
+Nenhuma mudança estrutural necessária.
+
+Apenas garantir que:
+
+* `num_columns = 2`
+* `x_offsets_pct` está correto
+* `num_questions` bate com o gabarito real
+
+---
+
+## ✔ Resultado esperado após mudanças
+
+* Leitura 2 colunas alinhada corretamente
+* Altura das questões distribuída corretamente
+* QR lido com mais robustez
+* Impressão A4 matematicamente estável
+* Thresholds realmente obedecendo o layout calibrado
+* Fim dos “empilhamentos” verticais errados
+
+Se quiser, posso entregar o `omr.py` já reescrito completo com tudo aplicado.
