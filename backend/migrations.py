@@ -33,6 +33,10 @@ def run_migrations(engine):
         # engine.begin() garante COMMIT ao fim do bloco ou ROLLBACK em caso de erro
         with engine.begin() as conn:
             for table, col in json_migrations:
+                if not inspector.has_table(table):
+                    logger.warning(f"Tabela '{table}' ainda não existe. Pulando migração de JSON.")
+                    continue
+                    
                 columns = [c["name"] for c in inspector.get_columns(table)]
                 
                 if col not in columns:
