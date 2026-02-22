@@ -7,15 +7,25 @@ import os
 # Em desenvolvimento local, usa lerprova_server.db (SQLite)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./lerprova_server.db")
 
+# Limpeza e Normalização da URL
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip()
+
 # Render usa "postgres://" mas o SQLAlchemy exige "postgresql://"
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # O check_same_thread=False é apenas para SQLite
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    engine = create_engine(DATABASE_URL)
+try:
+    if DATABASE_URL and DATABASE_URL.startswith("sqlite"):
+        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    else:
+        # Tentar criar a engine
+        engine = create_engine(DATABASE_URL)
+except Exception as e:
+    print(f"ERRO CRÍTICO AO CRIAR ENGINE SQLALCHEMY: {e}")
+    # Fallback para SQLite se falhar em produção (melhor avisar que tentar rodar com DB errado)
+    raise e
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
