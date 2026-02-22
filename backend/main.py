@@ -103,21 +103,28 @@ async def global_exception_handler(request: Request, exc: Exception):
     err_msg = f"Erro Global: {str(exc)}\n{trace}"
     logger.error(err_msg)
     
-    # Garantir que tudo seja string para evitar erro de serialização de bytes
+    # Função para limpar objetos não serializáveis (como bytes)
+    def clean_json(obj):
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8', errors='replace')
+        if isinstance(obj, dict):
+            return {k: clean_json(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [clean_json(i) for i in obj]
+        return str(obj) if not isinstance(obj, (str, int, float, bool, type(None))) else obj
+
     response_content = {
         "detail": "Erro interno no servidor", 
-        "error_message": str(exc),
-        "trace": str(trace)
+        "error_message": clean_json(str(exc)),
+        "trace": clean_json(trace)
     }
     
     response = JSONResponse(
         status_code=500,
         content=response_content
     )
-    # CORS Headers Manuais (Fallback)
+    # CORS
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
 @app.middleware("http")
