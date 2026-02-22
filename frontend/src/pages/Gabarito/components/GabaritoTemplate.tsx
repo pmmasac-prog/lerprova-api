@@ -56,7 +56,7 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
                                 </div>
                             </div>
                             <div className="qr-container">
-                                <QRCodeSVG value={qrData} size={96} level="Q" includeMargin />
+                                <QRCodeSVG value={qrData} size={100} level="Q" includeMargin />
                             </div>
                         </header>
 

@@ -20,29 +20,32 @@
 /* Marcadores Fiduciais */
 .fiducial {
     position: absolute;
-    width: 12mm;
-    height: 12mm;
-    background-color: black;
+    width: 14mm;
+    height: 14mm;
+    background-color: #fff;
+    border: 3mm solid #000;
+    border-radius: 50%;
+    box-sizing: border-box;
 }
 
 .tl {
-    top: 8mm;
-    left: 8mm;
+    top: 10mm;
+    left: 10mm;
 }
 
 .tr {
-    top: 8mm;
-    right: 8mm;
+    top: 10mm;
+    right: 10mm;
 }
 
 .bl {
-    bottom: 8mm;
-    left: 8mm;
+    bottom: 10mm;
+    left: 10mm;
 }
 
 .br {
-    bottom: 8mm;
-    right: 8mm;
+    bottom: 10mm;
+    right: 10mm;
 }
 
 .template-header {
@@ -52,7 +55,8 @@
     border-bottom: 2px solid #000;
     padding-bottom: 5mm;
     margin-bottom: 10mm;
-    min-height: 45mm;
+    height: 45mm;
+    box-sizing: border-box;
 }
 
 .template-title {
@@ -120,15 +124,16 @@
 .questions-grid-printable {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 5mm 15mm;
+    gap: 8mm 15mm;
     margin-bottom: 10mm;
+    border: 1px solid #ccc;
+    padding: 10mm;
 }
 
 .template-question-row {
     display: flex;
     align-items: center;
     padding: 2mm 0;
-    border-bottom: 1px solid #eee;
 }
 
 .q-num {
@@ -150,8 +155,8 @@
 }
 
 .option-circle {
-    width: 6mm;
-    height: 6mm;
+    width: 7mm;
+    height: 7mm;
     border: 1.5px solid #000;
     border-radius: 50%;
 }
