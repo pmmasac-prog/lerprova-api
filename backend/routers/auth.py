@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from datetime import datetime
 import users_db
 import models
@@ -10,6 +11,11 @@ import logging
 
 router = APIRouter(tags=["auth"])
 logger = logging.getLogger("lerprova-api")
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 
 @router.get("/stats")
 async def get_stats(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -71,9 +77,9 @@ async def upgrade_plan(data: dict, user: users_db.User = Depends(get_current_use
     return {"message": f"Sucesso! Seu plano foi atualizado para {target_plan}.", "plan": user.plan_type}
 
 @router.post("/auth/login")
-async def login(data: dict, db: Session = Depends(get_db)):
-    email = data.get("email")
-    password = data.get("password")
+async def login(data: LoginRequest, db: Session = Depends(get_db)):
+    email = data.email
+    password = data.password
     
     user = users_db.get_user_by_email(db, email)
     
