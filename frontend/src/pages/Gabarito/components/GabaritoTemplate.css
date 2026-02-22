@@ -1,3 +1,8 @@
+@page {
+    size: A4;
+    margin: 0;
+}
+
 .printable-page {
     width: 210mm;
     min-height: 297mm;
