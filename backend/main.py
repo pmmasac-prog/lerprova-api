@@ -101,12 +101,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def global_exception_handler(request: Request, exc: Exception):
     err_msg = f"Erro Global: {str(exc)}\n{traceback.format_exc()}"
     logger.error(err_msg)
+    # Em produção, vamos forçar o trace no detalhe por enquanto para debugar o erro 500 do login
     response = JSONResponse(
         status_code=500,
         content={
             "detail": "Erro interno no servidor", 
             "error_message": str(exc),
-            "trace": traceback.format_exc() if os.getenv("DEBUG") == "true" else "Trace oculto em produção"
+            "trace": traceback.format_exc() # Forçando trace para debug
         }
     )
     response.headers["Access-Control-Allow-Origin"] = "*"
