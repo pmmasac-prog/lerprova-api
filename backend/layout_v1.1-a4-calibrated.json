@@ -10,6 +10,28 @@
     },
     "roi_size_pct_of_width": 0.035,
     "num_columns": 2,
+    "anchors_expected_pct": [
+        {
+            "x": 0.0810,
+            "y": 0.0572,
+            "role": "tl"
+        },
+        {
+            "x": 0.9190,
+            "y": 0.0572,
+            "role": "tr"
+        },
+        {
+            "x": 0.0810,
+            "y": 0.9428,
+            "role": "bl"
+        },
+        {
+            "x": 0.9190,
+            "y": 0.9428,
+            "role": "br"
+        }
+    ],
     "x_offsets_pct": [
         0.142,
         0.535

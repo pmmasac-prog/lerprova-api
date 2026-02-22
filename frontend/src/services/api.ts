@@ -8,55 +8,77 @@ const getAuthHeaders = () => {
     };
 };
 
+const request = async (url: string, options: RequestInit = {}) => {
+    const response = await fetch(url, options);
+
+    // Tenta ler o JSON, mas lida com corpo vazio
+    let data;
+    const text = await response.text();
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch (e) {
+        data = { error: 'Invalid JSON response' };
+    }
+
+    if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+        }
+        throw new Error('Sessão expirada. Redirecionando...');
+    }
+
+    if (!response.ok) {
+        const errorMsg = data.detail || data.error || 'Erro na requisição';
+        throw new Error(errorMsg);
+    }
+
+    return data;
+};
+
 export const api = {
     // Autenticação
     async login(email: string, password: string) {
-        const response = await fetch(`${API_URL}/auth/login`, {
+        return request(`${API_URL}/auth/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
         });
-        return response.json();
     },
 
     // Turmas
     async getTurmas() {
-        const response = await fetch(`${API_URL}/turmas`, {
+        return request(`${API_URL}/turmas`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async addTurma(data: any) {
-        const response = await fetch(`${API_URL}/turmas`, {
+        return request(`${API_URL}/turmas`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async deleteTurma(id: number) {
-        const response = await fetch(`${API_URL}/turmas/${id}`, {
+        return request(`${API_URL}/turmas/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Alunos
     async getAlunos() {
-        const response = await fetch(`${API_URL}/alunos`, {
+        return request(`${API_URL}/alunos`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getAlunosByTurma(turmaId: number) {
-        const response = await fetch(`${API_URL}/alunos/turma/${turmaId}`, {
+        return request(`${API_URL}/alunos/turma/${turmaId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Gabaritos
@@ -83,244 +105,203 @@ export const api = {
     },
 
     async getResultadosByGabarito(gabaritoId: number) {
-        const response = await fetch(`${API_URL}/resultados/gabarito/${gabaritoId}`, {
+        return request(`${API_URL}/resultados/gabarito/${gabaritoId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getResultadosAlunoTurma(turmaId: number, alunoId: number) {
-        const response = await fetch(`${API_URL}/resultados/turma/${turmaId}/aluno/${alunoId}`, {
+        return request(`${API_URL}/resultados/turma/${turmaId}/aluno/${alunoId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno?: string[], nota?: number }) {
-        const response = await fetch(`${API_URL}/resultados`, {
+        return request(`${API_URL}/resultados`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async updateResultado(id: number, data: { respostas_aluno?: string[], nota?: number }) {
-        const response = await fetch(`${API_URL}/resultados/${id}`, {
+        return request(`${API_URL}/resultados/${id}`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async deleteResultado(id: number) {
-        const response = await fetch(`${API_URL}/resultados/${id}`, {
+        return request(`${API_URL}/resultados/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Estatísticas
     async getStats() {
-        const response = await fetch(`${API_URL}/stats`, {
+        return request(`${API_URL}/stats`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getDashboardOperacional() {
-        const response = await fetch(`${API_URL}/dashboard/operacional`, {
+        return request(`${API_URL}/dashboard/operacional`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getStatsByTurma(turmaId: number) {
-        const response = await fetch(`${API_URL}/stats/turma/${turmaId}`, {
+        return request(`${API_URL}/stats/turma/${turmaId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Alunos - adicionar
     async addAluno(data: any) {
-        const response = await fetch(`${API_URL}/alunos`, {
+        return request(`${API_URL}/alunos`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async deleteAluno(id: number) {
-        const response = await fetch(`${API_URL}/alunos/${id}`, {
+        return request(`${API_URL}/alunos/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async unlinkAlunoFromTurma(turmaId: number, alunoId: number) {
-        const response = await fetch(`${API_URL}/turmas/${turmaId}/alunos/${alunoId}`, {
+        return request(`${API_URL}/turmas/${turmaId}/alunos/${alunoId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Gabaritos - adicionar
     async addGabarito(data: any) {
-        const response = await fetch(`${API_URL}/gabaritos`, {
+        return request(`${API_URL}/gabaritos`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async deleteGabarito(id: number) {
-        const response = await fetch(`${API_URL}/gabaritos/${id}`, {
+        return request(`${API_URL}/gabaritos/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async updateGabarito(id: number, data: any) {
-        const response = await fetch(`${API_URL}/gabaritos/${id}`, {
+        return request(`${API_URL}/gabaritos/${id}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async getDisciplinas() {
-        const response = await fetch(`${API_URL}/disciplinas`, {
+        return request(`${API_URL}/disciplinas`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Frequência
     async saveFrequencia(data: any) {
-        const response = await fetch(`${API_URL}/frequencia`, {
+        return request(`${API_URL}/frequencia`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        return response.json();
     },
 
     async getFrequenciaTurma(turmaId: number) {
-        const response = await fetch(`${API_URL}/frequencia/turma/${turmaId}`, {
+        return request(`${API_URL}/frequencia/turma/${turmaId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getFrequenciaAluno(alunoId: number) {
-        const response = await fetch(`${API_URL}/frequencia/aluno/${alunoId}`, {
+        return request(`${API_URL}/frequencia/aluno/${alunoId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getFrequenciaAlunoTurma(turmaId: number, alunoId: number) {
-        const response = await fetch(`${API_URL}/frequencia/turma/${turmaId}/aluno/${alunoId}`, {
+        return request(`${API_URL}/frequencia/turma/${turmaId}/aluno/${alunoId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getFrequenciaDates(turmaId: number) {
-        const response = await fetch(`${API_URL}/frequencia/turma/${turmaId}/dates`, {
+        return request(`${API_URL}/frequencia/turma/${turmaId}/dates`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // OMR Engine
     async processarProva(data: { image: string, num_questions?: number, gabarito_id?: number, aluno_id?: number }) {
-        const response = await fetch(`${API_URL}/provas/processar`, {
+        return request(`${API_URL}/provas/processar`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            return { success: false, error: result.detail || "Erro ao processar imagem." };
-        }
-
-        return result;
     },
 
     async scanAnchors(data: { image: string }) {
-        const response = await fetch(`${API_URL}/provas/scan-anchors`, {
+        return request(`${API_URL}/provas/scan-anchors`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-
-        if (!response.ok) {
-            return { success: false, anchors_found: 0, anchors: [] };
-        }
-
-        return response.json();
     },
 
     // Admin Endpoints
     admin: {
         listUsers: async () => {
-            const res = await fetch(`${API_URL}/admin/users`, {
+            return request(`${API_URL}/admin/users`, {
                 headers: getAuthHeaders()
             });
-            return res.json();
         },
         getTurma: async (id: number) => {
-            const response = await fetch(`${API_URL}/turmas/${id}`, {
+            return request(`${API_URL}/turmas/${id}`, {
                 headers: getAuthHeaders()
             });
-            return response.json();
         },
         getAlunosTurma: async (turmaId: number) => {
-            const response = await fetch(`${API_URL}/alunos?turma_id=${turmaId}`, {
+            return request(`${API_URL}/alunos?turma_id=${turmaId}`, {
                 headers: getAuthHeaders()
             });
-            return response.json();
         },
         createUser: async (userData: any) => {
-            const res = await fetch(`${API_URL}/admin/users`, {
+            return request(`${API_URL}/admin/users`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(userData)
             });
-            return res.json();
         },
         async deleteUser(userId: number) {
-            const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+            return request(`${API_URL}/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders()
             });
-            return res.json();
         },
         async listPendencias() {
-            const res = await fetch(`${API_URL}/admin/pendencias`, {
+            return request(`${API_URL}/admin/pendencias`, {
                 headers: getAuthHeaders()
             });
-            return res.json();
         },
         async notificarProfessor(professorId: number) {
-            const res = await fetch(`${API_URL}/admin/notificar`, {
+            return request(`${API_URL}/admin/notificar`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ professor_id: professorId })
             });
-            return res.json();
         }
     },
 
@@ -330,117 +311,102 @@ export const api = {
             console.warn('api.getPlanosturma: ID inválido', turmaId);
             return [];
         }
-        const response = await fetch(`${API_URL}/planos/turma/${turmaId}`, {
+        return request(`${API_URL}/planos/turma/${turmaId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getPlano(id: number) {
-        const response = await fetch(`${API_URL}/planos/${id}`, {
+        return request(`${API_URL}/planos/${id}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async createPlano(data: { turma_id: number, titulo: string, disciplina?: string, data_inicio: string, aulas: any[], intervalo_dias?: number, dias_semana?: number[] }) {
-        const response = await fetch(`${API_URL}/planos`, {
+        return request(`${API_URL}/planos`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data)
         });
-        return response.json();
     },
 
     async updatePlano(id: number, data: { titulo?: string, disciplina?: string, aulas?: any[], dias_semana?: number[] }) {
-        const response = await fetch(`${API_URL}/planos/${id}`, {
+        return request(`${API_URL}/planos/${id}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data)
         });
-        return response.json();
     },
 
     async getAulaHoje(planoId: number) {
         if (!planoId || isNaN(planoId)) return { message: 'ID inválido' };
-        const response = await fetch(`${API_URL}/planos/${planoId}/hoje`, {
+        return request(`${API_URL}/planos/${planoId}/hoje`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async concluirAula(aulaId: number, data: { percepcoes?: string[], observacoes?: string | null }) {
-        const response = await fetch(`${API_URL}/planos/aulas/${aulaId}/concluir`, {
+        return request(`${API_URL}/planos/aulas/${aulaId}/concluir`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data)
         });
-        return response.json();
     },
 
     async inserirReforco(aulaId: number) {
-        const response = await fetch(`${API_URL}/planos/aulas/${aulaId}/inserir-reforco`, {
+        return request(`${API_URL}/planos/aulas/${aulaId}/inserir-reforco`, {
             method: 'POST',
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getHeatmap(turmaId: number) {
-        const response = await fetch(`${API_URL}/analytics/turma/${turmaId}/heatmap`, {
+        return request(`${API_URL}/analytics/turma/${turmaId}/heatmap`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getPlanoAulas(planoId: number) {
-        const response = await fetch(`${API_URL}/planos/${planoId}/aulas`, {
+        return request(`${API_URL}/planos/${planoId}/aulas`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Currículo Base
     async getCurriculoSubjects() {
-        const response = await fetch(`${API_URL}/curriculo/subjects`, {
+        return request(`${API_URL}/curriculo/subjects`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getCurriculoUnits(subjectId: number) {
-        const response = await fetch(`${API_URL}/curriculo/subjects/${subjectId}/units`, {
+        return request(`${API_URL}/curriculo/subjects/${subjectId}/units`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getCurriculoTopics(unitId: number) {
-        const response = await fetch(`${API_URL}/curriculo/units/${unitId}/topics`, {
+        return request(`${API_URL}/curriculo/units/${unitId}/topics`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getCurriculoMethodologies() {
-        const response = await fetch(`${API_URL}/curriculo/methodologies`, {
+        return request(`${API_URL}/curriculo/methodologies`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getCurriculoResources() {
-        const response = await fetch(`${API_URL}/curriculo/resources`, {
+        return request(`${API_URL}/curriculo/resources`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getCurriculoSuggestions(topicId: number) {
-        const response = await fetch(`${API_URL}/curriculo/topics/${topicId}/suggestions`, {
+        return request(`${API_URL}/curriculo/topics/${topicId}/suggestions`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async searchBNCCSkills(q?: string, subjectId?: number, grade?: string) {
@@ -451,29 +417,23 @@ export const api = {
 
         const url = `${API_URL}/curriculo/bncc/skills?${params.toString()}`;
 
-        try {
-            const response = await fetch(url, {
-                headers: getAuthHeaders()
-            });
-            const data = await response.json();
-            return Array.isArray(data) ? data : [];
-        } catch (e) {
+        return request(url, {
+            headers: getAuthHeaders()
+        }).catch(e => {
             console.error("Erro ao buscar BNCC:", e);
             return [];
-        }
+        });
     },
 
     async getBNCCCompetencies() {
-        const response = await fetch(`${API_URL}/curriculo/bncc/competencies`, {
+        return request(`${API_URL}/curriculo/bncc/competencies`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getCoberturaPedagogica(planoId: number) {
-        const response = await fetch(`${API_URL}/planos/${planoId}/cobertura-pedagogica`, {
+        return request(`${API_URL}/planos/${planoId}/cobertura-pedagogica`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     }
 };

@@ -20,8 +20,8 @@ export const AdminDashboard: React.FC = () => {
                 api.getDashboardOperacional(),
                 api.admin.listPendencias()
             ]);
-            setStats(statsData);
-            setPendencias(pendenciasData);
+            setStats(statsData || {});
+            setPendencias(Array.isArray(pendenciasData) ? pendenciasData : []);
         } catch (error) {
             console.error('Erro ao carregar dashboard admin:', error);
         } finally {

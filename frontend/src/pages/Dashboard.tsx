@@ -178,9 +178,16 @@ export const Dashboard: React.FC = () => {
         );
     }
 
-    const { primary_action, alerts, classes_status, recent_activity } = data;
-    const gradient = ACTION_GRADIENTS[primary_action.type] || ACTION_GRADIENTS['DIA_LIVRE'];
-    const icon = ACTION_ICONS[primary_action.type] || <Zap size={32} />;
+    const {
+        primary_action = { type: 'DIA_LIVRE', title: 'Carregando...', subtitle: '', cta_label: '', route: '', payload: {}, score: 0, why: [] },
+        alerts = [],
+        classes_status = [],
+        recent_activity = []
+    } = data || {};
+
+    const primaryType = primary_action?.type || 'DIA_LIVRE';
+    const gradient = ACTION_GRADIENTS[primaryType] || ACTION_GRADIENTS['DIA_LIVRE'];
+    const icon = ACTION_ICONS[primaryType] || <Zap size={32} />;
 
     return (
         <div className="op-dashboard">

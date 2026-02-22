@@ -151,7 +151,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                 gabarito_id: gabaritoId
             });
 
-            if (response?.success) {
+            if (response && response.success !== false) {
                 stopCamera();
                 if (!isMountedRef.current) return;
 
@@ -160,9 +160,9 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
             } else {
                 setError(response?.error || 'Falha ao processar imagem.');
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro no processamento:', err);
-            setError('Erro de conexão com o servidor.');
+            setError(err.message || 'Erro de conexão com o servidor.');
         } finally {
             if (isMountedRef.current) setProcessing(false);
         }
@@ -352,7 +352,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                                                     {r === 'low_confidence' && 'Baixa Confiança'}
                                                     {r === 'invalid_marks' && 'Marcação Múltipla'}
                                                     {r === 'too_many_ambiguous' && 'Ambiguidade'}
-                                                    {![ 'low_confidence', 'invalid_marks', 'too_many_ambiguous' ].includes(r) && r}
+                                                    {!['low_confidence', 'invalid_marks', 'too_many_ambiguous'].includes(r) && r}
                                                 </span>
                                             ))}
                                         </div>
