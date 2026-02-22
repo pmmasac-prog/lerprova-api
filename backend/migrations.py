@@ -52,8 +52,42 @@ def run_migrations(engine):
                             conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN {col} TYPE JSONB USING {col}::jsonb"))
                             logger.info(f"Coluna '{col}' convertida para JSONB.")
 
-            # Outras migrações ad-hoc se necessário...
-            # Migração para Workflow de Revisão OMR (Etapa 4)
+            # Migrações para a tabela USERS
+            columns_users = [c["name"] for c in inspector.get_columns("users")]
+            
+            if "escola" not in columns_users:
+                logger.info("Adicionando coluna 'escola' em 'users'...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN escola VARCHAR NULL"))
+                
+            if "disciplina" not in columns_users:
+                logger.info("Adicionando coluna 'disciplina' em 'users'...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN disciplina VARCHAR NULL"))
+
+            if "plan_type" not in columns_users:
+                logger.info("Adicionando coluna 'plan_type' em 'users'...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN plan_type VARCHAR DEFAULT 'free'"))
+
+            if "subscription_expires_at" not in columns_users:
+                logger.info("Adicionando coluna 'subscription_expires_at' em 'users'...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN subscription_expires_at TIMESTAMP NULL"))
+
+            if "total_corrections_used" not in columns_users:
+                logger.info("Adicionando coluna 'total_corrections_used' em 'users'...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN total_corrections_used INTEGER DEFAULT 0"))
+
+            # Migrações para a tabela TURMAS
+            columns_turmas = [c["name"] for c in inspector.get_columns("turmas")]
+            
+            if "disciplina" not in columns_turmas:
+                logger.info("Adicionando coluna 'disciplina' em 'turmas'...")
+                conn.execute(text("ALTER TABLE turmas ADD COLUMN disciplina VARCHAR NULL"))
+
+            if "user_id" not in columns_turmas:
+                logger.info("Adicionando coluna 'user_id' em 'turmas'...")
+                # Nota: Em SQLite o REFERENCES em ALTER TABLE pode ser limitado, mas o SA cuidará disso se possível.
+                conn.execute(text("ALTER TABLE turmas ADD COLUMN user_id INTEGER NULL"))
+
+            # Migrações para RESULTADOS (continuação...)
             columns_resultados = [c["name"] for c in inspector.get_columns("resultados")]
             
             if "needs_review" not in columns_resultados:
