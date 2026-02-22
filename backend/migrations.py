@@ -68,6 +68,18 @@ def run_migrations(engine):
             if "review_status" not in columns_resultados:
                 logger.info("Adicionando coluna 'review_status' em 'resultados'...")
                 conn.execute(text("ALTER TABLE resultados ADD COLUMN review_status VARCHAR DEFAULT 'confirmed'"))
+
+            if "avg_confidence" not in columns_resultados:
+                logger.info("Adicionando coluna 'avg_confidence' em 'resultados'...")
+                conn.execute(text("ALTER TABLE resultados ADD COLUMN avg_confidence FLOAT DEFAULT 0.0"))
+
+            if "layout_version" not in columns_resultados:
+                logger.info("Adicionando coluna 'layout_version' em 'resultados'...")
+                conn.execute(text("ALTER TABLE resultados ADD COLUMN layout_version VARCHAR DEFAULT 'v1'"))
+
+            if "anchors_found" not in columns_resultados:
+                logger.info("Adicionando coluna 'anchors_found' em 'resultados'...")
+                conn.execute(text("ALTER TABLE resultados ADD COLUMN anchors_found INTEGER DEFAULT 0"))
             
     except Exception as e:
         logger.error(f"FALHA CRÍTICA NA MIGRAÇÃO: {e}")

@@ -40,7 +40,7 @@ class OMREngine:
             "version": "default",
             "warped_size": {"w": 1120, "h": 1600},
             "thresholds": {"marked": 0.20, "ambiguous": 0.10},
-            "roi_size_pct_of_width": 0.030,
+            "roi_size_pct_of_width": 0.028,
             "options": ["A", "B", "C", "D", "E"],
             "x_centers_pct": [0.245, 0.318, 0.392, 0.465, 0.538],
             "y_start_pct": 0.21,
@@ -633,6 +633,11 @@ class OMREngine:
         amb_thr = 0.08      # Abaixo disso, é sujeira ou nada (em branco)
         margin_thr = 0.06   # Diferença mínima entre Top 1 e Top 2 para não ser ambíguo
 
+        answers = []
+        confidence_scores = []
+        status_list = []
+        status_counts = {"valid": 0, "blank": 0, "invalid": 0, "ambiguous": 0}
+
         for question_data in bubble_results:
             bubbles = question_data['bubbles']
             
@@ -651,7 +656,7 @@ class OMREngine:
             if top1_score < amb_thr:
                 status = "blank"
                 ans = None
-                conf = 0.0
+                conf = 1.0 - (top1_score / amb_thr) # Confiança proporcional ao quão "vazio" está
                 final_idx = None
             
             # 2. Checar múltiplas marcações reais (Top 1 e Top 2 estão pintados de verdade)
@@ -674,7 +679,7 @@ class OMREngine:
                 status = "valid"
                 ans = top1_b['option']
                 # Se a margem for maior que 3x a margem mínima, confiança é 1.0 (perfeita)
-                conf = min(1.0, margin / (margin_thr * 3)) if margin_thr > 0 else 1.0
+                conf = min(1.0, margin / (margin_thr * 2.5)) if margin_thr > 0 else 1.0
                 final_idx = bubbles.index(top1_b)
 
             # Anotar na question_data para o audit_map usar
@@ -692,7 +697,7 @@ class OMREngine:
             'confidence_scores': confidence_scores,
             'status_list': status_list,
             'status_counts': status_counts,
-            'avg_confidence': np.mean(confidence_scores) if confidence_scores else 0.0
+            'avg_confidence': float(np.mean(confidence_scores)) if confidence_scores else 0.0
         }
     
     def generate_audit_map(self, warped, bubble_results, num_questions):

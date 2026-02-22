@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
+// ScannerModal.tsx
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { X, RefreshCw, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { api } from '../../../services/api';
 import './ScannerModal.css';
@@ -10,219 +11,301 @@ interface ScannerModalProps {
     onSuccess?: (resultado: any) => void;
 }
 
-export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId, numQuestions = 10, onSuccess }) => {
+type AnchorPoint = [number, number];
+
+export const ScannerModal: React.FC<ScannerModalProps> = ({
+    onClose,
+    gabaritoId,
+    numQuestions = 10,
+    onSuccess
+}) => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const captureCanvasRef = useRef<HTMLCanvasElement>(null);
     const pollCanvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
+
     const [isCameraReady, setIsCameraReady] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // AR Tracking State
-    const [anchors, setAnchors] = useState<number[][]>([]);
+    const [anchors, setAnchors] = useState<AnchorPoint[]>([]);
     const [trackingScore, setTrackingScore] = useState(0);
+
     const trackingScoreRef = useRef(0);
     const pollingRef = useRef<number | null>(null);
+    const isMountedRef = useRef(true);
 
-    useEffect(() => {
-        startCamera();
-        return () => {
-            stopCamera();
-            if (pollingRef.current) clearInterval(pollingRef.current);
-        };
+    const stopPolling = useCallback(() => {
+        if (pollingRef.current) {
+            window.clearInterval(pollingRef.current);
+            pollingRef.current = null;
+        }
     }, []);
 
-    const startCamera = async () => {
+    const stopCamera = useCallback(() => {
+        stopPolling();
+
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((t) => t.stop());
+            streamRef.current = null;
+        }
+
+        const v = videoRef.current;
+        if (v) {
+            try {
+                v.pause();
+            } catch { }
+            // @ts-ignore
+            v.srcObject = null;
+            v.src = '';
+        }
+
+        setIsCameraReady(false);
+    }, [stopPolling]);
+
+    const startCamera = useCallback(async () => {
         try {
+            setError(null);
+
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
             });
+
             streamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                setIsCameraReady(true);
-            }
+
+            const v = videoRef.current;
+            if (!v) return;
+
+            // @ts-ignore
+            v.srcObject = stream;
+
+            // iOS/Safari: garantir que o play ocorra após metadata
+            const onLoaded = async () => {
+                try {
+                    await v.play();
+                } catch {
+                    // se falhar, o usuário pode tocar no botão de captura e a tela continua funcional
+                } finally {
+                    v.removeEventListener('loadedmetadata', onLoaded);
+                }
+            };
+
+            v.addEventListener('loadedmetadata', onLoaded);
+
+            setIsCameraReady(true);
         } catch (err) {
             console.error('Erro ao acessar câmera:', err);
             setError('Não foi possível acessar a câmera. Verifique as permissões.');
+            setIsCameraReady(false);
         }
-    };
+    }, []);
 
-    const stopCamera = () => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null;
-        }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
-        setIsCameraReady(false);
-        if (pollingRef.current) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-        }
-    };
+    const resetTracking = useCallback(() => {
+        setAnchors([]);
+        setTrackingScore(0);
+        trackingScoreRef.current = 0;
+    }, []);
 
-    // Fast Polling Loop para Scanner AR
     useEffect(() => {
-        if (!isCameraReady || processing || result) {
-            if (pollingRef.current) {
-                clearInterval(pollingRef.current);
-                pollingRef.current = null;
-            }
+        isMountedRef.current = true;
+        startCamera();
+
+        return () => {
+            isMountedRef.current = false;
+            stopCamera();
+        };
+    }, [startCamera, stopCamera]);
+
+    const captureAndProcess = useCallback(async () => {
+        const video = videoRef.current;
+        const canvas = captureCanvasRef.current;
+
+        if (!video || !canvas || processing) return;
+        if (video.videoWidth <= 0 || video.videoHeight <= 0) {
+            setError('Câmera ainda não está pronta. Aguarde 1 segundo e tente novamente.');
             return;
         }
-
-        const pollRadar = async () => {
-            if (!videoRef.current || !pollCanvasRef.current || processing) return;
-
-            const video = videoRef.current;
-            const canvas = pollCanvasRef.current;
-
-            if (video.videoWidth > 0 && video.videoHeight > 0) {
-                // Preservar aspect ratio real da câmera para evitar distorção (que quebra a circularidade no OMR)
-                const videoRatio = video.videoWidth / video.videoHeight;
-                canvas.width = 480; // Resolução leve pro Radar
-                canvas.height = 480 / videoRatio;
-
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const imageData = canvas.toDataURL('image/jpeg', 0.6); // Compressão alta
-
-                    try {
-                        const radar = await api.scanAnchors({ image: imageData });
-                        if (radar.success && radar.anchors_found === 4) {
-                            setAnchors(radar.anchors);
-                            setTrackingScore(prev => Math.min(prev + 20, 100)); // Acumula pontuação de instabilidade
-                            trackingScoreRef.current = Math.min(trackingScoreRef.current + 20, 100);
-
-                            // ===== Auto-Capture Magic =====
-                            if (trackingScoreRef.current >= 100 && !processing) {
-                                captureAndProcess();
-                            }
-                        } else {
-                            setAnchors([]);
-                            setTrackingScore(prev => Math.max(prev - 40, 0)); // Reseta rápido se perder
-                            trackingScoreRef.current = Math.max(trackingScoreRef.current - 40, 0);
-                        }
-                    } catch (e) {
-                        // Ignora erros silenciosos do radar
-                    }
-                }
-            }
-        };
-
-        pollingRef.current = window.setInterval(pollRadar, 300);
-        return () => {
-            if (pollingRef.current) clearInterval(pollingRef.current);
-        };
-    }, [isCameraReady, processing, result]);
-
-    const captureAndProcess = async () => {
-        if (!videoRef.current || !canvasRef.current || processing) return;
 
         setProcessing(true);
         setError(null);
 
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        try {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.drawImage(video, 0, 0);
+            const ctx = canvas.getContext('2d', { willReadFrequently: false });
+            if (!ctx) throw new Error('Canvas indisponível');
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = canvas.toDataURL('image/jpeg', 0.85);
 
-            try {
-                const response = await api.processarProva({
-                    image: imageData,
-                    num_questions: numQuestions,
-                    gabarito_id: gabaritoId
-                });
+            const response = await api.processarProva({
+                image: imageData,
+                num_questions: numQuestions,
+                gabarito_id: gabaritoId
+            });
 
-                if (response.success) {
-                    stopCamera(); // Encerrar câmera após uso/sucesso
-                    setResult(response);
-                    if (onSuccess) onSuccess(response);
-                } else {
-                    setError(response.error || 'Falha ao processar imagem.');
-                }
-            } catch (err) {
-                console.error('Erro no processamento:', err);
-                setError('Erro de conexão com o servidor.');
-            } finally {
-                setProcessing(false);
+            if (response?.success) {
+                stopCamera();
+                if (!isMountedRef.current) return;
+
+                setResult(response);
+                onSuccess?.(response);
+            } else {
+                setError(response?.error || 'Falha ao processar imagem.');
             }
+        } catch (err) {
+            console.error('Erro no processamento:', err);
+            setError('Erro de conexão com o servidor.');
+        } finally {
+            if (isMountedRef.current) setProcessing(false);
         }
-    };
+    }, [gabaritoId, numQuestions, onSuccess, processing, stopCamera]);
 
-    const handleReset = () => {
+    useEffect(() => {
+        // Se não pode ou não deve rodar o radar, para tudo
+        if (!isCameraReady || processing || result) {
+            stopPolling();
+            return;
+        }
+
+        const pollRadar = async () => {
+            const video = videoRef.current;
+            const canvas = pollCanvasRef.current;
+
+            if (!video || !canvas) return;
+            if (processing) return;
+            if (video.videoWidth <= 0 || video.videoHeight <= 0) return;
+
+            const videoRatio = video.videoWidth / video.videoHeight;
+
+            // Radar leve sem distorcer aspecto
+            const targetW = 480;
+            const targetH = Math.max(1, Math.round(targetW / videoRatio));
+            canvas.width = targetW;
+            canvas.height = targetH;
+
+            const ctx = canvas.getContext('2d', { willReadFrequently: false });
+            if (!ctx) return;
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg', 0.6);
+
+            try {
+                const radar = await api.scanAnchors({ image: imageData });
+
+                if (radar?.success && radar?.anchors_found === 4 && Array.isArray(radar.anchors)) {
+                    const nextAnchors: AnchorPoint[] = radar.anchors;
+                    setAnchors(nextAnchors);
+
+                    const nextScore = Math.min(trackingScoreRef.current + 20, 100);
+                    trackingScoreRef.current = nextScore;
+                    setTrackingScore(nextScore);
+
+                    if (nextScore >= 100 && !processing) {
+                        captureAndProcess();
+                    }
+                } else {
+                    resetTracking();
+                }
+            } catch {
+                // radar pode falhar silenciosamente; não derruba o scanner
+                resetTracking();
+            }
+        };
+
+        pollingRef.current = window.setInterval(pollRadar, 300);
+
+        return () => stopPolling();
+    }, [isCameraReady, processing, result, captureAndProcess, resetTracking, stopPolling]);
+
+    const handleReset = useCallback(() => {
         setResult(null);
         setError(null);
-        startCamera(); // Reiniciar câmera para nova prova
-    };
+        resetTracking();
+        startCamera();
+    }, [resetTracking, startCamera]);
+
+    const handleClose = useCallback(() => {
+        stopCamera();
+        onClose();
+    }, [onClose, stopCamera]);
+
+    const v = videoRef.current;
+    const videoW = v?.offsetWidth ?? 0;
+    const videoH = v?.offsetHeight ?? 0;
 
     return (
         <div className="scanner-overlay">
             <div className="scanner-container">
                 <div className="scanner-header">
-                    <button className="close-btn" onClick={onClose}><X size={20} /></button>
+                    <button className="close-btn" onClick={handleClose} aria-label="Fechar">
+                        <X size={20} />
+                    </button>
+
                     <h3>Scanner AR</h3>
-                    <div style={{ width: '44px' }}></div> {/* Spacer for symmetry */}
+
+                    <div className="header-spacer" aria-hidden="true" />
                 </div>
 
-                <div className="scanner-body" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div className="scanner-body">
                     {!result ? (
                         <div className="camera-view">
                             <video ref={videoRef} autoPlay playsInline muted />
 
-                            {/* Overlay de Enquadramento */}
                             <div className={`frame-overlay ${anchors.length === 4 ? 'active' : ''}`}>
-                                <div className="corner tl"></div>
-                                <div className="corner tr"></div>
-                                <div className="corner bl"></div>
-                                <div className="corner br"></div>
-                                {anchors.length < 4 && <div className="scan-line"></div>}
+                                <div className="frame-box">
+                                    <div className="corner tl" />
+                                    <div className="corner tr" />
+                                    <div className="corner bl" />
+                                    <div className="corner br" />
+                                    {anchors.length < 4 && <div className="scan-line" />}
+                                </div>
                             </div>
 
-                            {/* SVG de Realidade Aumentada (Polígono Verde) */}
-                            {anchors.length === 4 && videoRef.current && (
-                                <svg className="ar-overlay" style={{
-                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10
-                                }}>
+                            {anchors.length === 4 && videoW > 0 && videoH > 0 && (
+                                <svg className="ar-overlay" viewBox={`0 0 ${videoW} ${videoH}`} preserveAspectRatio="none">
                                     <polygon
-                                        points={anchors.map(pt => `${pt[0] * videoRef.current!.offsetWidth},${pt[1] * videoRef.current!.offsetHeight}`).join(' ')}
-                                        fill="rgba(16, 185, 129, 0.2)"
-                                        stroke="#10b981"
+                                        points={anchors.map((pt) => `${pt[0] * videoW},${pt[1] * videoH}`).join(' ')}
+                                        fill="rgba(16, 185, 129, 0.18)"
+                                        stroke="rgba(16, 185, 129, 1)"
                                         strokeWidth="3"
                                         strokeLinejoin="round"
                                     />
                                     {anchors.map((pt, i) => (
                                         <circle
                                             key={i}
-                                            cx={pt[0] * videoRef.current!.offsetWidth}
-                                            cy={pt[1] * videoRef.current!.offsetHeight}
+                                            cx={pt[0] * videoW}
+                                            cy={pt[1] * videoH}
                                             r="6"
-                                            fill="#10b981"
+                                            fill="rgba(16, 185, 129, 1)"
                                         />
                                     ))}
                                 </svg>
                             )}
 
                             {error && (
-                                <div className="scanner-error">
+                                <div className="scanner-error" role="alert">
                                     <AlertCircle size={18} />
                                     <span>{error}</span>
                                 </div>
                             )}
 
-                            <div className="scanner-instructions">
+                            <div className="scanner-instructions" aria-live="polite">
                                 <Info size={16} />
-                                <span>{anchors.length === 4 ? trackingScore >= 100 ? "Processando..." : "Segure Firme..." : "Enquadre os 4 cantos na área verde"}</span>
+                                <span>
+                                    {anchors.length === 4
+                                        ? trackingScore >= 100
+                                            ? 'Processando...'
+                                            : 'Segure firme...'
+                                        : 'Enquadre os 4 cantos na área'}
+                                </span>
                             </div>
 
                             <button
@@ -234,30 +317,19 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                                 {processing && <RefreshCw className="spin" size={24} />}
                             </button>
 
-                            {/* Barra de Progresso Auto-Capture */}
                             {anchors.length === 4 && (
-                                <div className="auto-capture-progress" style={{
-                                    position: 'absolute',
-                                    bottom: '30px',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    width: '120px',
-                                    height: '6px',
-                                    background: 'rgba(255,255,255,0.2)',
-                                    borderRadius: '3px',
-                                    zIndex: 60,
-                                    overflow: 'hidden'
-                                }}>
-                                    <div style={{ width: `${trackingScore}%`, height: '100%', background: '#10b981', transition: 'width 0.3s ease' }}></div>
+                                <div className="auto-capture-progress" aria-hidden="true">
+                                    <div className="auto-capture-bar" style={{ width: `${trackingScore}%` }} />
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="result-view" style={{ overflowY: 'auto', flex: 1 }}>
+                        <div className="result-view">
                             <div className="result-card">
                                 <CheckCircle size={48} color="#10b981" />
                                 <h2>Nota: {result.nota}</h2>
                                 <p className="aluno-name">{result.aluno_nome}</p>
+
                                 <div className="stats-row">
                                     <div className="stat">
                                         <span className="label">Acertos</span>
@@ -265,14 +337,32 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                                     </div>
                                     <div className="stat">
                                         <span className="label">Status</span>
-                                        <span className="value success">CONCLUÍDO</span>
+                                        <span className={`value ${result.needs_review ? 'warning' : 'success'}`}>
+                                            {result.needs_review ? 'REVISÃO NECESSÁRIA' : 'CONCLUÍDO'}
+                                        </span>
                                     </div>
                                 </div>
+
+                                {result.needs_review && result.review_reasons && (
+                                    <div className="review-alert">
+                                        <Info size={16} />
+                                        <div className="reasons">
+                                            {result.review_reasons.map((r: string, idx: number) => (
+                                                <span key={idx} className="reason-tag">
+                                                    {r === 'low_confidence' && 'Baixa Confiança'}
+                                                    {r === 'invalid_marks' && 'Marcação Múltipla'}
+                                                    {r === 'too_many_ambiguous' && 'Ambiguidade'}
+                                                    {![ 'low_confidence', 'invalid_marks', 'too_many_ambiguous' ].includes(r) && r}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {result.audit_map && (
                                     <div className="audit-preview">
                                         <label>Mapa de Auditoria:</label>
-                                        <img src={result.audit_map} alt="Audit" />
+                                        <img src={result.audit_map} alt="Mapa de auditoria" />
                                     </div>
                                 )}
 
@@ -281,7 +371,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                                         <RefreshCw size={18} />
                                         <span>Próxima Prova</span>
                                     </button>
-                                    <button className="finish-btn" onClick={onClose}>
+                                    <button className="finish-btn" onClick={handleClose}>
                                         Finalizar
                                     </button>
                                 </div>
@@ -289,10 +379,10 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({ onClose, gabaritoId,
                         </div>
                     )}
                 </div>
+
+                <canvas ref={captureCanvasRef} style={{ display: 'none' }} />
+                <canvas ref={pollCanvasRef} style={{ display: 'none' }} />
             </div>
-            {/* Canvases Hiddens para Foto Real e para Radar (Polling) */}
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-            <canvas ref={pollCanvasRef} style={{ display: 'none' }} />
         </div>
     );
 };

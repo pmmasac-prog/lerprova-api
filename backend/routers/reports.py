@@ -19,7 +19,10 @@ class SyncRequest(BaseModel):
 API_KEY_SECRET = os.getenv("API_KEY_SECRET")
 
 @router.post("/batch/sync")
-async def batch_sync(request: SyncRequest, x_api_key: str = Header(None)):
+async def batch_sync(request: SyncRequest, x_api_key: str = Header(None), current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
+        
     if not API_KEY_SECRET:
         raise HTTPException(status_code=500, detail="API_KEY_SECRET não configurada no servidor")
     if x_api_key != API_KEY_SECRET:
