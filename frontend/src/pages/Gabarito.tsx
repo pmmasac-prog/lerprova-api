@@ -21,8 +21,9 @@ interface Gabarito {
     disciplina?: string;
     data: string;
     num_questoes: number;
-    respostas_corretas: string;
+    respostas_corretas: string[];  // sempre lista (normalizado pela API)
     turma_ids?: number[];
+    total_resultados?: number;
 }
 
 export const Gabarito: React.FC = () => {
@@ -210,16 +211,16 @@ export const Gabarito: React.FC = () => {
         setData(g.data);
         setNumQuestions(g.num_questoes);
 
-        try {
-            const parsedRespostas = JSON.parse(g.respostas_corretas);
-            const answersObj: Record<number, string> = {};
-            parsedRespostas.forEach((ans: string, i: number) => {
-                answersObj[i] = ans;
-            });
-            setAnswers(answersObj);
-        } catch (e) {
-            console.error('Erro ao carregar respostas', e);
-        }
+        // respostas_corretas já é uma lista após a reestruturação do backend
+        const parsedRespostas: string[] = Array.isArray(g.respostas_corretas)
+            ? g.respostas_corretas
+            : JSON.parse(g.respostas_corretas as unknown as string); // fallback de segurança
+
+        const answersObj: Record<number, string> = {};
+        parsedRespostas.forEach((ans: string, i: number) => {
+            answersObj[i] = ans;
+        });
+        setAnswers(answersObj);
 
         if (g.turma_ids) {
             setSelectedTurmaIds(g.turma_ids);
@@ -358,14 +359,10 @@ export const Gabarito: React.FC = () => {
                                             </div>
                                             <div className="history-answers" style={{ fontSize: '0.8rem', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                                 <span style={{ color: '#64748b', fontWeight: 'bold', marginRight: '4px' }}>RESPOSTAS:</span>
-                                                {(() => {
-                                                    try {
-                                                        const ans = JSON.parse(g.respostas_corretas);
-                                                        return Array.isArray(ans) ? ans.join(', ') : 'Erro ao carregar';
-                                                    } catch (e) {
-                                                        return 'Erro ao carregar';
-                                                    }
-                                                })()}
+                                                {Array.isArray(g.respostas_corretas)
+                                                    ? g.respostas_corretas.join(', ')
+                                                    : 'Não disponível'
+                                                }
                                             </div>
                                         </div>
 

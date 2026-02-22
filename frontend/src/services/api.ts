@@ -84,10 +84,9 @@ export const api = {
 
     // Gabaritos
     async getGabaritos() {
-        const response = await fetch(`${API_URL}/gabaritos`, {
+        return request(`${API_URL}/gabaritos`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     // Resultados
@@ -188,6 +187,12 @@ export const api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
+        });
+    },
+
+    async getGabaritoById(id: number) {
+        return request(`${API_URL}/gabaritos/${id}`, {
+            headers: getAuthHeaders()
         });
     },
 

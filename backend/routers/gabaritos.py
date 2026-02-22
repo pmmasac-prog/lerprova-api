@@ -1,148 +1,243 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
+from pydantic import BaseModel, field_validator
+from typing import Optional, List
 import models
 import users_db
 from database import get_db
 from dependencies import get_current_user
 from utils.answers import parse_json_list, dump_json_list
-import json
 import logging
 
 router = APIRouter(tags=["gabaritos"])
 logger = logging.getLogger("lerprova-api")
 
+
+# ─────────────────────────────────────────────
+# Modelos Pydantic
+# ─────────────────────────────────────────────
+
+class GabaritoCreate(BaseModel):
+    titulo: Optional[str] = None
+    assunto: Optional[str] = None
+    disciplina: Optional[str] = None
+    data: Optional[str] = None
+    num_questoes: Optional[int] = 10
+    questoes: Optional[int] = None       # alias legado
+    respostas: Optional[List[Optional[str]]] = None
+    turma_ids: Optional[List[int]] = []
+    turma_id: Optional[int] = None       # alias legado
+    periodo: Optional[int] = None
+
+
+class GabaritoUpdate(BaseModel):
+    titulo: Optional[str] = None
+    assunto: Optional[str] = None
+    disciplina: Optional[str] = None
+    data: Optional[str] = None
+    num_questoes: Optional[int] = None
+    questoes: Optional[int] = None       # alias legado
+    respostas: Optional[List[Optional[str]]] = None
+    turma_ids: Optional[List[int]] = None
+    periodo: Optional[int] = None
+
+
+# ─────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────
+
+def _serialize_gabarito(g: models.Gabarito, db: Session) -> dict:
+    """Serializa um Gabarito para dict, retornando respostas como lista Python."""
+    count = db.query(models.Resultado).filter(models.Resultado.gabarito_id == g.id).count()
+    respostas = parse_json_list(g.respostas_corretas, "respostas_corretas")
+    return {
+        "id": g.id,
+        "turma_id": g.turmas[0].id if g.turmas else None,
+        "turma_nome": ", ".join([t.nome for t in g.turmas]) if g.turmas else "N/A",
+        "turma_ids": [t.id for t in g.turmas],
+        "titulo": g.titulo or g.assunto,
+        "assunto": g.assunto,
+        "disciplina": g.disciplina,
+        "data": g.data_prova or "",
+        "num_questoes": g.num_questoes,
+        "respostas_corretas": respostas,   # ← sempre lista, nunca string
+        "periodo": g.periodo,
+        "total_resultados": count,
+    }
+
+
+def _check_turma_access(user: users_db.User, turma_ids: list, db: Session):
+    """Levanta 403 se o professor não tiver acesso a alguma das turmas."""
+    if user.role != "admin" and turma_ids:
+        owned = db.query(models.Turma).filter(
+            models.Turma.id.in_(turma_ids),
+            models.Turma.user_id == user.id
+        ).count()
+        if owned != len(turma_ids):
+            raise HTTPException(status_code=403, detail="Acesso negado a uma ou mais turmas")
+
+
+# ─────────────────────────────────────────────
+# Endpoints
+# ─────────────────────────────────────────────
+
 @router.post("/gabaritos")
-async def create_gabarito(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    # Normalizar respostas via util central
-    num_questoes = int(data.get("questoes") or data.get("num_questoes") or 10)
-    corretas = parse_json_list(data.get("respostas"), "respostas")
+async def create_gabarito(
+    data: GabaritoCreate,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    num_questoes = data.questoes or data.num_questoes or 10
+    corretas = parse_json_list(data.respostas, "respostas") if data.respostas else []
 
     if corretas and len(corretas) != num_questoes:
-        raise HTTPException(status_code=422, detail=f"respostas deve ter {num_questoes} itens, recebeu {len(corretas)}")
+        raise HTTPException(
+            status_code=422,
+            detail=f"respostas deve ter {num_questoes} itens, recebeu {len(corretas)}"
+        )
 
-    turma_ids = data.get("turma_ids", [])
-    if data.get("turma_id") and int(data.get("turma_id")) not in turma_ids:
-        turma_ids.append(int(data.get("turma_id")))
+    # Consolidar turma_ids (compatibilidade com turma_id legado)
+    turma_ids = list(data.turma_ids or [])
+    if data.turma_id and data.turma_id not in turma_ids:
+        turma_ids.append(data.turma_id)
 
-    if user.role != "admin" and turma_ids:
-        user_turmas_count = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids), models.Turma.user_id == user.id).count()
-        if user_turmas_count != len(turma_ids):
-             raise HTTPException(status_code=403, detail="Você não tem permissão para criar provas para turmas que não são suas")
+    _check_turma_access(user, turma_ids, db)
 
-    novo_gabarito = models.Gabarito(
-        titulo=data.get("titulo", data.get("assunto")),
-        assunto=data.get("assunto"),
-        disciplina=data.get("disciplina"),
-        data_prova=data.get("data"),
+    titulo = data.titulo or data.assunto
+    novo = models.Gabarito(
+        titulo=titulo,
+        assunto=data.assunto,
+        disciplina=data.disciplina,
+        data_prova=data.data,
         num_questoes=num_questoes,
         respostas_corretas=dump_json_list(corretas),
-        periodo=data.get("periodo")
+        periodo=data.periodo,
     )
 
     if turma_ids:
-        turmas = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids)).all()
-        novo_gabarito.turmas = turmas
+        novo.turmas = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids)).all()
 
-    db.add(novo_gabarito)
+    db.add(novo)
     db.commit()
-    db.refresh(novo_gabarito)
-    return {"message": "Gabarito criado com sucesso", "id": novo_gabarito.id}
+    db.refresh(novo)
+
+    return {"message": "Gabarito criado com sucesso", "id": novo.id}
+
 
 @router.put("/gabaritos/{gabarito_id}")
-async def update_gabarito(gabarito_id: int, data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
+async def update_gabarito(
+    gabarito_id: int,
+    data: GabaritoUpdate,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    gabarito = db.query(models.Gabarito).options(
+        joinedload(models.Gabarito.turmas)
+    ).filter(models.Gabarito.id == gabarito_id).first()
+
     if not gabarito:
         raise HTTPException(status_code=404, detail="Gabarito não encontrado")
-    
+
     if user.role != "admin":
         has_access = any(t.user_id == user.id for t in gabarito.turmas)
         if not has_access and gabarito.turmas:
-              raise HTTPException(status_code=403, detail="Acesso negado a este gabarito")
+            raise HTTPException(status_code=403, detail="Acesso negado a este gabarito")
 
-    if "titulo" in data or "assunto" in data:
-        gabarito.titulo = data.get("titulo", data.get("assunto"))
-        gabarito.assunto = data.get("assunto", gabarito.assunto)
-    
-    if "disciplina" in data:
-        gabarito.disciplina = data.get("disciplina")
-    
-    if "data" in data:
-        gabarito.data_prova = data.get("data")
-    
-    if "num_questoes" in data or "questoes" in data:
-        gabarito.num_questoes = int(data.get("questoes") or data.get("num_questoes") or gabarito.num_questoes)
-    
-    if "respostas" in data:
-        corretas = parse_json_list(data.get("respostas"), "respostas")
+    if data.titulo is not None:
+        gabarito.titulo = data.titulo
+    if data.assunto is not None:
+        gabarito.assunto = data.assunto
+    if data.disciplina is not None:
+        gabarito.disciplina = data.disciplina
+    if data.data is not None:
+        gabarito.data_prova = data.data
+    if data.periodo is not None:
+        gabarito.periodo = data.periodo
+
+    num_questoes = data.questoes or data.num_questoes
+    if num_questoes is not None:
+        gabarito.num_questoes = num_questoes
+
+    if data.respostas is not None:
+        corretas = parse_json_list(data.respostas, "respostas")
         if corretas and gabarito.num_questoes and len(corretas) != gabarito.num_questoes:
-            raise HTTPException(status_code=422, detail=f"respostas deve ter {gabarito.num_questoes} itens")
+            raise HTTPException(
+                status_code=422,
+                detail=f"respostas deve ter {gabarito.num_questoes} itens"
+            )
         gabarito.respostas_corretas = dump_json_list(corretas)
 
-    if "periodo" in data:
-        gabarito.periodo = data.get("periodo")
-
-    if "turma_ids" in data:
-        turma_ids = data.get("turma_ids", [])
-        if user.role != "admin" and turma_ids:
-             user_turmas_count = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids), models.Turma.user_id == user.id).count()
-             if user_turmas_count != len(turma_ids):
-                  raise HTTPException(status_code=403, detail="Você não pode vincular este gabarito a turmas que não são suas")
-
-        turmas = db.query(models.Turma).filter(models.Turma.id.in_(turma_ids)).all()
-        gabarito.turmas = turmas
+    if data.turma_ids is not None:
+        _check_turma_access(user, data.turma_ids, db)
+        gabarito.turmas = db.query(models.Turma).filter(
+            models.Turma.id.in_(data.turma_ids)
+        ).all()
 
     db.commit()
     return {"message": "Gabarito atualizado com sucesso"}
 
+
 @router.get("/gabaritos")
-async def get_gabaritos(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_gabaritos(
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     query = db.query(models.Gabarito).options(joinedload(models.Gabarito.turmas))
-    
+
     if user.role != "admin":
         query = query.filter(models.Gabarito.turmas.any(models.Turma.user_id == user.id))
 
     gabaritos = query.all()
-    
-    result = []
-    for g in gabaritos:
-        count = db.query(models.Resultado).filter(models.Resultado.gabarito_id == g.id).count()
-        g_dict = {
-            "id": g.id,
-            "turma_id": g.turmas[0].id if g.turmas else None,
-            "turma_nome": ", ".join([t.nome for t in g.turmas]) if g.turmas else "N/A",
-            "turma_ids": [t.id for t in g.turmas],
-            "titulo": g.titulo,
-            "assunto": g.assunto,
-            "disciplina": g.disciplina,
-            "data": g.data_prova or "",
-            "num_questoes": g.num_questoes,
-            "respostas_corretas": g.respostas_corretas,
-            "periodo": g.periodo,
-            "total_resultados": count
-        }
-        result.append(g_dict)
-    
-    return result
+    return [_serialize_gabarito(g, db) for g in gabaritos]
+
+
+@router.get("/gabaritos/{gabarito_id}")
+async def get_gabarito(
+    gabarito_id: int,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    g = db.query(models.Gabarito).options(
+        joinedload(models.Gabarito.turmas)
+    ).filter(models.Gabarito.id == gabarito_id).first()
+
+    if not g:
+        raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in g.turmas)
+        if not has_access:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+
+    return _serialize_gabarito(g, db)
+
+
+@router.delete("/gabaritos/{gabarito_id}")
+async def delete_gabarito(
+    gabarito_id: int,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    gabarito = db.query(models.Gabarito).options(
+        joinedload(models.Gabarito.turmas)
+    ).filter(models.Gabarito.id == gabarito_id).first()
+
+    if not gabarito:
+        raise HTTPException(status_code=404, detail="Gabarito não encontrado")
+
+    if user.role != "admin":
+        has_access = any(t.user_id == user.id for t in gabarito.turmas)
+        if not has_access and gabarito.turmas:
+            raise HTTPException(status_code=403, detail="Acesso negado para excluir este gabarito")
+
+    db.delete(gabarito)
+    db.commit()
+    return {"message": "Gabarito excluído com sucesso"}
+
 
 @router.get("/disciplinas")
 async def get_disciplinas(db: Session = Depends(get_db)):
     disc_turmas = db.query(models.Turma.disciplina).filter(models.Turma.disciplina != None).distinct().all()
     disc_gabas = db.query(models.Gabarito.disciplina).filter(models.Gabarito.disciplina != None).distinct().all()
-    
     all_discs = set([d[0] for d in disc_turmas] + [d[0] for d in disc_gabas])
     return sorted(list(all_discs))
-
-@router.delete("/gabaritos/{gabarito_id}")
-async def delete_gabarito(gabarito_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
-    if not gabarito:
-        raise HTTPException(status_code=404, detail="Gabarito não encontrado")
-
-    if user.role != "admin":
-        has_access = any(t.user_id == user.id for t in gabarito.turmas)
-        if not has_access and gabarito.turmas:
-             raise HTTPException(status_code=403, detail="Acesso negado para excluir este gabarito")
-
-    db.delete(gabarito)
-    db.commit()
-    return {"message": "Gabarito excluído com sucesso"}
