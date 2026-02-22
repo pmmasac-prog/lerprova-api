@@ -610,6 +610,11 @@ class OMREngine:
         roi_size = int(self.target_width * float(layout.get("roi_size_pct_of_width", 0.028)))
         x_offsets_pct = layout.get("x_offsets_pct", [0.0]) # Percentual de deslocamento de cada coluna
         
+        # Binarizar a imagem retificada para leitura das bolhas
+        gray_warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+        # Usamos threshold de Otsu para separar papel de caneta/lápis automaticamente
+        _, thresh = cv2.threshold(gray_warped, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        
         results = []
         
         # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)

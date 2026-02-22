@@ -23,6 +23,7 @@ class ProcessRequest(BaseModel):
     num_questions: Optional[int] = 10
     gabarito_id: Optional[int] = None
     aluno_id: Optional[int] = None
+    layout_version: Optional[str] = None
 
 class ReviewRequest(BaseModel):
     resultado_id: int
@@ -104,7 +105,7 @@ async def scan_anchors(req: ScanAnchorsRequest, current_user: users_db.User = De
 @router.post("/provas/processar")
 async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), current_user: users_db.User = Depends(get_current_user)):
     try:
-        layout_version = "v1"
+        layout_version = req.layout_version or "v1.1-a4-calibrated"
         result = omr.process_image(req.image, num_questions=req.num_questions, layout_version=layout_version)
         
         # Só bloqueia hard se for erro estrutural ou falta de âncoras (quality = reject)
