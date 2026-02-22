@@ -99,17 +99,22 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    err_msg = f"Erro Global: {str(exc)}\n{traceback.format_exc()}"
+    trace = traceback.format_exc()
+    err_msg = f"Erro Global: {str(exc)}\n{trace}"
     logger.error(err_msg)
-    # Em produção, vamos forçar o trace no detalhe por enquanto para debugar o erro 500 do login
+    
+    # Garantir que tudo seja string para evitar erro de serialização de bytes
+    response_content = {
+        "detail": "Erro interno no servidor", 
+        "error_message": str(exc),
+        "trace": str(trace)
+    }
+    
     response = JSONResponse(
         status_code=500,
-        content={
-            "detail": "Erro interno no servidor", 
-            "error_message": str(exc),
-            "trace": traceback.format_exc() # Forçando trace para debug
-        }
+        content=response_content
     )
+    # CORS Headers Manuais (Fallback)
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
