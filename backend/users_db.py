@@ -8,7 +8,9 @@ from models import User, pwd_context
 
 # Funções auxiliares
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+    if email:
+        email = email.lower()
+    return db.query(User).filter(User.email.ilike(email)).first()
 
 def create_user(db: Session, user_data: dict):
     # Criptografar a senha antes de salvar

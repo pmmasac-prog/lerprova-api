@@ -2,11 +2,16 @@ import jwt
 from datetime import datetime, timedelta
 from typing import Optional
 import os
+import logging
+logger = logging.getLogger("lerprova-api")
 
 # Segredo para assinar os tokens (DEVE ser mantido seguro via Env Var)
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "pro_secret_key_lerprova_2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 horas
+
+# Log de diagnóstico na carga (mascarado)
+logger.info(f"JWT_CONFIG: Algorithm={ALGORITHM} SecretKeyPrefix={SECRET_KEY[:4]}... len={len(SECRET_KEY)}")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -27,6 +32,11 @@ def decode_access_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
+        logger.warning("JWT Decode Fail: Token Expired")
         return None
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError as e:
+        logger.warning(f"JWT Decode Fail: Invalid Token ({e})")
+        return None
+    except Exception as e:
+        logger.error(f"JWT Decode Fail: Unexpected Error ({e})")
         return None

@@ -91,17 +91,15 @@ export const api = {
 
     // Resultados
     async getResultados() {
-        const response = await fetch(`${API_URL}/resultados`, {
+        return request(`${API_URL}/resultados`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getResultadosByTurma(turmaId: number) {
-        const response = await fetch(`${API_URL}/resultados/turma/${turmaId}`, {
+        return request(`${API_URL}/resultados/turma/${turmaId}`, {
             headers: getAuthHeaders()
         });
-        return response.json();
     },
 
     async getResultadosByGabarito(gabaritoId: number) {
