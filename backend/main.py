@@ -66,7 +66,7 @@ async def health_check():
 
 @app.get("/")
 async def root():
-    return {"message": "LERPROVA Pro API - Modularizada e Ativa"}
+    return {"message": "LERPROVA Pro API - Modularizada e Ativa", "version": "1.3.1"}
 
 # Configuração de CORS
 app.add_middleware(
