@@ -1,12 +1,35 @@
 import React, { useState } from 'react';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, FileText, Code as CodeIcon } from 'lucide-react';
 import { api } from '../services/api';
 
 export const ImportMaster: React.FC = () => {
-    const [jsonInput, setJsonInput] = useState('');
+    const [inputText, setInputText] = useState('');
+    const [mode, setMode] = useState<'csv' | 'json'>('csv');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ message: string, turmas_criadas: number, alunos_processados: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const parseCSV = (csv: string) => {
+        const lines = csv.split('\n').filter(line => line.trim() !== '');
+        const roomsMap: Record<string, any[]> = {};
+
+        lines.forEach(line => {
+            const parts = line.split(/[;,]/); // Suporta ponto e vírgula ou vírgula
+            if (parts.length >= 3) {
+                const roomName = parts[0].trim();
+                const studentName = parts[1].trim();
+                const studentCode = parts[2].trim();
+
+                if (!roomsMap[roomName]) roomsMap[roomName] = [];
+                roomsMap[roomName].push({ nome: studentName, codigo: studentCode });
+            }
+        });
+
+        return Object.keys(roomsMap).map(name => ({
+            nome: name,
+            alunos: roomsMap[name]
+        }));
+    };
 
     const handleImport = async () => {
         try {
@@ -14,89 +37,109 @@ export const ImportMaster: React.FC = () => {
             setError(null);
             setResult(null);
 
-            const data = JSON.parse(jsonInput);
+            let data;
+            if (mode === 'json') {
+                data = JSON.parse(inputText);
+            } else {
+                data = parseCSV(inputText);
+            }
 
-            if (!Array.isArray(data)) {
-                throw new Error("O formato deve ser uma lista de salas.");
+            if (!Array.isArray(data) || data.length === 0) {
+                throw new Error("Nenhum dado válido identificado. Verifique o formato.");
             }
 
             const res = await api.admin.importMasterData(data);
             setResult(res);
-            setJsonInput('');
+            setInputText('');
         } catch (err: any) {
             console.error(err);
-            setError(err.message || "Erro ao processar JSON ou enviar ao servidor.");
+            setError(err.message || "Erro ao processar dados ou enviar ao servidor.");
         } finally {
             setLoading(false);
         }
     };
-
-    const exampleJson = [
-        {
-            "nome": "7º Ano A",
-            "alunos": [
-                { "nome": "João Silva", "codigo": "2024001" },
-                { "nome": "Maria Santos", "codigo": "2024002" }
-            ]
-        }
-    ];
 
     return (
         <div className="admin-container">
             <header className="admin-header">
                 <div>
                     <h1 className="admin-title">Base Central de Alunos</h1>
-                    <p className="admin-subtitle">Importe listas mestras de alunos para os professores incorporarem.</p>
+                    <p className="admin-subtitle">Importe listas mestras de alunos (CSV ou JSON).</p>
                 </div>
             </header>
 
             <div className="admin-card" style={{ marginTop: '20px' }}>
+                <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+                    <button
+                        className={`btn-${mode === 'csv' ? 'primary' : 'secondary'}`}
+                        onClick={() => { setMode('csv'); setInputText(''); setError(null); }}
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+                    >
+                        <FileText size={18} /> Importar CSV
+                    </button>
+                    <button
+                        className={`btn-${mode === 'json' ? 'primary' : 'secondary'}`}
+                        onClick={() => { setMode('json'); setInputText(''); setError(null); }}
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+                    >
+                        <CodeIcon size={18} /> Importar JSON
+                    </button>
+                </div>
+
                 <div style={{ display: 'flex', gap: '20px' }}>
                     <div style={{ flex: 1 }}>
-                        <h3 className="admin-card-title">Inserir Dados (JSON)</h3>
+                        <h3 className="admin-card-title">Inserir Conteúdo</h3>
                         <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '10px' }}>
-                            Cole abaixo a estrutura JSON contendo as salas e alunos.
+                            {mode === 'csv'
+                                ? "Formato esperado: Turma;Nome do Aluno;Matrícula"
+                                : "Formato esperado: [{ 'nome': 'Sala X', 'alunos': [...] }]"}
                         </p>
                         <textarea
                             style={{
                                 width: '100%',
-                                height: '300px',
+                                height: '350px',
                                 background: '#111827',
                                 border: '1px solid #374151',
                                 borderRadius: '8px',
                                 color: '#e5e7eb',
                                 padding: '15px',
                                 fontFamily: 'monospace',
-                                fontSize: '13px'
+                                fontSize: '13px',
+                                resize: 'none'
                             }}
-                            placeholder="Ex: [{ 'nome': 'Sala X', 'alunos': [...] }]"
-                            value={jsonInput}
-                            onChange={(e) => setJsonInput(e.target.value)}
+                            placeholder={mode === 'csv' ? "Ex:\n7 A;Joao Silva;202401\n7 A;Maria Santos;202402" : "Paste JSON here..."}
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
                         />
                         <button
                             className="btn-primary"
-                            style={{ marginTop: '15px', width: '100%' }}
+                            style={{ marginTop: '15px', width: '100%', height: '50px', fontSize: '16px' }}
                             onClick={handleImport}
-                            disabled={loading || !jsonInput}
+                            disabled={loading || !inputText}
                         >
-                            {loading ? 'Processando...' : 'Iniciar Importação'}
+                            {loading ? 'Processando...' : 'Processar Agora'}
                         </button>
                     </div>
 
                     <div style={{ width: '300px', background: '#111827', padding: '20px', borderRadius: '12px' }}>
-                        <h4 style={{ color: '#f3f4f6', marginBottom: '10px' }}>Como Usar</h4>
-                        <ol style={{ color: '#94a3b8', fontSize: '0.85rem', paddingLeft: '20px' }}>
-                            <li style={{ marginBottom: '8px' }}>Prepare uma lista de salas e alunos.</li>
-                            <li style={{ marginBottom: '8px' }}>Siga o modelo JSON ao lado.</li>
-                            <li style={{ marginBottom: '8px' }}>O sistema verificará se o aluno (pelo código) já existe para evitar duplicatas.</li>
-                            <li>Os professores poderão ver essas salas no menu "Importar Central".</li>
+                        <h4 style={{ color: '#f3f4f6', marginBottom: '10px' }}>Orientações</h4>
+                        <ol style={{ color: '#94a3b8', fontSize: '0.85rem', paddingLeft: '15px', lineHeight: '1.6' }}>
+                            <li style={{ marginBottom: '10px' }}>
+                                <b>CSV</b>: Cada linha deve ter os 3 campos separados por "<b>;</b>" ou "<b>,</b>".
+                            </li>
+                            <li style={{ marginBottom: '10px' }}>
+                                <b>Evite Duplicatas</b>: O sistema usa a matrícula para verificar se o aluno já existe.
+                            </li>
+                            <li>
+                                <b>Visualização</b>: Após importar, as salas aparecerão para todos os professores no menu "Importar Central".
+                            </li>
                         </ol>
 
-                        <div style={{ marginTop: '20px', padding: '10px', background: '#1f2937', borderRadius: '8px' }}>
-                            <p style={{ color: '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold' }}>Exemplo de Estrutura:</p>
-                            <pre style={{ color: '#94a3b8', fontSize: '0.75rem', overflowX: 'auto' }}>
-                                {JSON.stringify(exampleJson, null, 2)}
-                            </pre>
+                        <div style={{ marginTop: '20px', padding: '15px', background: '#1f2937', borderRadius: '8px', border: '1px dashed #4b5563' }}>
+                            <p style={{ color: '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>Dica:</p>
+                            <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                                Você pode copiar direto de uma planilha Excel. O separador padrão (ponto e vírgula) será reconhecido.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -107,7 +150,7 @@ export const ImportMaster: React.FC = () => {
                         <div>
                             <p style={{ color: '#ecfdf5', fontWeight: 'bold' }}>{result.message}</p>
                             <p style={{ color: '#d1fae5', fontSize: '0.85rem' }}>
-                                {result.turmas_criadas} salas criadas e {result.alunos_processados} novos alunos cadastrados.
+                                {result.turmas_criadas} salas registradas com sucesso.
                             </p>
                         </div>
                     </div>
