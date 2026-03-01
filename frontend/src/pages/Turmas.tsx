@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, Trash2, BookOpen } from 'lucide-react';
+import { Users, Plus, Trash2, BookOpen, Edit2 } from 'lucide-react';
 import { api } from '../services/api';
 import './Turmas.css';
 
@@ -9,6 +9,7 @@ interface Turma {
     nome: string;
     disciplina?: string;
     dias_semana?: string | number[];
+    quantidade_aulas?: number;
 }
 
 interface MasterTurma {
@@ -19,12 +20,14 @@ interface MasterTurma {
 export const Turmas: React.FC = () => {
     const navigate = useNavigate();
     const [turmas, setTurmas] = useState<Turma[]>([]);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [newTurma, setNewTurma] = useState<{
-        nome: string;
-        disciplina: string;
-        dias_semana: number[];
-    }>({ nome: '', disciplina: '', dias_semana: [0, 2, 4] });
+    const [showModal, setShowModal] = useState(false);
+    const [editingTurmaId, setEditingTurmaId] = useState<number | null>(null);
+    const [formData, setFormData] = useState({
+        nome: '',
+        disciplina: '',
+        dias_semana: [0, 2, 4] as number[],
+        quantidade_aulas: 1
+    });
     const [loading, setLoading] = useState(true);
 
     const [masterTurmas, setMasterTurmas] = useState<MasterTurma[]>([]);
@@ -66,7 +69,7 @@ export const Turmas: React.FC = () => {
     };
 
     const toggleDay = (dayId: number) => {
-        setNewTurma(prev => {
+        setFormData(prev => {
             const current = prev.dias_semana || [];
             const next = current.includes(dayId)
                 ? current.filter(d => d !== dayId)
@@ -75,20 +78,25 @@ export const Turmas: React.FC = () => {
         });
     };
 
-    const handleAddTurma = async () => {
-        if (!newTurma.nome || !newTurma.disciplina || newTurma.dias_semana.length === 0) {
-            alert('Nome, disciplina e pelo menos um dia da semana são obrigatórios');
+    const handleSaveTurma = async () => {
+        if (!formData.nome || !formData.disciplina) {
+            alert('Nome e disciplina são obrigatórios');
             return;
         }
 
         try {
-            await api.addTurma(newTurma);
-            setShowAddModal(false);
-            setNewTurma({ nome: '', disciplina: '', dias_semana: [0, 2, 4] });
+            if (editingTurmaId) {
+                await api.updateTurma(editingTurmaId, formData);
+            } else {
+                await api.addTurma(formData);
+            }
+            setShowModal(false);
+            setEditingTurmaId(null);
+            setFormData({ nome: '', disciplina: '', dias_semana: [0, 2, 4], quantidade_aulas: 1 });
             loadTurmas();
         } catch (error) {
-            console.error('Erro ao criar turma:', error);
-            alert('Erro ao criar turma');
+            console.error('Erro ao salvar turma:', error);
+            alert('Erro ao salvar turma');
         }
     };
 
@@ -107,6 +115,30 @@ export const Turmas: React.FC = () => {
             console.error('Erro ao incorporar:', error);
             alert('Erro ao incorporar turma');
         }
+    };
+
+    const openEditModal = (turma: Turma) => {
+        setEditingTurmaId(turma.id);
+        let ds = [0, 2, 4];
+        if (typeof turma.dias_semana === 'string') {
+            try { ds = JSON.parse(turma.dias_semana); } catch (e) { ds = []; }
+        } else if (Array.isArray(turma.dias_semana)) {
+            ds = turma.dias_semana;
+        }
+
+        setFormData({
+            nome: turma.nome,
+            disciplina: turma.disciplina || '',
+            dias_semana: ds,
+            quantidade_aulas: turma.quantidade_aulas || 1
+        });
+        setShowModal(true);
+    };
+
+    const openCreateModal = () => {
+        setEditingTurmaId(null);
+        setFormData({ nome: '', disciplina: '', dias_semana: [0, 2, 4], quantidade_aulas: 1 });
+        setShowModal(true);
     };
 
     const handleDeleteTurma = async (id: number) => {
@@ -132,7 +164,7 @@ export const Turmas: React.FC = () => {
                     <button className="btn-secondary" onClick={() => setShowIncorporateModal(true)} title="Importar da Base Central">
                         Importar Central
                     </button>
-                    <button className="btn-primary" onClick={() => setShowAddModal(true)} title="Nova Turma">
+                    <button className="btn-primary" onClick={openCreateModal} title="Nova Turma">
                         <Plus size={20} />
                     </button>
                 </div>
@@ -156,6 +188,9 @@ export const Turmas: React.FC = () => {
                                 </div>
 
                                 <div className="turma-actions">
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); openEditModal(turma); }} title="Editar Turma" style={{ color: '#60a5fa' }}>
+                                        <Edit2 size={18} />
+                                    </button>
                                     <button className="icon-btn" onClick={(e) => { e.stopPropagation(); handleDeleteTurma(turma.id); }} title="Excluir Turma">
                                         <Trash2 size={18} />
                                     </button>
@@ -171,7 +206,7 @@ export const Turmas: React.FC = () => {
                         <h3>Nenhuma turma encontrada</h3>
                         <p>Crie sua primeira turma para começar</p>
                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                            <button className="btn-primary" onClick={openCreateModal}>
                                 Criar Nova Turma
                             </button>
                             <button className="btn-secondary" onClick={() => setShowIncorporateModal(true)}>
@@ -182,19 +217,19 @@ export const Turmas: React.FC = () => {
                 )}
             </div>
 
-            {/* Modal Nova Turma */}
-            {showAddModal && (
-                <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+            {/* Modal Criar/Editar Turma */}
+            {showModal && (
+                <div className="modal-overlay" onClick={() => { setShowModal(false); setEditingTurmaId(null); }}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <h2 className="modal-title">Nova Turma</h2>
+                        <h2 className="modal-title">{editingTurmaId ? 'Editar Turma' : 'Nova Turma'}</h2>
                         <div className="form-group">
                             <label className="form-label">Nome da Turma</label>
                             <input
                                 type="text"
                                 className="form-input"
                                 placeholder="Ex: 3º Ano A"
-                                value={newTurma.nome}
-                                onChange={e => setNewTurma({ ...newTurma, nome: e.target.value })}
+                                value={formData.nome}
+                                onChange={e => setFormData({ ...formData, nome: e.target.value })}
                             />
                         </div>
                         <div className="form-group">
@@ -203,8 +238,20 @@ export const Turmas: React.FC = () => {
                                 type="text"
                                 className="form-input"
                                 placeholder="Ex: Matemática"
-                                value={newTurma.disciplina}
-                                onChange={e => setNewTurma({ ...newTurma, disciplina: e.target.value })}
+                                value={formData.disciplina}
+                                onChange={e => setFormData({ ...formData, disciplina: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Quantidade de Aulas (Semanal)</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                min="1"
+                                max="40"
+                                value={formData.quantidade_aulas}
+                                onChange={e => setFormData({ ...formData, quantidade_aulas: parseInt(e.target.value) || 1 })}
                             />
                         </div>
 
@@ -215,7 +262,7 @@ export const Turmas: React.FC = () => {
                                     <button
                                         key={day.id}
                                         type="button"
-                                        className={`weekday-btn ${newTurma.dias_semana.includes(day.id) ? 'active' : ''}`}
+                                        className={`weekday-btn ${formData.dias_semana.includes(day.id) ? 'active' : ''}`}
                                         onClick={() => toggleDay(day.id)}
                                     >
                                         {day.label}
@@ -225,8 +272,10 @@ export const Turmas: React.FC = () => {
                         </div>
 
                         <div className="modal-actions">
-                            <button className="btn-cancel" onClick={() => setShowAddModal(false)}>Cancelar</button>
-                            <button className="btn-primary" onClick={handleAddTurma}>Criar Turma</button>
+                            <button className="btn-cancel" onClick={() => { setShowModal(false); setEditingTurmaId(null); }}>Cancelar</button>
+                            <button className="btn-primary" onClick={handleSaveTurma}>
+                                {editingTurmaId ? 'Salvar Alterações' : 'Criar Turma'}
+                            </button>
                         </div>
                     </div>
                 </div>

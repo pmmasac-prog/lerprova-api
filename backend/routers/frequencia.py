@@ -5,6 +5,8 @@ import users_db
 from database import get_db
 from dependencies import get_current_user
 import logging
+import datetime
+import json
 
 router = APIRouter(tags=["frequencia"])
 logger = logging.getLogger("lerprova-api")
@@ -110,4 +112,78 @@ async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, user: users_d
         "historico": [
             {"data": f.data, "presente": f.presente} for f in freqs
         ]
+    }
+
+@router.post("/qr-scan")
+async def scan_qr_attendance(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    qr_token = data.get("qr_token")
+    if not qr_token:
+        raise HTTPException(status_code=400, detail="Token QR não fornecido")
+
+    aluno = db.query(models.Aluno).filter(models.Aluno.qr_token == qr_token).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado com este QR Code")
+
+    import datetime
+    now = datetime.datetime.now()
+    today_index = now.weekday() # 0-6 (Mon-Sun) - dps comparamos com Turma.dias_semana (0-4)
+    today_str = now.strftime("%Y-%m-%d")
+
+    # Turmas do professor que ocorrem hoje e contêm o aluno
+    minhas_turmas = db.query(models.Turma).filter(models.Turma.user_id == user.id).all()
+    
+    turmas_atingidas = []
+    
+    for t in minhas_turmas:
+        dias = []
+        if isinstance(t.dias_semana, list):
+            dias = t.dias_semana
+        elif isinstance(t.dias_semana, str):
+            try: dias = json.loads(t.dias_semana)
+            except: pass
+            
+        if today_index not in dias:
+            continue
+            
+        is_in_turma = db.query(models.aluno_turma).filter(
+            models.aluno_turma.c.aluno_id == aluno.id,
+            models.aluno_turma.c.turma_id == t.id
+        ).first()
+        
+        if is_in_turma:
+            existente = db.query(models.Frequencia).filter(
+                models.Frequencia.turma_id == t.id,
+                models.Frequencia.aluno_id == aluno.id,
+                models.Frequencia.data == today_str
+            ).first()
+            
+            if not existente:
+                nova_freq = models.Frequencia(
+                    turma_id=t.id,
+                    aluno_id=aluno.id,
+                    data=today_str,
+                    presente=True
+                )
+                db.add(nova_freq)
+                turmas_atingidas.append(t.nome)
+            else:
+                if not existente.presente:
+                    existente.presente = True
+                    turmas_atingidas.append(t.nome)
+
+    db.commit()
+    
+    if not turmas_atingidas:
+        return {
+            "message": f"Aluno {aluno.nome} identificado, mas não há aulas registradas para ele hoje com você.",
+            "success": True,
+            "count": 0,
+            "aluno": aluno.nome
+        }
+
+    return {
+        "message": f"Presença registrada para {aluno.nome} em: {', '.join(turmas_atingidas)}",
+        "success": True, 
+        "count": len(turmas_atingidas),
+        "aluno": aluno.nome
     }

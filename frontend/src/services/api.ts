@@ -62,6 +62,14 @@ export const api = {
         });
     },
 
+    async updateTurma(id: number, data: any) {
+        return request(`${API_URL}/turmas/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+    },
+
     async deleteTurma(id: number) {
         return request(`${API_URL}/turmas/${id}`, {
             method: 'DELETE',
@@ -235,6 +243,14 @@ export const api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
+        });
+    },
+
+    async scanQrCode(qr_token: string) {
+        return request(`${API_URL}/qr-scan`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ qr_token }),
         });
     },
 

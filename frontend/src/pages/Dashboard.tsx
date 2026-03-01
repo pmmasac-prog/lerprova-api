@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
     AlertTriangle, CheckCircle, BookOpen, ArrowRight,
     LogOut, Settings, Zap, Clock, ChevronRight,
-    Target, RefreshCw, Users
+    Target, RefreshCw, Users, QrCode
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { QRScanner } from '../components/QRScanner';
 import './Dashboard.css';
 
 interface ActionPayload {
@@ -88,6 +89,7 @@ export const Dashboard: React.FC = () => {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showQrScanner, setShowQrScanner] = useState(false);
     const navigate = useNavigate();
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -145,8 +147,6 @@ export const Dashboard: React.FC = () => {
         }
     };
 
-    // ====== RENDER ======
-
     if (loading) {
         return (
             <div className="op-dashboard">
@@ -191,13 +191,15 @@ export const Dashboard: React.FC = () => {
 
     return (
         <div className="op-dashboard">
-            {/* Header */}
             <div className="op-header">
                 <div className="op-header-left">
                     <h1 className="op-greeting">Olá, {firstName}</h1>
                     <p className="op-date">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                 </div>
                 <div className="op-header-right">
+                    <button className="op-icon-btn" onClick={() => setShowQrScanner(true)} title="Chamada QR" style={{ color: '#60a5fa' }}>
+                        <QrCode size={20} />
+                    </button>
                     {isAdmin && (
                         <button className="op-icon-btn" onClick={() => navigate('/dashboard/debug')} title="Diagnóstico">
                             <Settings size={20} />
@@ -209,10 +211,7 @@ export const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Grid: 4 Cognitive Layers */}
             <div className="op-grid">
-
-                {/* LAYER 1: Primary Action (Center) */}
                 <div className="op-center">
                     <div className="op-hero-card" style={{ background: gradient }}>
                         <div className="op-hero-icon">{icon}</div>
@@ -235,7 +234,6 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* LAYER 2: Alerts (Top-left) */}
                 <div className="op-alerts-col">
                     <h3 className="op-section-title">
                         <AlertTriangle size={16} />
@@ -263,7 +261,6 @@ export const Dashboard: React.FC = () => {
                     )}
                 </div>
 
-                {/* LAYER 3: Classes Status (Right) */}
                 <div className="op-turmas-col">
                     <h3 className="op-section-title">
                         <BookOpen size={16} />
@@ -296,7 +293,6 @@ export const Dashboard: React.FC = () => {
                     )}
                 </div>
 
-                {/* LAYER 4: Recent History (Bottom) */}
                 <div className="op-history-col">
                     <h3 className="op-section-title">
                         <Clock size={16} />
@@ -323,6 +319,13 @@ export const Dashboard: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {showQrScanner && (
+                <QRScanner
+                    onClose={() => setShowQrScanner(false)}
+                    onSuccess={() => loadDashboard()}
+                />
+            )}
         </div>
     );
 };

@@ -24,7 +24,8 @@ async def get_turmas(user: users_db.User = Depends(get_current_user), db: Sessio
             "id": t.id,
             "nome": t.nome,
             "disciplina": t.disciplina,
-            "dias_semana": t.dias_semana, # Novo campo
+            "dias_semana": t.dias_semana,
+            "quantidade_aulas": t.quantidade_aulas,
             "user_id": t.user_id,
             "created_at": t.created_at.isoformat() if t.created_at else None
         } for t in turmas
@@ -34,22 +35,46 @@ async def get_turmas(user: users_db.User = Depends(get_current_user), db: Sessio
 async def create_turma(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     nome = data.get("nome")
     disciplina = data.get("disciplina")
-    dias_semana = data.get("dias_semana") # JSON list ex: [0, 2]
+    dias_semana = data.get("dias_semana")
+    quantidade_aulas = data.get("quantidade_aulas", 1)
 
-    if not nome or not disciplina or not dias_semana:
-        raise HTTPException(status_code=400, detail="Nome, Disciplina e Dias da Semana são obrigatórios")
+    if not nome or not disciplina:
+        raise HTTPException(status_code=400, detail="Nome e Disciplina são obrigatórios")
 
     nova_turma = models.Turma(
         nome=nome,
         disciplina=disciplina,
         dias_semana=json.dumps(dias_semana) if isinstance(dias_semana, list) else dias_semana,
-        user_id=user.id # Vincula a turma ao professor logado
+        quantidade_aulas=quantidade_aulas,
+        user_id=user.id
     )
     db.add(nova_turma)
     db.commit()
     db.refresh(nova_turma)
     logger.info(f"Turma criada: {nova_turma.nome} pelo usuário {user.email}")
     return {"message": "Turma cadastrada com sucesso", "id": nova_turma.id}
+
+@router.put("/{turma_id}")
+async def update_turma(turma_id: int, data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada")
+        
+    if user.role != "admin" and turma.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    # Atualiza campos
+    if "nome" in data: turma.nome = data["nome"]
+    if "disciplina" in data: turma.disciplina = data["disciplina"]
+    if "quantidade_aulas" in data: turma.quantidade_aulas = data["quantidade_aulas"]
+    if "dias_semana" in data:
+        ds = data["dias_semana"]
+        turma.dias_semana = json.dumps(ds) if isinstance(ds, list) else ds
+
+    db.commit()
+    logger.info(f"Turma {turma_id} atualizada por {user.email}")
+    return {"message": "Turma atualizada com sucesso"}
 
 @router.delete("/{turma_id}")
 async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
