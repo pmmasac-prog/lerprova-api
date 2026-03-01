@@ -43,7 +43,7 @@ if db.query(BNCCSkill).count() == 0:
 
 db.close()
 
-app = FastAPI(title="LERPROVA API", version="1.3.0")
+app = FastAPI(title="LERPROVA API", version="1.3.1")
 
 # Inclusão dos Roteadores
 app.include_router(auth.router)
