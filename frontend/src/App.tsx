@@ -13,6 +13,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminSidebar } from './components/AdminSidebar';
 import { Planejamento } from './pages/Planejamento';
 import { ImportMaster } from './pages/ImportMaster';
+import { StudentPortal } from './pages/StudentPortal';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -38,6 +39,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 const HomeRedirect = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  if (user.role === 'student') return <Navigate to="/portal-aluno" replace />;
   return <Navigate to="/dashboard" replace />;
 };
 
@@ -65,6 +67,9 @@ function App() {
         <Route path="/admin/turmas-master" element={<PrivateRoute><AdminLayout><ImportMaster /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
         <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
+
+        {/* Student Portal */}
+        <Route path="/portal-aluno" element={<PrivateRoute><StudentPortal /></PrivateRoute>} />
 
         {/* Redirecionamento legado */}
         <Route path="/dashboard/admin" element={<Navigate to="/admin" replace />} />

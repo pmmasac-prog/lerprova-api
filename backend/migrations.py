@@ -122,6 +122,19 @@ def run_migrations(engine):
             if "anchors_found" not in columns_resultados:
                 logger.info("Adicionando coluna 'anchors_found' em 'resultados'...")
                 conn.execute(text("ALTER TABLE resultados ADD COLUMN anchors_found INTEGER DEFAULT 0"))
+
+            # Migrações para a tabela ALUNOS
+            columns_alunos = [c["name"] for c in inspector.get_columns("alunos")]
+            if "hashed_password" not in columns_alunos:
+                logger.info("Adicionando coluna 'hashed_password' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN hashed_password VARCHAR NULL"))
+                
+                # Definir senha padrão '123456' para todos os alunos existentes
+                # Hash de '123456' via passlib.context (bcrypt)
+                from models import pwd_context
+                default_hash = pwd_context.hash("123456")
+                conn.execute(text(f"UPDATE alunos SET hashed_password = '{default_hash}' WHERE hashed_password IS NULL"))
+                logger.info("Senha padrão '123456' definida para alunos existentes.")
             
     except Exception as e:
         logger.error(f"FALHA CRÍTICA NA MIGRAÇÃO: {e}")

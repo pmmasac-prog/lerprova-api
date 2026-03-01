@@ -178,6 +178,39 @@ export const api = {
         });
     },
 
+    // Portal do Aluno
+    student: {
+        async login(codigo: string, password: string) {
+            return request(`${API_URL}/alunos-portal/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo, password }),
+            });
+        },
+        async getMe() {
+            return request(`${API_URL}/alunos-portal/me`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getResultados() {
+            return request(`${API_URL}/alunos-portal/me/resultados`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getFrequencia() {
+            return request(`${API_URL}/alunos-portal/me/frequencia`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async changePassword(newPassword: string) {
+            return request(`${API_URL}/alunos-portal/me/password`, {
+                method: 'PATCH',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ new_password: newPassword }),
+            });
+        }
+    },
+
     // Alunos - adicionar
     async addAluno(data: any) {
         return request(`${API_URL}/alunos`, {

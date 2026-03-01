@@ -20,16 +20,24 @@ async def get_current_user(authorization: str = Header(None), db: Session = Depe
         # Tenta descobrir o motivo da falha se possível (o auth_utils já logou)
         raise HTTPException(status_code=401, detail="Sessão expirada ou inválida (Token Decode Fail)")
     
-    user_email = payload.get("sub")
-    if user_email:
-        user_email = user_email.lower() # Case-insensitive lookup safety
+    user_id_val = payload.get("sub")
+    role = payload.get("role", "professor")
     
-    user = db.query(models.User).filter(models.User.email.ilike(user_email)).first()
+    if role == "student":
+        student = db.query(models.Aluno).filter(models.Aluno.codigo == user_id_val).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Aluno não encontrado")
+        # Adicionar atributo role virtual para compatibilidade se necessário
+        student.role = "student"
+        return student
+    
+    if user_id_val:
+        user_id_val = user_id_val.lower()
+    
+    user = db.query(models.User).filter(models.User.email.ilike(user_id_val)).first()
     if not user:
-        logger.warning(f"AUTH FAIL: User not found in DB for email: {user_email}")
-        raise HTTPException(status_code=404, detail=f"Usuário não encontrado ({user_email})")
+        logger.warning(f"AUTH FAIL: User not found in DB for email/code: {user_id_val}")
+        raise HTTPException(status_code=404, detail=f"Usuário não encontrado ({user_id_val})")
     
-    # Log de depuração (ativado para diagnóstico)
     logger.info(f"AUTH SUCCESS: user={user.email} role={user.role} id={user.id}")
-    
     return user

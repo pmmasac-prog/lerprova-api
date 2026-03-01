@@ -20,7 +20,7 @@ import models
 import users_db
 from database import engine, SessionLocal
 from migrations import run_migrations
-from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications
+from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications, alunos_portal
 
 # Inicializar Banco de Dados
 models.Base.metadata.create_all(bind=engine) # Criar tabelas iniciais
@@ -49,6 +49,7 @@ app = FastAPI(title="LERPROVA API", version="1.3.1")
 app.include_router(auth.router)
 app.include_router(turmas.router)
 app.include_router(alunos.router)
+app.include_router(alunos_portal.router)
 app.include_router(gabaritos.router)
 app.include_router(resultados.router)
 app.include_router(frequencia.router)
