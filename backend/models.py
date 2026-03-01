@@ -38,6 +38,7 @@ class Turma(Base):
     nome = Column(String)
     disciplina = Column(String, nullable=True)
     dias_semana = Column(JSON, nullable=True) # Lista de inteiros
+    quantidade_aulas = Column(Integer, default=1)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
