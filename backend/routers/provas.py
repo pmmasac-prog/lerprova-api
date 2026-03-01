@@ -217,10 +217,7 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
                 "review_status": "pending" if needs_review else "confirmed"
             }
             
-            # TODO: Add needs_review and related fields to the models.Resultado schema
-            # Ignoraremos a inserção desses campos novos no DB por enquanto se causarem crash
-            # mas o dicionário já está preparado. Apenas limitando set attrs:
-            db_audit_data = {k:v for k,v in audit_data.items() if hasattr(models.Resultado, k)}
+            db_audit_data = audit_data
             
             if resultado_existente:
                 resultado_existente.acertos = acertos
@@ -293,7 +290,15 @@ def revisar_prova(req: ReviewRequest, db: Session = Depends(get_db), current_use
         raise HTTPException(status_code=404, detail="Gabarito original não encontrado.")
     
     # Validar acesso do professor (checar se resultado é de aluno de uma turma dele)
-    # TODO: Implementar verificação rigorosa de ACL se necessário.
+    if current_user.role != "admin":
+        # Verifica se o resultado pertence a um gabarito que o professor tem acesso
+        possui_acesso = db.query(models.Resultado).join(models.Gabarito).filter(
+            models.Resultado.id == req.resultado_id,
+            models.Gabarito.turmas.any(models.Turma.user_id == current_user.id)
+        ).first()
+        
+        if not possui_acesso:
+            raise HTTPException(status_code=403, detail="Acesso negado para revisar este resultado.")
         
     respostas_gabarito = parse_json_list(gabarito.respostas_corretas)
     novas_respostas = req.respostas_corrigidas

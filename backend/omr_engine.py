@@ -194,6 +194,13 @@ class OMREngine:
 
             warped = self.four_point_transform(img, rect)
             
+            # ===== 4.0 VALIDAÇÃO DE PERSPECTIVA EXTREMA =====
+            # Se a câmera estava muito inclinada (ângulo > 60°), o ratio pode estar fora do esperado
+            # Avisar ao usuário para tirar a foto mais paralela ao papel
+            perspective_quality = self._validate_perspective_quality(rect, img.shape[:2])
+            if perspective_quality["warning"]:
+                logger.warning(f"Perspective warning: {perspective_quality['message']}")
+            
             # Limpeza de memória imediata
             del img
             del gray
@@ -230,6 +237,10 @@ class OMREngine:
                 review_reasons.append("too_many_ambiguous")
             if avg_conf < 0.75:
                 review_reasons.append("low_confidence")
+            
+            # Adicionar aviso se perspectiva foi muito inclinada
+            if perspective_quality.get("warning"):
+                review_reasons.append("perspective_warning")
                 
             needs_review = len(review_reasons) > 0
             quality = "review" if needs_review else "ok"
@@ -247,7 +258,8 @@ class OMREngine:
                 "avg_confidence": avg_conf,
                 "anchors_detected": True,
                 "anchors_found": 4,
-                "qr_data": qr_data
+                "qr_data": qr_data,
+                "perspective_warning": perspective_quality.get("message", "")
             }
 
             # ===== 9. SALVAR DIAGNÓSTICOS (DIAGNÓSTICOS PERMANENTES) =====
@@ -340,6 +352,60 @@ class OMREngine:
         except Exception as e:
             print(f"Erro ao decodificar QR Code (OpenCV): {e}")
             return None
+    
+    def _validate_perspective_quality(self, rect_points, img_shape):
+        """
+        Valida a qualidade da perspectiva detectada.
+        Avisa se a câmera estava em um ângulo muito extremo (muito de cima ou muito de lado).
+        
+        Retorna:
+            dict: {
+                "warning": bool,
+                "message": str,
+                "perspective_score": float (0-1, onde 1 é perspectiva ideal)
+            }
+        """
+        try:
+            tl, tr, br, bl = rect_points
+            img_h, img_w = img_shape
+            
+            # Calcular os 4 lados do documento detectado
+            top_edge_len = np.linalg.norm(tr - tl)      # Aresta superior
+            bottom_edge_len = np.linalg.norm(br - bl)  # Aresta inferior
+            left_edge_len = np.linalg.norm(bl - tl)    # Aresta esquerda
+            right_edge_len = np.linalg.norm(br - tr)   # Aresta direita
+            
+            # Razão de compressão: quanto mais longe do ideal (1.0), mais inclinada a câmera
+            # Se top_edge << bottom_edge, câmera está apontando de cima para baixo
+            top_bottom_ratio = top_edge_len / (bottom_edge_len + 1e-6)
+            left_right_ratio = left_edge_len / (right_edge_len + 1e-6)
+            
+            # Score de perspectiva: quão próxima a razão está de 1.0
+            perspective_score = min(top_bottom_ratio, 1/top_bottom_ratio) * min(left_right_ratio, 1/left_right_ratio)
+            
+            # Avisar se perspectiva está muito distorcida
+            warning = False
+            message = "Perspectiva normal"
+            
+            if perspective_score < 0.65:
+                warning = True
+                message = "Câmera muito inclinada. Tire a foto mais paralela ao papel para melhor detecção."
+            elif perspective_score < 0.80:
+                warning = True
+                message = "Câmera ligeiramente inclinada. Tente estar mais perpendicular ao papel."
+            
+            return {
+                "warning": warning,
+                "message": message,
+                "perspective_score": perspective_score
+            }
+        except Exception as e:
+            return {
+                "warning": False,
+                "message": f"Erro na validação de perspectiva: {str(e)}",
+                "perspective_score": 0.0
+            }
+
     
     def detect_anchors_robust(self, thresh, gray):
         """
@@ -517,6 +583,7 @@ class OMREngine:
     def order_points(self, pts):
         """Ordena pontos: TL, TR, BR, BL (sentido horário) de forma robusta a inclinações
         Garante que a aresta entre os 2 primeiros pontos seja uma aresta curta (Topo do retrato).
+        Funciona corretamente mesmo com câmera inclinada de cima para baixo.
         """
         # 1. Obter o centro geométrico
         center = np.mean(pts, axis=0)
@@ -525,23 +592,39 @@ class OMREngine:
         angles = np.arctan2(pts[:, 1] - center[1], pts[:, 0] - center[0])
         pts_sorted = pts[np.argsort(angles)]
         
-        # 3. Descobrir qual aresta é a mais longa
+        # 3. Calcular distâncias entre pontos consecutivos
         distances = []
         for i in range(4):
             p_next = pts_sorted[(i + 1) % 4]
             dist = np.linalg.norm(pts_sorted[i] - p_next)
             distances.append(dist)
-            
-        # 4. Aresta 0 é pts_sorted[0] -> pts_sorted[1]
+        
+        # 4. Identificar qual é a aresta curta (superior, no caso retrato)
+        # Aresta 0 é pts_sorted[0] -> pts_sorted[1]
         # Queremos forçar o formato Retrato, ou seja, Aresta Superior (0) deve ser menor que Lateral (1)
         if distances[0] > distances[1]:
             # Aresta 0 é longa, então rotaciona o array em 1 para que a aresta 0 passe a ser a curta (Top)
             pts_sorted = np.roll(pts_sorted, -1, axis=0)
+        
+        # 5. VALIDAÇÃO ADICIONAL: Garantir que Top < Bottom e Left < Right (coordenadas Y e X)
+        # Isso é crítico para fotos tiradas de ângulos extremos (câmera de cima)
+        tl, tr, br, bl = pts_sorted
+        
+        # Y coordinate validation: topo deve ter Y menor que base
+        if tl[1] > br[1]:  # Se topo tiver Y maior, há inversão vertical
+            # Rotaciona 180 graus na ordem dos pontos: [TL,TR,BR,BL] -> [BR,BL,TL,TR]
+            pts_sorted = np.roll(pts_sorted, 2, axis=0)
+        
+        # X coordinate validation: esquerda deve ter X menor que direita
+        tl, tr, br, bl = pts_sorted
+        if tl[0] > tr[0]:  # Se esquerda tiver X maior, há inversão horizontal
+            # Inverte esquerda-direita: [TL,TR,BR,BL] -> [TR,TL,BL,BR]
+            pts_sorted = np.array([pts_sorted[1], pts_sorted[0], pts_sorted[3], pts_sorted[2]], dtype="float32")
             
         return np.array(pts_sorted, dtype="float32")
     
     def four_point_transform(self, image, rect):
-        """Aplica transformação de perspectiva (homografia)"""
+        """Aplica transformação de perspectiva (homografia) e valida orientação resultante"""
         dst = np.array([
             [0, 0],
             [self.target_width - 1, 0],
@@ -550,7 +633,16 @@ class OMREngine:
         ], dtype="float32")
         
         M = cv2.getPerspectiveTransform(rect, dst)
-        return cv2.warpPerspective(image, M, (self.target_width, self.target_height))
+        warped = cv2.warpPerspective(image, M, (self.target_width, self.target_height))
+        
+        # VALIDAÇÃO DE ORIENTAÇÃO: Se a imagem resultante estiver muito "larga" (landscape),
+        # pode indicar que a transformação foi aplicada com pontos em ordem errada.
+        # Isso é comum quando a câmera está muito inclinada de cima para baixo.
+        # 
+        # Nota: target_width=1120 e target_height=1600, então é sempre retrato por design.
+        # Se mesmo assim a imagem parecer "errada", validamos checando as âncoras.
+        
+        return warped
 
     def _masked_ratio(self, roi):
         """

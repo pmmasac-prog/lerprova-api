@@ -352,10 +352,17 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                                                     {r === 'low_confidence' && 'Baixa Confiança'}
                                                     {r === 'invalid_marks' && 'Marcação Múltipla'}
                                                     {r === 'too_many_ambiguous' && 'Ambiguidade'}
-                                                    {!['low_confidence', 'invalid_marks', 'too_many_ambiguous'].includes(r) && r}
+                                                    {r === 'perspective_warning' && 'Ângulo da Câmera'}
+                                                    {!['low_confidence', 'invalid_marks', 'too_many_ambiguous', 'perspective_warning'].includes(r) && r}
                                                 </span>
                                             ))}
                                         </div>
+                                        {result.perspective_warning && (
+                                            <div className="perspective-hint">
+                                                <AlertCircle size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                <span>{result.perspective_warning}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

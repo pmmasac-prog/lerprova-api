@@ -428,6 +428,19 @@
     text-transform: uppercase;
 }
 
+.perspective-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(245, 158, 11, 0.2);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #f59e0b;
+    opacity: 0.9;
+}
+
 .audit-preview {
     text-align: left;
     margin-bottom: 32px;
