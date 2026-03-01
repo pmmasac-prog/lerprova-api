@@ -4,6 +4,7 @@ import users_db
 import models
 from database import get_db
 from dependencies import get_current_user
+from pydantic import BaseModel
 import logging
 import json
 
@@ -92,8 +93,6 @@ async def get_master_turmas(user: users_db.User = Depends(get_current_user), db:
 class IncorporateRequest(BaseModel):
     master_turma_id: int
     disciplina: str
-
-from pydantic import BaseModel
 
 @router.post("/incorporate")
 async def incorporate_turma(req: IncorporateRequest, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
