@@ -12,6 +12,7 @@ import { Admin } from './pages/Admin';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminSidebar } from './components/AdminSidebar';
 import { Planejamento } from './pages/Planejamento';
+import { ImportMaster } from './pages/ImportMaster';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -61,6 +62,7 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<PrivateRoute><AdminLayout><AdminDashboard /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/users" element={<PrivateRoute><AdminLayout><Admin /></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/turmas-master" element={<PrivateRoute><AdminLayout><ImportMaster /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
         <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
 

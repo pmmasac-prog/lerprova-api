@@ -32,6 +32,10 @@ export const AdminSidebar: React.FC = () => {
                     <Users size={20} />
                     <span>Gerir Usuários</span>
                 </NavLink>
+                <NavLink to="/admin/turmas-master" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
+                    <Users size={20} />
+                    <span>Base Central (Salas)</span>
+                </NavLink>
                 <NavLink to="/admin/licencas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
                     <Award size={20} />
                     <span>Licenças & Planos</span>

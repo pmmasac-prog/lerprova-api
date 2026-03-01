@@ -69,6 +69,20 @@ export const api = {
         });
     },
 
+    async getMasterTurmas() {
+        return request(`${API_URL}/turmas/master`, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    async incorporateTurma(data: { master_turma_id: number, disciplina: string }) {
+        return request(`${API_URL}/turmas/incorporate`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+    },
+
     // Alunos
     async getAlunos() {
         return request(`${API_URL}/alunos`, {
@@ -305,6 +319,13 @@ export const api = {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ professor_id: professorId })
+            });
+        },
+        async importMasterData(data: any[]) {
+            return request(`${API_URL}/admin/import-master`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data)
             });
         }
     },

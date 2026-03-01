@@ -11,6 +11,11 @@ interface Turma {
     dias_semana?: string | number[];
 }
 
+interface MasterTurma {
+    id: number;
+    nome: string;
+}
+
 export const Turmas: React.FC = () => {
     const navigate = useNavigate();
     const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -22,6 +27,10 @@ export const Turmas: React.FC = () => {
     }>({ nome: '', disciplina: '', dias_semana: [0, 2, 4] });
     const [loading, setLoading] = useState(true);
 
+    const [masterTurmas, setMasterTurmas] = useState<MasterTurma[]>([]);
+    const [showIncorporateModal, setShowIncorporateModal] = useState(false);
+    const [incData, setIncData] = useState({ master_turma_id: 0, disciplina: '' });
+
     const DIAS_SEMANA = [
         { id: 0, label: 'Seg' },
         { id: 1, label: 'Ter' },
@@ -32,7 +41,17 @@ export const Turmas: React.FC = () => {
 
     useEffect(() => {
         loadTurmas();
+        loadMasterTurmas();
     }, []);
+
+    const loadMasterTurmas = async () => {
+        try {
+            const data = await api.getMasterTurmas();
+            setMasterTurmas(data);
+        } catch (error) {
+            console.error('Erro ao carregar turmas master:', error);
+        }
+    };
 
     const loadTurmas = async () => {
         try {
@@ -73,6 +92,23 @@ export const Turmas: React.FC = () => {
         }
     };
 
+    const handleIncorporate = async () => {
+        if (!incData.master_turma_id || !incData.disciplina) {
+            alert('Selecione uma turma e informe a disciplina');
+            return;
+        }
+
+        try {
+            await api.incorporateTurma(incData);
+            setShowIncorporateModal(false);
+            setIncData({ master_turma_id: 0, disciplina: '' });
+            loadTurmas();
+        } catch (error) {
+            console.error('Erro ao incorporar:', error);
+            alert('Erro ao incorporar turma');
+        }
+    };
+
     const handleDeleteTurma = async (id: number) => {
         if (!confirm('Tem certeza que deseja excluir esta turma?')) return;
 
@@ -92,9 +128,14 @@ export const Turmas: React.FC = () => {
                     <h1 className="turmas-title">Minhas Turmas</h1>
                     <p className="turmas-subtitle">Gerencie suas salas de aula</p>
                 </div>
-                <button className="btn-primary" onClick={() => setShowAddModal(true)} title="Nova Turma">
-                    <Plus size={20} />
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn-secondary" onClick={() => setShowIncorporateModal(true)} title="Importar da Base Central">
+                        Importar Central
+                    </button>
+                    <button className="btn-primary" onClick={() => setShowAddModal(true)} title="Nova Turma">
+                        <Plus size={20} />
+                    </button>
+                </div>
             </div>
 
             <div className="turmas-content">
@@ -129,9 +170,14 @@ export const Turmas: React.FC = () => {
                         </div>
                         <h3>Nenhuma turma encontrada</h3>
                         <p>Crie sua primeira turma para começar</p>
-                        <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-                            Criar Nova Turma
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                                Criar Nova Turma
+                            </button>
+                            <button className="btn-secondary" onClick={() => setShowIncorporateModal(true)}>
+                                Importar Central
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -181,6 +227,46 @@ export const Turmas: React.FC = () => {
                         <div className="modal-actions">
                             <button className="btn-cancel" onClick={() => setShowAddModal(false)}>Cancelar</button>
                             <button className="btn-primary" onClick={handleAddTurma}>Criar Turma</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Incorporar Turma */}
+            {showIncorporateModal && (
+                <div className="modal-overlay" onClick={() => setShowIncorporateModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <h2 className="modal-title">Central de Turmas</h2>
+                        <p className="modal-subtitle">Escolha uma lista de alunos da base central e indique sua disciplina</p>
+
+                        <div className="form-group">
+                            <label className="form-label">Turma (Base Central)</label>
+                            <select
+                                className="form-input"
+                                value={incData.master_turma_id}
+                                onChange={e => setIncData({ ...incData, master_turma_id: parseInt(e.target.value) })}
+                            >
+                                <option value={0}>Selecione uma sala...</option>
+                                {masterTurmas.map(m => (
+                                    <option key={m.id} value={m.id}>{m.nome}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Sua Disciplina</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Ex: Química, Geografia..."
+                                value={incData.disciplina}
+                                onChange={e => setIncData({ ...incData, disciplina: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="modal-actions">
+                            <button className="btn-cancel" onClick={() => setShowIncorporateModal(false)}>Cancelar</button>
+                            <button className="btn-primary" onClick={handleIncorporate}>Vincular à minha conta</button>
                         </div>
                     </div>
                 </div>

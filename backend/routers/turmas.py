@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import users_db
 import models
 from database import get_db
@@ -72,3 +72,57 @@ async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_
         db.rollback()
         logger.error(f"Erro ao excluir turma {turma_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao excluir turma: {str(e)}")
+
+@router.get("/master")
+async def get_master_turmas(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Lista as turmas da base central (criadas por admins)."""
+    # Busca usuários que são admin
+    admin_ids = [u.id for u in db.query(users_db.User.id).filter(users_db.User.role == "admin").all()]
+    
+    master_turmas = db.query(models.Turma).filter(models.Turma.user_id.in_(admin_ids)).all()
+    
+    return [
+        {
+            "id": t.id,
+            "nome": t.nome,
+            "created_at": t.created_at.isoformat() if t.created_at else None
+        } for t in master_turmas
+    ]
+
+class IncorporateRequest(BaseModel):
+    master_turma_id: int
+    disciplina: str
+
+from pydantic import BaseModel
+
+@router.post("/incorporate")
+async def incorporate_turma(req: IncorporateRequest, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Copia uma turma master para o professor logado."""
+    master = db.query(models.Turma).options(joinedload(models.Turma.alunos)).filter(models.Turma.id == req.master_turma_id).first()
+    
+    if not master:
+        raise HTTPException(status_code=404, detail="Turma master não encontrada")
+    
+    # Cria a nova turma do professor
+    nova_turma = models.Turma(
+        nome=master.nome,
+        disciplina=req.disciplina,
+        user_id=user.id,
+        dias_semana=master.dias_semana
+    )
+    db.add(nova_turma)
+    db.flush()
+    
+    # Vincula todos os alunos
+    for aluno in master.alunos:
+        db.execute(
+            models.aluno_turma.insert().values(
+                aluno_id=aluno.id,
+                turma_id=nova_turma.id
+            )
+        )
+    
+    db.commit()
+    logger.info(f"Professor {user.email} incorporou turma {master.nome} como {req.disciplina}")
+    
+    return {"message": "Turma incorporada com sucesso", "id": nova_turma.id}

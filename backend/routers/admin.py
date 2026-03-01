@@ -189,3 +189,64 @@ async def notify_professor(payload: dict, admin_user = Depends(verify_admin), db
         "message": f"Professor {prof.nome} foi notificado com sucesso!",
         "channel": "db/push"
     }
+
+class StudentImport(BaseModel):
+    nome: str
+    codigo: str
+
+class RoomImport(BaseModel):
+    nome: str
+    alunos: List[StudentImport]
+
+@router.post("/import-master")
+async def import_master_data(payload: List[RoomImport], admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """
+    Importação em massa de salas e alunos pela base central (ADM).
+    """
+    import random, string
+
+    created_rooms = 0
+    created_students = 0
+
+    for room_data in payload:
+        # 1. Cria a Turma (Master, vinculada ao ADM)
+        nova_turma = models.Turma(
+            nome=room_data.nome,
+            disciplina="Base Central",
+            user_id=admin_user.id
+        )
+        db.add(nova_turma)
+        db.flush() # Para pegar o ID
+        created_rooms += 1
+
+        for stu in room_data.alunos:
+            # 2. Verifica se o aluno já existe (pelo código/matrícula)
+            aluno = db.query(models.Aluno).filter(models.Aluno.codigo == stu.codigo).first()
+            
+            if not aluno:
+                # Gera QR token aleatório
+                token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+                aluno = models.Aluno(
+                    nome=stu.nome,
+                    codigo=stu.codigo,
+                    qr_token=token
+                )
+                db.add(aluno)
+                db.flush()
+                created_students += 1
+            
+            # 3. Vincula o aluno à turma
+            # Usa a tabela associativa models.aluno_turma
+            db.execute(
+                models.aluno_turma.insert().values(
+                    aluno_id=aluno.id,
+                    turma_id=nova_turma.id
+                 )
+            )
+
+    db.commit()
+    return {
+        "message": "Importação concluída com sucesso",
+        "turmas_criadas": created_rooms,
+        "alunos_processados": created_students
+    }
