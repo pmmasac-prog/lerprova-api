@@ -409,3 +409,38 @@ async def import_master_data(payload: List[RoomImport], admin_user = Depends(ver
         "turmas_criadas": created_rooms,
         "alunos_processados": created_students
     }
+
+
+@router.get("/system-overview")
+async def system_overview(admin_user=Depends(verify_admin), db: Session = Depends(get_db)):
+    """Visão geral do sistema para o painel admin"""
+    total_users = db.query(func.count(models.User.id)).scalar()
+    total_turmas = db.query(func.count(models.Turma.id)).scalar()
+    total_alunos = db.query(func.count(models.Aluno.id)).scalar()
+    total_gabaritos = db.query(func.count(models.Gabarito.id)).scalar()
+    total_resultados = db.query(func.count(models.Resultado.id)).scalar()
+    total_eventos = db.query(func.count(models.Event.id)).scalar()
+    total_freq = db.query(func.count(models.Frequencia.id)).scalar()
+    total_planos = db.query(func.count(models.Plano.id)).scalar()
+    total_schools = db.query(func.count(models.School.id)).scalar()
+
+    # Média de notas
+    avg_nota = db.query(func.avg(models.Resultado.nota)).scalar()
+
+    # Frequência média (% presença)
+    total_presencas = db.query(func.count(models.Frequencia.id)).filter(models.Frequencia.presente == True).scalar()
+    pct_presenca = round((total_presencas / total_freq * 100), 1) if total_freq > 0 else 0
+
+    return {
+        "users": total_users,
+        "turmas": total_turmas,
+        "alunos": total_alunos,
+        "gabaritos": total_gabaritos,
+        "resultados": total_resultados,
+        "eventos": total_eventos,
+        "frequencia_registros": total_freq,
+        "planos": total_planos,
+        "schools": total_schools,
+        "media_notas": round(avg_nota, 1) if avg_nota else 0,
+        "pct_presenca": pct_presenca,
+    }

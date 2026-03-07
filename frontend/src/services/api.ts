@@ -376,6 +376,11 @@ export const api = {
                 headers: getAuthHeaders(),
                 body: JSON.stringify(data)
             });
+        },
+        async getSystemOverview() {
+            return request(`${API_URL}/admin/system-overview`, {
+                headers: getAuthHeaders()
+            });
         }
     },
 
@@ -679,5 +684,39 @@ export const api = {
             console.warn('GET /planos sem parâmetros não disponível');
             return [];
         });
+    },
+
+    // --- CALENDÁRIO PÚBLICO (endpoints /calendar/*) ---
+    calendar: {
+        async getEvents() {
+            return request(`${API_URL}/calendar/events`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getEventsByType(eventType: string) {
+            return request(`${API_URL}/calendar/events/${eventType}`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getPeriods() {
+            return request(`${API_URL}/calendar/periods`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getAcademicYears() {
+            return request(`${API_URL}/calendar/academic-years`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getSchools() {
+            return request(`${API_URL}/calendar/schools`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async getFullCalendar() {
+            return request(`${API_URL}/calendar/full-calendar`, {
+                headers: getAuthHeaders()
+            });
+        }
     }
 };

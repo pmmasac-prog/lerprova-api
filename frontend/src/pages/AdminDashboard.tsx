@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Globe, Zap } from 'lucide-react';
+import { Activity, Globe, Zap, Users, BookOpen, FileText, Calendar, School, BarChart3 } from 'lucide-react';
 import { api } from '../services/api';
 import './Admin.css';
 
 export const AdminDashboard: React.FC = () => {
     const [stats, setStats] = useState<any>(null);
+    const [overview, setOverview] = useState<any>(null);
     const [pendencias, setPendencias] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [notifying, setNotifying] = useState<number | null>(null);
@@ -16,12 +17,14 @@ export const AdminDashboard: React.FC = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsData, pendenciasData] = await Promise.all([
+            const [statsData, pendenciasData, overviewData] = await Promise.all([
                 api.getDashboardOperacional(),
-                api.admin.listPendencias()
+                api.admin.listPendencias(),
+                api.admin.getSystemOverview().catch(() => null),
             ]);
             setStats(statsData || {});
             setPendencias(Array.isArray(pendenciasData) ? pendenciasData : []);
+            setOverview(overviewData);
         } catch (error) {
             console.error('Erro ao carregar dashboard admin:', error);
         } finally {
@@ -90,6 +93,31 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* VISÃO GERAL DO SISTEMA */}
+            {overview && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', margin: '20px 0' }}>
+                    {[
+                        { label: 'Alunos', value: overview.alunos, icon: <Users size={20} />, color: '#10b981' },
+                        { label: 'Turmas', value: overview.turmas, icon: <BookOpen size={20} />, color: '#3b82f6' },
+                        { label: 'Gabaritos', value: overview.gabaritos, icon: <FileText size={20} />, color: '#f59e0b' },
+                        { label: 'Resultados', value: overview.resultados, icon: <BarChart3 size={20} />, color: '#8b5cf6' },
+                        { label: 'Eventos', value: overview.eventos, icon: <Calendar size={20} />, color: '#ec4899' },
+                        { label: 'Escolas', value: overview.schools, icon: <School size={20} />, color: '#06b6d4' },
+                        { label: 'Média Notas', value: overview.media_notas?.toFixed(1) || '—', icon: <Activity size={20} />, color: '#f97316' },
+                        { label: 'Presença', value: `${overview.pct_presenca}%`, icon: <Globe size={20} />, color: '#22c55e' },
+                    ].map((item, idx) => (
+                        <div key={idx} style={{
+                            background: '#0f172a', border: `1px solid ${item.color}33`, borderRadius: '10px',
+                            padding: '16px', textAlign: 'center',
+                        }}>
+                            <div style={{ color: item.color, marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>{item.icon}</div>
+                            <p style={{ color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{item.value}</p>
+                            <p style={{ color: '#64748b', fontSize: '0.75rem', margin: '4px 0 0' }}>{item.label}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="admin-dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
                 {/* Widget de Auditoria de Pendências */}
