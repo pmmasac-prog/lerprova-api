@@ -79,6 +79,119 @@
     color: #3b82f6;
 }
 
+/* Notification Bell */
+.tab-notification {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.notification-bell-btn {
+    position: relative;
+    padding: 8px;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.2s;
+}
+
+.notification-bell-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+}
+
+/* Dropdown abre PARA CIMA (nav fica no fundo da tela) */
+.notification-dropdown {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 12px;
+    width: 380px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #1a1d27;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 2100;
+}
+
+/* Override Tailwind/light styles dentro do dropdown dark */
+.notification-dropdown h1 {
+    color: #e2e8f0;
+}
+
+.notification-dropdown .text-gray-500,
+.notification-dropdown .text-gray-400 {
+    color: #94a3b8 !important;
+}
+
+.notification-dropdown .text-gray-600 {
+    color: #cbd5e1 !important;
+}
+
+.notification-dropdown .text-gray-700 {
+    color: #e2e8f0 !important;
+}
+
+.notification-dropdown .bg-gray-50 {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.notification-dropdown .bg-gray-200 {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+
+.notification-dropdown .bg-blue-50 {
+    background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.notification-dropdown .bg-blue-100 {
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+.notification-dropdown .text-blue-900 {
+    color: #93c5fd !important;
+}
+
+.notification-dropdown .border-gray-300 {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.notification-dropdown .border-blue-500 {
+    border-color: #3b82f6 !important;
+}
+
+.notification-dropdown .bg-red-100 {
+    background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.notification-dropdown .text-red-700 {
+    color: #fca5a5 !important;
+}
+
+.notification-dropdown .border-red-400 {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.notification-dropdown select {
+    background: #252830;
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 420px) {
+    .notification-dropdown {
+        width: calc(100vw - 24px);
+        right: -8px;
+    }
+}
+
 .tab-content {
     flex: 1;
     width: 100%;

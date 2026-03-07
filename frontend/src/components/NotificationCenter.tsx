@@ -235,14 +235,14 @@ export const NotificationBell: React.FC = () => {
         <div className="relative">
             <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+                className="notification-bell-btn"
             >
                 🔔
                 <NotificationBadge count={unreadCount} />
             </button>
 
             {showDropdown && (
-                <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                <div className="notification-dropdown">
                     <NotificationCenter onClose={() => setShowDropdown(false)} />
                 </div>
             )}
