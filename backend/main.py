@@ -41,6 +41,22 @@ if db.query(BNCCSkill).count() == 0:
     except Exception as e:
         logger.error(f"Erro no seed BNCC: {e}")
 
+# Auto-seed Calendário Escolar 2026 se estiver vazio
+from models import Event
+if db.query(Event).count() == 0:
+    logger.info("Calendário 2026 vazio. Iniciando seed automático...")
+    try:
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent))
+        from scripts.seed_school_2026_real import seed_from_json
+        seed_from_json()
+        logger.info("✅ Seed calendário 2026 concluído com sucesso!")
+    except Exception as e:
+        logger.error(f"Erro no seed calendário: {e}")
+        import traceback
+        traceback.print_exc()
+
 db.close()
 
 app = FastAPI(title="LERPROVA API", version="1.3.1")
