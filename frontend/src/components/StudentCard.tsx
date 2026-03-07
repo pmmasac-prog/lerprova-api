@@ -20,65 +20,78 @@ export const StudentCard: React.FC<StudentCardProps> = ({
     academicYear = "2026",
     photoUrl
 }) => {
+    const initials = studentName
+        .split(' ')
+        .filter(n => n.length > 1)
+        .map(n => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
+
     return (
         <div className="student-card-container">
-            <div className="student-card shadow-xl">
-                {/* Header do Cartão */}
-                <div className="card-header bg-blue-900 text-white p-4">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <School size={24} color="#fbbf24" />
-                        <div className="header-text">
-                            <h3 style={{ fontSize: '14px', fontWeight: 'bold' }}>{schoolName}</h3>
-                            <span style={{ fontSize: '10px', opacity: 0.8 }}>IDENTIDADE ESTUDANTIL DIGITAL</span>
-                        </div>
+            <div className="student-card">
+                {/* Faixa decorativa superior */}
+                <div className="card-accent-bar" />
+
+                {/* Header */}
+                <div className="card-header">
+                    <School size={20} color="#fbbf24" />
+                    <div className="header-text">
+                        <h3>{schoolName}</h3>
+                        <span>IDENTIDADE ESTUDANTIL DIGITAL</span>
                     </div>
                 </div>
 
-                {/* Body do Cartão */}
-                <div className="card-body p-4 flex gap-4">
-                    <div className="photo-container">
+                {/* Body */}
+                <div className="card-body">
+                    {/* Foto */}
+                    <div className="photo-area">
                         {photoUrl ? (
                             <img src={photoUrl} alt={studentName} className="student-photo" />
                         ) : (
-                            <div className="photo-placeholder active:scale-95 transition-all">
-                                <User size={48} color="#94a3b8" />
+                            <div className="photo-placeholder">
+                                <span className="photo-initials">{initials}</span>
                             </div>
                         )}
                     </div>
-                    
-                    <div className="card-info flex-1">
-                        <div className="info-item mb-2">
-                            <label className="text-gray-400 text-xs block font-bold mb-1">NOME DO ESTUDANTE</label>
-                            <p className="student-name text-blue-900 font-bold truncate text-lg" style={{ maxWidth: '200px' }}>{studentName.toUpperCase()}</p>
+
+                    {/* Info */}
+                    <div className="card-info">
+                        <div className="info-item">
+                            <label>NOME</label>
+                            <p className="student-name">{studentName.toUpperCase()}</p>
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="info-row">
                             <div className="info-item">
-                                <label className="text-gray-400 text-xs block font-bold mb-1">MATRÍCULA</label>
-                                <p className="text-sm font-semibold">{studentCode}</p>
+                                <label>MATRÍCULA</label>
+                                <p>{studentCode}</p>
                             </div>
                             <div className="info-item">
-                                <label className="text-gray-400 text-xs block font-bold mb-1">TURMA</label>
-                                <p className="text-sm font-semibold">{className}</p>
+                                <label>TURMA</label>
+                                <p>{className}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="card-qr flex flex-col items-center justify-center p-2 bg-gray-50 rounded-lg">
+                    {/* QR */}
+                    <div className="card-qr">
                         <QRCode 
-                            value={`https://lerprova.com/v/${studentCode}`} 
-                            size={64} 
-                            bgColor="transparent" 
+                            value={`lerprova:${studentCode}`} 
+                            size={56} 
+                            bgColor="#ffffff" 
                             fgColor="#1e3a8a" 
+                            level="M"
                         />
-                        <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#1e3a8a', marginTop: '4px' }}>VERIFICAR</span>
+                        <span className="qr-label">VERIFICAR</span>
                     </div>
                 </div>
 
-                {/* Footer do Cartão */}
-                <div className="card-footer bg-gray-100 flex items-center justify-between px-4 py-2">
-                    <span className="text-xs font-bold text-gray-500">ANO LETIVO {academicYear}</span>
-                    <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#3b82f6' }}>LERPROVA GESTÃO</p>
+                {/* Footer */}
+                <div className="card-footer">
+                    <span>ANO LETIVO {academicYear}</span>
+                    <div className="footer-deco" />
+                    <span>LERPROVA GESTÃO</span>
                 </div>
             </div>
         </div>
