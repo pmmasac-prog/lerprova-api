@@ -489,7 +489,8 @@ export const Planejamento: React.FC = () => {
                         aulas: aulas.map(a => ({
                             titulo: a.titulo,
                             objetivo: a.objetivo || '',
-                            conteudos: a.conteudos || []
+                            metodologia_recurso: a.metodologia_recurso || [],
+                            bncc_skills: a.bncc_skills || []
                         }))
                     } : undefined}
                 />
