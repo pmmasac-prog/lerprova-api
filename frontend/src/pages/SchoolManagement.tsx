@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { School, Calendar, MapPin, Search, Plus, Filter, Eye } from 'lucide-react';
-import { api } from '../services/api';
+import { School, MapPin, Search, Plus, Filter, Eye } from 'lucide-react';
 
 interface SchoolData {
   id: number;
@@ -11,15 +10,13 @@ interface SchoolData {
 
 export const SchoolManagement: React.FC = () => {
   const [schools, setSchools] = useState<SchoolData[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulando busca de escolas - No futuro isso virá do api.admin.getSchools()
+    // Simulando busca de escolas
     setSchools([
       { id: 1, name: "C.E. ALCIDES CESAR MENESES", address: "Rua Principal, 123", units: 1 },
       { id: 2, name: "ESCOLA MUNICIPAL BELA VISTA", address: "Av. do Sol, 456", units: 2 }
     ]);
-    setLoading(false);
   }, []);
 
   return (
