@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List, Grid, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -42,7 +42,6 @@ export const AcademicCalendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<string>('');
   const [expandedPeriod, setExpandedPeriod] = useState<string>('');
   const [viewMode, setViewMode] = useState<'list' | 'month'>('month');
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -108,12 +107,8 @@ export const AcademicCalendar: React.FC = () => {
     }
   }, [periods, expandedPeriod]);
 
-  const filteredEvents = useMemo(() =>
-    filterType ? events.filter(e => e.type === filterType) : events
-  , [events, filterType]);
-
   const getEventsByPeriod = (period: Period) => {
-    return filteredEvents.filter(e => {
+    return events.filter(e => {
       return e.start_date <= period.end_date && e.end_date >= period.start_date;
     });
   };
@@ -130,7 +125,7 @@ export const AcademicCalendar: React.FC = () => {
 
   const getEventsForDate = (year: number, month: number, day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return filteredEvents.filter(e => e.start_date <= dateStr && e.end_date >= dateStr);
+    return events.filter(e => e.start_date <= dateStr && e.end_date >= dateStr);
   };
 
   const openCreate = () => {
@@ -252,42 +247,6 @@ export const AcademicCalendar: React.FC = () => {
           </button>
         </div>
       </header>
-
-      {/* FILTROS */}
-      <div className="admin-card" style={{ marginTop: '20px' }}>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <label style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold' }}>Filtrar:</label>
-          <button
-            onClick={() => setFilterType('')}
-            style={{
-              padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem',
-              border: !filterType ? '2px solid #3b82f6' : '1px solid #374151',
-              background: !filterType ? '#1e40af' : '#0f172a', color: '#f3f4f6',
-            }}
-          >
-            Todos ({events.length})
-          </button>
-          {Object.entries(EVENT_TYPES).map(([key, { label, emoji, color }]) => {
-            const count = events.filter(e => e.type === key).length;
-            if (count === 0) return null;
-            return (
-              <button
-                key={key}
-                onClick={() => setFilterType(key)}
-                style={{
-                  padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem',
-                  border: filterType === key ? `2px solid ${color}` : '1px solid #374151',
-                  background: filterType === key ? '#1e293b' : '#0f172a',
-                  color: filterType === key ? color : '#94a3b8',
-                  fontWeight: filterType === key ? 'bold' : 'normal'
-                }}
-              >
-                {emoji} {label} ({count})
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* ========== MONTH VIEW ========== */}
       {viewMode === 'month' && (
