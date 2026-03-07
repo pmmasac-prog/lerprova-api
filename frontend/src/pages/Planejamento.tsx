@@ -487,6 +487,7 @@ export const Planejamento: React.FC = () => {
                         dias_semana: editingPlanoData.dias_semana || [],
                         aulas: aulas.map(a => ({
                             titulo: a.titulo,
+                            objetivo: a.objetivo || '',
                             conteudos: a.conteudos || []
                         }))
                     } : undefined}

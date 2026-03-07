@@ -1,0 +1,377 @@
+id,unit_id,order_index,title,default_lessons
+1,1,1,Gêneros textuais (noções),1
+2,1,2,Estratégias de leitura,1
+3,1,3,Coesão e coerência,1
+4,1,4,Intertextualidade (noções),1
+5,1,5,Inferência e intenção comunicativa,1
+6,2,1,Classes de palavras (revisão),1
+7,2,2,Sintaxe: termos essenciais,1
+8,2,3,Concordância (noções),1
+9,2,4,Regência e crase (noções),1
+10,2,5,Pontuação,1
+11,3,1,Resumo e resenha,1
+12,3,2,Artigo de opinião,1
+13,3,3,Relato e crônica,1
+14,3,4,Projeto de texto e reescrita,1
+15,3,5,Norma padrão (revisão),1
+16,4,1,Variação linguística,1
+17,4,2,Preconceito linguístico,1
+18,4,3,Semântica (noções),1
+19,4,4,Figuras de linguagem (noções),1
+20,5,1,Leitura de textos multimodais,1
+21,5,2,Interpretação de gráficos e charges,1
+22,5,3,Questões de gramática contextualizada,1
+23,5,4,Simulados e análise de erros,1
+24,6,1,O que é literatura?,1
+25,6,2,Trovadorismo (noções),1
+26,6,3,Humanismo (noções),1
+27,6,4,Classicismo (noções),1
+28,6,5,Barroco (noções),1
+29,7,1,Arcadismo,1
+30,7,2,Romantismo,1
+31,7,3,Realismo/Naturalismo,1
+32,7,4,Parnasianismo/Simbolismo,1
+33,8,1,Pré-Modernismo,1
+34,8,2,"Modernismo (1ª,2ª,3ª fases)",1
+35,8,3,Literatura contemporânea (noções),1
+36,8,4,Literatura e sociedade (leituras),1
+37,9,1,Competências da redação (ENEM),1
+38,9,2,Estrutura dissertativo-argumentativa,1
+39,9,3,"Tese, argumentos e conclusão",1
+40,9,4,Coesão e repertório,1
+41,10,1,Repertório sociocultural,1
+42,10,2,Estratégias argumentativas,1
+43,10,3,Proposta de intervenção,1
+44,10,4,Revisão e reescrita,1
+45,11,1,Temas semanais,1
+46,11,2,Correção por critérios,1
+47,11,3,Banco de conectivos,1
+48,11,4,Simulados e gestão de tempo,1
+49,12,1,Skimming e scanning,1
+50,12,2,Cognatos e falsos cognatos,1
+51,12,3,Context clues,1
+52,12,4,"Gêneros (anúncio, notícia, e-mail)",1
+53,13,1,Simple past/present review (uso em leitura),1
+54,13,2,Modal verbs (noções),1
+55,13,3,Pronomes e conectores,1
+56,13,4,Temas culturais e mídia,1
+57,14,1,Interpretação de textos,1
+58,14,2,Vocabulário por temas,1
+59,14,3,Estratégias de prova,1
+60,14,4,Projetos (podcast/apresentação),1
+61,15,1,"Elementos visuais (linha, cor, forma)",1
+62,15,2,História da arte (panorama),1
+63,15,3,Leitura de imagem,1
+64,15,4,Produção artística,1
+65,16,1,Elementos musicais (noções),1
+66,16,2,Ritmo e composição (prática),1
+67,16,3,Teatro: corpo e cena,1
+68,16,4,Produções coletivas,1
+69,17,1,Cinema: linguagem audiovisual,1
+70,17,2,Fotografia e composição,1
+71,17,3,Arte e identidade,1
+72,17,4,Projeto final (mostra cultural),1
+73,18,1,Capacidades físicas,1
+74,18,2,Treinamento básico (noções),1
+75,18,3,Esportes coletivos (fundamentos),1
+76,18,4,Hábitos saudáveis,1
+77,19,1,Danças e manifestações culturais,1
+78,19,2,Jogos e brincadeiras,1
+79,19,3,Lazer e qualidade de vida,1
+80,19,4,Esportes alternativos,1
+81,20,1,Projeto esportivo,1
+82,20,2,Avaliação física (noções),1
+83,20,3,Planejamento de treino (noções),1
+84,20,4,Organização de eventos esportivos,1
+85,21,1,Conjuntos numéricos e operações,1
+86,21,2,Potenciação e radiciação,1
+87,21,3,Produtos notáveis e fatoração,1
+88,21,4,Equações e inequações do 1º grau,1
+89,21,5,Função afim: conceito e gráficos,1
+90,21,6,Função quadrática: conceito e gráficos,1
+91,21,7,Sistemas lineares (2x2) e problemas,1
+92,21,8,Progressões aritméticas (PA),1
+93,21,9,Progressões geométricas (PG),1
+94,22,1,"Ângulos, polígonos e circunferência",1
+95,22,2,Semelhança de triângulos,1
+96,22,3,Teorema de Pitágoras e aplicações,1
+97,22,4,Áreas e perímetros (plano),1
+98,22,5,Geometria espacial: prismas e pirâmides,1
+99,22,6,"Cilindro, cone e esfera (noções)",1
+100,22,7,Trigonometria no triângulo retângulo,1
+101,23,1,Leitura e interpretação de gráficos,1
+102,23,2,Medidas de tendência central,1
+103,23,3,Medidas de dispersão (noções),1
+104,23,4,Princípios de contagem,1
+105,23,5,Probabilidade básica,1
+106,24,1,Função exponencial,1
+107,24,2,Função logarítmica,1
+108,24,3,Equações e inequações exponenciais,1
+109,24,4,Equações e inequações logarítmicas,1
+110,24,5,Funções composta e inversa,1
+111,24,6,Modelagem com funções (crescimento/decrescimento),1
+112,25,1,Plano cartesiano e distância,1
+113,25,2,Ponto médio e divisão de segmentos,1
+114,25,3,Equação da reta,1
+115,25,4,Paralelismo e perpendicularismo,1
+116,25,5,Circunferência (equação),1
+117,25,6,Problemas geométricos no plano,1
+118,26,1,Razões trigonométricas,1
+119,26,2,Ciclo trigonométrico (noções),1
+120,26,3,"Funções seno, cosseno e tangente",1
+121,26,4,Identidades básicas,1
+122,26,5,Resolução de triângulos (lei dos senos e cossenos),1
+123,27,1,"Arranjos, combinações e permutações",1
+124,27,2,Binômio de Newton (noções),1
+125,27,3,Probabilidade condicionada,1
+126,27,4,Eventos independentes,1
+127,27,5,Distribuições simples (noções),1
+128,28,1,"Volumes: prismas, pirâmides, cilindro, cone, esfera",1
+129,28,2,Seções e planificações (noções),1
+130,28,3,Geometria de posição (reta/plano),1
+131,28,4,Poliedros e relações (Euler) (noções),1
+132,29,1,"Problemas integrados (funções, geometria, estatística)",1
+133,29,2,Estratégias ENEM: leitura de enunciados,1
+134,29,3,Listas de exercícios por tema,1
+135,29,4,Simulados e análise de erros,1
+136,30,1,Grandezas e unidades,1
+137,30,2,Movimento uniforme (MU),1
+138,30,3,Movimento uniformemente variado (MUV),1
+139,30,4,Queda livre e lançamento vertical,1
+140,30,5,Lançamento oblíquo (noções),1
+141,30,6,Gráficos do movimento,1
+142,31,1,Leis de Newton,1
+143,31,2,"Forças (peso, normal, atrito, tração)",1
+144,31,3,Plano inclinado,1
+145,31,4,Trabalho e potência,1
+146,31,5,Energia cinética e potencial,1
+147,31,6,Conservação de energia,1
+148,32,1,Gravitação universal (noções),1
+149,32,2,Pressão (noções),1
+150,32,3,Equilíbrio de forças,1
+151,32,4,Torque e alavancas (noções),1
+152,33,1,Temperatura e escalas,1
+153,33,2,Dilatação térmica,1
+154,33,3,Calorimetria,1
+155,33,4,Mudanças de estado,1
+156,33,5,Gases e equação de estado,1
+157,33,6,Máquinas térmicas (noções),1
+158,34,1,Ondas: características,1
+159,34,2,Som: frequência e intensidade,1
+160,34,3,Fenômenos ondulatórios,1
+161,34,4,Óptica geométrica: reflexão,1
+162,34,5,Refração e lentes,1
+163,34,6,Instrumentos ópticos (noções),1
+164,35,1,Densidade e pressão,1
+165,35,2,Princípio de Pascal,1
+166,35,3,Empuxo (Arquimedes),1
+167,35,4,Escoamento (noções),1
+168,36,1,Carga elétrica e eletrização,1
+169,36,2,Lei de Coulomb,1
+170,36,3,Campo e potencial elétrico,1
+171,36,4,Capacitores (noções),1
+172,37,1,"Corrente, tensão e resistência",1
+173,37,2,Leis de Ohm,1
+174,37,3,Associação de resistores,1
+175,37,4,Potência elétrica e consumo,1
+176,37,5,Circuitos elétricos simples,1
+177,38,1,Campo magnético,1
+178,38,2,Força magnética (noções),1
+179,38,3,Indução eletromagnética (noções),1
+180,38,4,Radiações e espectro,1
+181,38,5,Relatividade e quântica (panorama ENEM),1
+182,39,1,"Matéria, corpo e substância",1
+183,39,2,Misturas e separação,1
+184,39,3,Estados físicos e mudanças,1
+185,39,4,Propriedades da matéria,1
+186,39,5,Modelos atômicos (história e ideia),1
+187,39,6,Tabela periódica (organização),1
+188,40,1,Ligação iônica,1
+189,40,2,Ligação covalente,1
+190,40,3,Ligação metálica,1
+191,40,4,Geometria molecular (noções),1
+192,40,5,Polaridade e forças intermoleculares,1
+193,40,6,Propriedades dos materiais,1
+194,41,1,Mol e constante de Avogadro,1
+195,41,2,Massa molar,1
+196,41,3,Estequiometria básica,1
+197,41,4,Rendimento e pureza (noções),1
+198,41,5,Soluções: concentração comum e molaridade,1
+199,41,6,Diluição e mistura de soluções (noções),1
+200,42,1,Termoquímica,1
+201,42,2,Cinética química,1
+202,42,3,Equilíbrio químico,1
+203,42,4,pH e pOH (noções),1
+204,42,5,Eletroquímica: pilhas,1
+205,42,6,Eletrólise (noções),1
+206,43,1,Funções inorgânicas: ácidos,1
+207,43,2,Bases,1
+208,43,3,Sais e óxidos,1
+209,43,4,Nomenclatura e propriedades,1
+210,43,5,Reações inorgânicas (noções),1
+211,43,6,"Química ambiental (chuva ácida, poluição)",1
+212,44,1,Cadeias carbônicas,1
+213,44,2,Hidrocarbonetos,1
+214,44,3,Nomenclatura IUPAC,1
+215,44,4,Funções orgânicas,1
+216,44,5,Isomeria,1
+217,44,6,Reações orgânicas (noções),1
+218,44,7,Polímeros e aplicações,1
+219,44,8,Química dos combustíveis,1
+220,45,1,Resolução de questões contextualizadas,1
+221,45,2,"Química e cotidiano (alimentos, medicamentos)",1
+222,45,3,Experimentos simples e segurança,1
+223,45,4,Simulados e análise de erros,1
+224,46,1,"Água, sais, carboidratos, lipídios, proteínas",1
+225,46,2,Organelas e funções,1
+226,46,3,Membrana e transporte,1
+227,46,4,Metabolismo celular (noções),1
+228,46,5,Divisão celular (mitose e meiose),1
+229,47,1,"DNA, RNA e síntese proteica (noções)",1
+230,47,2,Herança mendeliana,1
+231,47,3,Probabilidade em genética,1
+232,47,4,Grupos sanguíneos (noções),1
+233,47,5,Genética e sociedade (bioética),1
+234,48,1,Conceitos de ecologia,1
+235,48,2,Cadeias e teias alimentares,1
+236,48,3,Ciclos biogeoquímicos (noções),1
+237,48,4,Relações ecológicas,1
+238,48,5,Impactos ambientais e conservação,1
+239,49,1,Classificação vegetal (noções),1
+240,49,2,Tecidos vegetais,1
+241,49,3,Transporte de seiva,1
+242,49,4,Fotossíntese e respiração vegetal,1
+243,49,5,Reprodução vegetal,1
+244,50,1,Invertebrados (panorama),1
+245,50,2,Vertebrados (panorama),1
+246,50,3,Evolução e adaptação,1
+247,50,4,Filogenia (noções),1
+248,51,1,Vírus e bactérias,1
+249,51,2,Protozooses e verminoses,1
+250,51,3,Imunologia (noções),1
+251,51,4,Vacinas e prevenção,1
+252,51,5,Saneamento básico,1
+253,52,1,Sistemas digestório e respiratório,1
+254,52,2,Circulatório e excretor,1
+255,52,3,Nervoso e endócrino,1
+256,52,4,Reprodutor e sexualidade,1
+257,52,5,Homeostase,1
+258,53,1,Teorias evolutivas,1
+259,53,2,Seleção natural,1
+260,53,3,Evidências da evolução,1
+261,53,4,"Biotecnologia (transgênicos, DNA)",1
+262,53,5,Bioética,1
+263,54,1,"Questões integradas (ecologia, genética, saúde)",1
+264,54,2,Estudos de caso e interpretação de dados,1
+265,54,3,Simulados e análise de erros,1
+266,55,1,Pré-história e Antiguidade Oriental (noções),1
+267,55,2,Grécia: política e cultura,1
+268,55,3,Roma: república e império,1
+269,55,4,Feudalismo,1
+270,55,5,Igreja e cultura medieval,1
+271,55,6,Crises do século XIV,1
+272,56,1,Renascimento e Humanismo,1
+273,56,2,Reformas Religiosas,1
+274,56,3,Expansão marítima europeia,1
+275,56,4,Colonização da América,1
+276,56,5,Mercantilismo e absolutismo,1
+277,57,1,Iluminismo,1
+278,57,2,Revolução Industrial,1
+279,57,3,Revoluções Inglesas,1
+280,57,4,Revolução Francesa,1
+281,57,5,Independências nas Américas,1
+282,57,6,Imperialismo e neocolonialismo,1
+283,58,1,Brasil Colônia: economia e sociedade,1
+284,58,2,Escravidão e resistências,1
+285,58,3,Independência,1
+286,58,4,Período Regencial,1
+287,58,5,Segundo Reinado,1
+288,58,6,Abolição e crise do Império,1
+289,59,1,República Velha,1
+290,59,2,Era Vargas,1
+291,59,3,República Populista,1
+292,59,4,Ditadura Militar,1
+293,59,5,Redemocratização,1
+294,59,6,Brasil contemporâneo (noções),1
+295,60,1,1ª Guerra Mundial,1
+296,60,2,2ª Guerra Mundial,1
+297,60,3,Guerra Fria,1
+298,60,4,Conflitos contemporâneos (noções),1
+299,60,5,Direitos humanos e cidadania,1
+300,61,1,Cartografia: escalas e projeções,1
+301,61,2,Coordenadas geográficas,1
+302,61,3,Relevo e geologia (noções),1
+303,61,4,Clima e vegetação,1
+304,61,5,Hidrografia,1
+305,61,6,Impactos ambientais,1
+306,62,1,Dinâmica populacional,1
+307,62,2,Migrações,1
+308,62,3,Urbanização e problemas urbanos,1
+309,62,4,Rede urbana,1
+310,62,5,Trabalho e renda (noções),1
+311,63,1,Industrialização,1
+312,63,2,Setores da economia,1
+313,63,3,Comércio e fluxos,1
+314,63,4,Globalização e blocos econômicos,1
+315,63,5,Tecnologia e território,1
+316,64,1,Formação do território brasileiro,1
+317,64,2,Regionalizações (IBGE),1
+318,64,3,Agropecuária,1
+319,64,4,Indústria e serviços,1
+320,64,5,Energia e infraestrutura,1
+321,64,6,Questões ambientais,1
+322,65,1,"Estado, nação e fronteiras",1
+323,65,2,Geopolítica mundial (noções),1
+324,65,3,Conflitos e tensões,1
+325,65,4,Recursos naturais e energia,1
+326,65,5,Mudanças climáticas e riscos,1
+327,66,1,Leitura de mapas e gráficos,1
+328,66,2,Estudos de caso do Brasil,1
+329,66,3,Simulados e análise de erros,1
+330,67,1,O que é filosofia?,1
+331,67,2,Mito e razão,1
+332,67,3,Conhecimento e verdade (noções),1
+333,67,4,Argumentação e lógica básica,1
+334,68,1,Sócrates e ética,1
+335,68,2,Platão,1
+336,68,3,Aristóteles,1
+337,68,4,Helenismo (noções),1
+338,69,1,Racionalismo e empirismo,1
+339,69,2,"Contratualismo (Hobbes, Locke, Rousseau)",1
+340,69,3,Iluminismo,1
+341,69,4,Kant (noções),1
+342,70,1,Ética: fundamentos,1
+343,70,2,Justiça e cidadania,1
+344,70,3,Democracia e participação,1
+345,70,4,Direitos humanos,1
+346,71,1,Marx (noções),1
+347,71,2,Nietzsche (noções),1
+348,71,3,Existencialismo (noções),1
+349,71,4,Escola de Frankfurt (noções),1
+350,72,1,Debates e seminários,1
+351,72,2,Produção de textos argumentativos,1
+352,72,3,Questões ENEM e atualidades,1
+353,73,1,Sociedade e cultura,1
+354,73,2,Socialização,1
+355,73,3,Instituições sociais,1
+356,73,4,Desigualdades (noções),1
+357,74,1,Cultura e diversidade,1
+358,74,2,Etnocentrismo e relativismo,1
+359,74,3,Mídia e consumo,1
+360,74,4,Juventudes (noções),1
+361,75,1,Trabalho e capitalismo,1
+362,75,2,Classe social,1
+363,75,3,Desigualdade e pobreza,1
+364,75,4,Globalização (noções),1
+365,76,1,Estado e poder,1
+366,76,2,Democracia e cidadania,1
+367,76,3,Movimentos sociais,1
+368,76,4,Políticas públicas (noções),1
+369,77,1,Gênero e sexualidade (noções),1
+370,77,2,Racismo e direitos,1
+371,77,3,Violência e segurança,1
+372,77,4,Tecnologia e redes,1
+373,77,5,Sustentabilidade e sociedade,1
+374,78,1,Estudos de caso,1
+375,78,2,Debates e produção escrita,1
+376,78,3,Questões ENEM,1

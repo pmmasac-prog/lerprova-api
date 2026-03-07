@@ -164,6 +164,7 @@ class AulaPlanejada(Base):
     titulo = Column(String)
     scheduled_date = Column(String)  # YYYY-MM-DD
     status = Column(String, default="pending")  # pending, done, skipped
+    objetivo = Column(String, nullable=True)
     metodologia_recurso = Column(JSON, nullable=True) # Lista de strings
     bncc_skills = Column(JSON, nullable=True) # Lista de strings (códigos BNCC)
     created_at = Column(DateTime, default=datetime.utcnow)

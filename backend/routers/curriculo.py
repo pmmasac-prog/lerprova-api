@@ -28,6 +28,7 @@ class CurriculumTopic(CurriculoBase):
     unit_id: int
     order_index: int
     title: str
+    objetivo: Optional[str] = None
     default_lessons: int
 
 class CurriculumMethodology(CurriculoBase):
@@ -83,7 +84,7 @@ async def get_units(subject_id: int):
 async def get_topics(unit_id: int):
     data = load_csv("curriculum_topics.csv")
     topics = [row for row in data if int(row['unit_id']) == unit_id]
-    return [CurriculumTopic(id=int(row['id']), unit_id=int(row['unit_id']), order_index=int(row['order_index']), name=row['title'], title=row['title'], default_lessons=int(row['default_lessons'])) for row in topics]
+    return [CurriculumTopic(id=int(row['id']), unit_id=int(row['unit_id']), order_index=int(row['order_index']), name=row['title'], title=row['title'], objetivo=row.get('objetivo'), default_lessons=int(row['default_lessons'])) for row in topics]
 
 @router.get("/methodologies", response_model=List[CurriculumMethodology])
 async def get_methodologies():

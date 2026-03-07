@@ -17,6 +17,7 @@ create table if not exists curriculum_topics (
   unit_id int not null references curriculum_units(id) on delete cascade,
   order_index int not null,
   title text not null,
+  objetivo text,
   default_lessons int not null default 1
 );
 

@@ -21,7 +21,7 @@ COPY curriculum_units (id, subject_id, grade, title)
 FROM '/docker-entrypoint-initdb.d/csv/curriculum_units.csv'
 WITH (FORMAT csv, HEADER true);
 
-COPY curriculum_topics (id, unit_id, order_index, title, default_lessons)
+COPY curriculum_topics (id, unit_id, order_index, title, objetivo, default_lessons)
 FROM '/docker-entrypoint-initdb.d/csv/curriculum_topics.csv'
 WITH (FORMAT csv, HEADER true);
 

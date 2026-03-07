@@ -123,6 +123,13 @@ def run_migrations(engine):
                 logger.info("Adicionando coluna 'anchors_found' em 'resultados'...")
                 conn.execute(text("ALTER TABLE resultados ADD COLUMN anchors_found INTEGER DEFAULT 0"))
 
+            # Migrações para a tabela AULAS_PLANEJADAS
+            if inspector.has_table("aulas_planejadas"):
+                columns_aulas_plan = [c["name"] for c in inspector.get_columns("aulas_planejadas")]
+                if "objetivo" not in columns_aulas_plan:
+                    logger.info("Adicionando coluna 'objetivo' em 'aulas_planejadas'...")
+                    conn.execute(text("ALTER TABLE aulas_planejadas ADD COLUMN objetivo VARCHAR NULL"))
+
             # Migrações para a tabela ALUNOS
             columns_alunos = [c["name"] for c in inspector.get_columns("alunos")]
             if "hashed_password" not in columns_alunos:

@@ -23,6 +23,7 @@ APP_TZ = ZoneInfo("America/Fortaleza")
 class AulaCreate(BaseModel):
     ordem: Optional[int] = None
     titulo: constr(min_length=1, strip_whitespace=True)
+    objetivo: Optional[str] = None
     metodologia_recurso: Optional[List[str]] = Field(default_factory=list)
     bncc_skills: Optional[List[str]] = Field(default_factory=list)
 
@@ -259,6 +260,7 @@ async def create_plano(
             plano_id=novo_plano.id,
             ordem=ordem,
             titulo=aula_in.titulo,
+            objetivo=aula_in.objetivo,
             scheduled_date=schedule[i].isoformat(),
             metodologia_recurso=json.dumps(aula_in.metodologia_recurso, ensure_ascii=False) if aula_in.metodologia_recurso else None,
             bncc_skills=json.dumps(aula_in.bncc_skills, ensure_ascii=False) if aula_in.bncc_skills else None,
@@ -311,6 +313,7 @@ async def update_plano(
             # Atualiza aula existente
             aula = aulas_existentes[ordem]
             aula.titulo = aula_in.titulo
+            aula.objetivo = aula_in.objetivo
             aula.metodologia_recurso = json.dumps(aula_in.metodologia_recurso, ensure_ascii=False) if aula_in.metodologia_recurso else None
             aula.bncc_skills = json.dumps(aula_in.bncc_skills, ensure_ascii=False) if aula_in.bncc_skills else None
             # Só atualiza a data se for 'pending'. 
@@ -324,6 +327,7 @@ async def update_plano(
                 plano_id=plano.id,
                 ordem=ordem,
                 titulo=aula_in.titulo,
+                objetivo=aula_in.objetivo,
                 scheduled_date=scheduled_date,
                 metodologia_recurso = json.dumps(aula_in.metodologia_recurso, ensure_ascii=False) if aula_in.metodologia_recurso else None,
                 bncc_skills = json.dumps(aula_in.bncc_skills, ensure_ascii=False) if aula_in.bncc_skills else None,
@@ -435,6 +439,7 @@ async def get_plano_aulas(
         {
             "id": a.id,
             "titulo": a.titulo,
+            "objetivo": a.objetivo,
             "ordem": a.ordem,
             "scheduled_date": a.scheduled_date,
             "status": a.status,

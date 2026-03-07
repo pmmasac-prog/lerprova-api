@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS curriculum_topics (
   unit_id         INT NOT NULL REFERENCES curriculum_units(id) ON DELETE CASCADE,
   order_index     INT NOT NULL DEFAULT 1,
   title           VARCHAR(255) NOT NULL,
+  objetivo        TEXT,
   description     TEXT,
   default_lessons SMALLINT NOT NULL DEFAULT 1,
   created_at      TIMESTAMP NOT NULL DEFAULT NOW()

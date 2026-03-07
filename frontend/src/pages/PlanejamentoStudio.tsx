@@ -9,6 +9,7 @@ interface CurriculoItem {
     name: string;
     title?: string;
     description?: string;
+    objetivo?: string;
     order_index?: number;
     type?: string;
     modality?: string;
@@ -26,7 +27,7 @@ interface TeachingStudioProps {
         titulo: string;
         data_inicio: string;
         dias_semana: number[];
-        aulas: { titulo: string; metodologia_recurso?: string[]; bncc_skills?: string[] }[];
+        aulas: { titulo: string; objetivo?: string; metodologia_recurso?: string[]; bncc_skills?: string[] }[];
     } | null;
 }
 
@@ -54,7 +55,7 @@ function formatLessonDate(dt: Date): string {
     }).format(dt);
 }
 
-type Lesson = { id: string; title: string; dateDisplay: string; metodologia_recurso: string[]; bncc_skills: string[] };
+type Lesson = { id: string; title: string; objetivo: string; dateDisplay: string; metodologia_recurso: string[]; bncc_skills: string[] };
 
 export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     onClose,
@@ -82,12 +83,13 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
             return initialData.aulas.map(a => ({
                 id: Math.random().toString(36).slice(2, 10),
                 title: a.titulo,
+                objetivo: a.objetivo || '',
                 dateDisplay: '',
                 metodologia_recurso: a.metodologia_recurso || [],
                 bncc_skills: a.bncc_skills || []
             }));
         }
-        return [{ id: Math.random().toString(36).slice(2, 10), title: '', dateDisplay: '', metodologia_recurso: [], bncc_skills: [] }];
+        return [{ id: Math.random().toString(36).slice(2, 10), title: '', objetivo: '', dateDisplay: '', metodologia_recurso: [], bncc_skills: [] }];
     });
 
     // Currículo
@@ -233,11 +235,11 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         setLessons(prev => reconcileDates(dataInicio, diasSemana, prev));
     }, [dataInicio, diasSemana, reconcileDates]);
 
-    const addLesson = useCallback((title = '') => {
+    const addLesson = useCallback((title = '', objetivo = '') => {
         setLessons(prev => {
             const next: Lesson[] = [
                 ...prev,
-                { id: Math.random().toString(36).slice(2, 10), title, dateDisplay: '', metodologia_recurso: [], bncc_skills: [] },
+                { id: Math.random().toString(36).slice(2, 10), title, objetivo, dateDisplay: '', metodologia_recurso: [], bncc_skills: [] },
             ];
             return reconcileDates(dataInicio, diasSemana, next);
         });
@@ -311,6 +313,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                 .map((t, i) => ({
                     ordem: i + 1,
                     titulo: t.title || 'Aula sem título',
+                    objetivo: t.objetivo || '',
                     metodologia_recurso: t.metodologia_recurso,
                     bncc_skills: t.bncc_skills
                 }));
@@ -356,7 +359,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                         <button className="btn-back" onClick={() => setSelectedUnit(null)}>← Unidades</button>
                         {topics.map(t => (
                             <div key={t.id} className="topic-box">
-                                <div className="topic-header" onClick={() => setSelectedTopic(t.id)}><span>{t.name}</span> <Plus size={16} onClick={(e) => { e.stopPropagation(); addLesson(t.name); }} /></div>
+                                <div className="topic-header" onClick={() => setSelectedTopic(t.id)}><span>{t.name}</span> <Plus size={16} onClick={(e) => { e.stopPropagation(); addLesson(t.name, t.objetivo || ''); }} /></div>
                                 {selectedTopic === t.id && (
                                     <div className="suggestions">
                                         {methodologies.filter(m => suggestedMeths.includes(m.id)).map(m => <button key={m.id} className="suggest-btn" onClick={() => handleAddComplement(m.name)}>{m.name}</button>)}
@@ -505,6 +508,11 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                     <input className="card-input" value={lesson.title} onChange={e => updateLesson(index, e.target.value)} placeholder="Título da aula..." />
                                     <button className="btn-remove-aula" onClick={() => removeLesson(index)} disabled={lessons.length === 1}><Trash2 size={16} /></button>
                                 </div>
+                                {lesson.objetivo && (
+                                    <div className="lesson-objetivo">
+                                        <Target size={12} /> <span>{lesson.objetivo}</span>
+                                    </div>
+                                )}
                                 <div className="lesson-contents">
                                     {lesson.bncc_skills.map(s => (
                                         <div key={s} className="bncc-tag"><Target size={12} /> {s} <X size={12} onClick={() => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, bncc_skills: x.bncc_skills.filter(y => y !== s) } : x))} /></div>
@@ -565,6 +573,13 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                 <span className="print-lesson-date">{lesson.dateDisplay}</span>
                             </div>
                             <div className="print-lesson-title">{lesson.title}</div>
+
+                            {lesson.objetivo && (
+                                <div className="print-section">
+                                    <strong>Objetivo:</strong>
+                                    <span>{lesson.objetivo}</span>
+                                </div>
+                            )}
 
                             {lesson.bncc_skills.length > 0 && (
                                 <div className="print-section">
