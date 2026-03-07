@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CreditCard, Printer, Search, Download, FileText, CheckCircle } from 'lucide-react';
 import { StudentCard } from '../components/StudentCard';
+import { api } from '../services/api';
 
 interface Student {
   id: number;
@@ -14,16 +15,17 @@ export const StudentCardsPage: React.FC = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Simulando busca de alunos - No futuro buscará via api.admin.getStudents()
-        setStudents([
-            { id: 1, nome: "ALEXANDRE DE JESUS LIMA", codigo: "2026001", turma: "7 A", unidade: "C.E. ALCIDES CESAR MENESES" },
-            { id: 2, nome: "AMANDA DOS SANTOS SILVA", codigo: "2026002", turma: "7 A", unidade: "C.E. ALCIDES CESAR MENESES" },
-            { id: 3, nome: "BRUNO HENRIQUE GARCIA", codigo: "2026003", turma: "7 B", unidade: "C.E. ALCIDES CESAR MENESES" },
-            { id: 4, nome: "CAIO MARTINS DE OLIVEIRA", codigo: "2026004", turma: "7 B", unidade: "C.E. ALCIDES CESAR MENESES" },
-        ]);
+        // Busca real de alunos via API
+        api.getAllStudents()
+          .then(data => {
+            setStudents(data || []);
+          })
+          .catch(err => console.error("Erro ao carregar alunos:", err))
+          .finally(() => setLoading(false));
     }, []);
 
     const handlePrint = () => {

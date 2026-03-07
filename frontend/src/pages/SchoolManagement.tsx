@@ -10,13 +10,16 @@ interface SchoolData {
 
 export const SchoolManagement: React.FC = () => {
   const [schools, setSchools] = useState<SchoolData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulando busca de escolas
-    setSchools([
-      { id: 1, name: "C.E. ALCIDES CESAR MENESES", address: "Rua Principal, 123", units: 1 },
-      { id: 2, name: "ESCOLA MUNICIPAL BELA VISTA", address: "Av. do Sol, 456", units: 2 }
-    ]);
+    // Busca real do banco de dados via API
+    api.getSchoolData()
+      .then(data => {
+        setSchools(data || []);
+      })
+      .catch(err => console.error("Erro ao carregar escolas:", err))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -31,7 +34,10 @@ export const SchoolManagement: React.FC = () => {
         </button>
       </header>
 
-      <div className="admin-card" style={{ marginTop: '20px' }}>
+      {loading ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados reais...</div>
+      ) : (
+        <div className="admin-card" style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />

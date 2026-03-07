@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Pin, Clock, Bookmark } from 'lucide-react';
+import { api } from '../services/api';
 
 interface EventData {
   id: number;
@@ -11,12 +12,17 @@ interface EventData {
 
 export const AcademicCalendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1)); // Janeiro de 2026
+  const [calendarEvents, setCalendarEvents] = useState<EventData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const calendarEvents: EventData[] = [
-    { id: 1, title: 'Início do Ano Letivo', date: '2026-01-15', type: 'administrative', description: 'Recepção de alunos e professores.' },
-    { id: 2, title: 'Aniversário da Cidade', date: '2026-01-20', type: 'holiday', description: 'Município em festa.' },
-    { id: 3, title: 'Semana de Planejamento', date: '2026-01-08', type: 'activity', description: 'Elaboração dos planos de ensino.' },
-  ];
+  useEffect(() => {
+    api.getMasterCalendar()
+      .then(data => {
+        if (data && data.events) setCalendarEvents(data.events);
+      })
+      .catch(err => console.error("Erro ao carregar calendário:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
   const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
   const firstDayOfMonth = (y: number, m: number) => new Date(y, m, 1).getDay();

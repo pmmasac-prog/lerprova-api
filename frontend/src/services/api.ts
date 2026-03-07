@@ -526,8 +526,14 @@ export const api = {
         });
     },
 
-    async getAcademicCalendar(yearId: string) {
-        return request(`${API_URL}/admin/academic-years/${yearId}/calendar`, {
+    async getMasterCalendar() {
+        return request(`${API_URL}/admin/calendar`, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    async getAllStudents() {
+        return request(`${API_URL}/admin/students`, {
             headers: getAuthHeaders()
         });
     },
