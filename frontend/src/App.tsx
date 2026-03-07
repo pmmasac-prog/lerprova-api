@@ -14,6 +14,9 @@ import { AdminSidebar } from './components/AdminSidebar';
 import { Planejamento } from './pages/Planejamento';
 import { ImportMaster } from './pages/ImportMaster';
 import { StudentPortal } from './pages/StudentPortal';
+import { SchoolManagement } from './pages/SchoolManagement';
+import { AcademicCalendar } from './pages/AcademicCalendar';
+import { StudentCardsPage } from './pages/StudentCardsPage';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -64,10 +67,10 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<PrivateRoute><AdminLayout><AdminDashboard /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/users" element={<PrivateRoute><AdminLayout><Admin /></AdminLayout></PrivateRoute>} />
-        <Route path="/admin/escolas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Escolas</h1><p className="admin-subtitle">Estruturação de unidades, matrizes e anos letivos.</p></div></AdminLayout></PrivateRoute>} />
-        <Route path="/admin/calendario" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Calendário Escolar 2026</h1><p className="admin-subtitle">Controle de dias letivos, feriados e eventos pedagógicos.</p></div></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/escolas" element={<PrivateRoute><AdminLayout><SchoolManagement /></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/calendario" element={<PrivateRoute><AdminLayout><AcademicCalendar /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/turmas-master" element={<PrivateRoute><AdminLayout><ImportMaster /></AdminLayout></PrivateRoute>} />
-        <Route path="/admin/carteirinhas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Geração de Carteirinhas</h1><p className="admin-subtitle">Emissão de identidades estudantis em massa com QR Code.</p></div></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/carteirinhas" element={<PrivateRoute><AdminLayout><StudentCardsPage /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
         <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
 
