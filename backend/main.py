@@ -20,44 +20,27 @@ import models
 import users_db
 from database import engine, SessionLocal
 from migrations import run_migrations
-from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications, alunos_portal
+from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications, alunos_portal, calendar
 
 # Inicializar Banco de Dados
 models.Base.metadata.create_all(bind=engine) # Criar tabelas iniciais
 run_migrations(engine)  # Aplicar migrações/alterações de colunas extras
 
-# Opcional: Popular com usuários iniciais se estiver vazio
-db = SessionLocal()
-users_db.init_default_users(db)
-
-# Auto-seed BNCC se estiver vazio
-from models import BNCCSkill
-if db.query(BNCCSkill).count() == 0:
-    logger.info("Base BNCC vazia. Iniciando seed automático...")
-    from scripts.seed_bncc import seed_bncc
-    try:
-        seed_bncc()
-        logger.info("Seed BNCC concluído com sucesso.")
-    except Exception as e:
-        logger.error(f"Erro no seed BNCC: {e}")
-
-# Auto-seed Calendário Escolar 2026 se estiver vazio
-from models import Event
-if db.query(Event).count() == 0:
-    logger.info("Calendário 2026 vazio. Iniciando seed automático...")
-    try:
-        import sys
-        from pathlib import Path
-        sys.path.insert(0, str(Path(__file__).parent))
-        from scripts.seed_school_2026_real import seed_from_json
-        seed_from_json()
-        logger.info("✅ Seed calendário 2026 concluído com sucesso!")
-    except Exception as e:
-        logger.error(f"Erro no seed calendário: {e}")
-        import traceback
-        traceback.print_exc()
-
-db.close()
+# Verificar e Inicializar Sistema Completo
+logger.info("\n" + "="*60)
+logger.info("🔧 VERIFICAÇÃO E INICIALIZAÇÃO DO SISTEMA")
+logger.info("="*60)
+try:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent))
+    from scripts.init_complete_system import seed_complete_system
+    seed_complete_system()
+    logger.info("="*60 + "\n")
+except Exception as e:
+    logger.error(f"\n❌ Erro na inicialização: {e}")
+    import traceback
+    traceback.print_exc()
 
 app = FastAPI(title="LERPROVA API", version="1.3.1")
 
@@ -76,6 +59,7 @@ app.include_router(planejamento.router)
 app.include_router(curriculo.router)
 app.include_router(dashboard.router)
 app.include_router(notifications.router)
+app.include_router(calendar.router)
 
 @app.get("/health")
 async def health_check():
