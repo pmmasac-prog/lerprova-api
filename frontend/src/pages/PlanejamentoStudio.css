@@ -778,6 +778,38 @@
     gap: 8px;
 }
 
+/* Content groups (metodologia, recurso, avaliação separados) */
+.content-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.content-group-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 4px 0 0 2px;
+}
+
+.content-tag.metodologia {
+    border-left-color: rgba(139, 92, 246, 0.6);
+    background: rgba(139, 92, 246, 0.10);
+}
+
+.content-tag.recurso {
+    border-left-color: rgba(245, 158, 11, 0.6);
+    background: rgba(245, 158, 11, 0.10);
+}
+
+.content-tag.avaliacao {
+    border-left-color: rgba(239, 68, 68, 0.6);
+    background: rgba(239, 68, 68, 0.10);
+}
+
 .btn-remove-content {
     background: transparent;
     border: none;

@@ -129,6 +129,23 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         { id: 'projeto', name: 'Projeto' },
     ];
 
+    const avaliacaoNames = new Set(AVALIACAO_TYPES.map(a => a.name));
+
+    const classifyItems = useCallback((items: string[]) => {
+        const metodologias: string[] = [];
+        const recursos: string[] = [];
+        const avaliacoes: string[] = [];
+        const methNames = new Set(methodologies.map(m => m.name));
+        const resNames = new Set(resources.map(r => r.name));
+        for (const item of items) {
+            if (avaliacaoNames.has(item)) avaliacoes.push(item);
+            else if (methNames.has(item)) metodologias.push(item);
+            else if (resNames.has(item)) recursos.push(item);
+            else metodologias.push(item); // fallback
+        }
+        return { metodologias, recursos, avaliacoes };
+    }, [methodologies, resources, avaliacaoNames]);
+
     const reconcileDates = useCallback((baseISO: string, days: number[], ls: Lesson[]): Lesson[] => {
         if (days.length === 0) return ls.map(l => ({ ...l, dateDisplay: '' }));
         const base = safeParseISODate(baseISO);
@@ -517,9 +534,38 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                     {lesson.bncc_skills.map(s => (
                                         <div key={s} className="bncc-tag"><Target size={12} /> {s} <X size={12} onClick={() => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, bncc_skills: x.bncc_skills.filter(y => y !== s) } : x))} /></div>
                                     ))}
-                                    {lesson.metodologia_recurso.map(m => (
-                                        <div key={m} className="content-tag">{m} <X size={12} onClick={() => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, metodologia_recurso: x.metodologia_recurso.filter(y => y !== m) } : x))} /></div>
-                                    ))}
+                                    {(() => {
+                                        const { metodologias, recursos, avaliacoes } = classifyItems(lesson.metodologia_recurso);
+                                        const removeItem = (m: string) => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, metodologia_recurso: x.metodologia_recurso.filter(y => y !== m) } : x));
+                                        return (
+                                            <>
+                                                {metodologias.length > 0 && (
+                                                    <div className="content-group">
+                                                        <span className="content-group-label">🧩 Metodologias</span>
+                                                        {metodologias.map(m => (
+                                                            <div key={m} className="content-tag metodologia">{m} <X size={12} onClick={() => removeItem(m)} /></div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {recursos.length > 0 && (
+                                                    <div className="content-group">
+                                                        <span className="content-group-label">🛠️ Recursos</span>
+                                                        {recursos.map(m => (
+                                                            <div key={m} className="content-tag recurso">{m} <X size={12} onClick={() => removeItem(m)} /></div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {avaliacoes.length > 0 && (
+                                                    <div className="content-group">
+                                                        <span className="content-group-label">📝 Avaliação</span>
+                                                        {avaliacoes.map(m => (
+                                                            <div key={m} className="content-tag avaliacao">{m} <X size={12} onClick={() => removeItem(m)} /></div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         ))}
@@ -588,12 +634,31 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                 </div>
                             )}
 
-                            {lesson.metodologia_recurso.length > 0 && (
-                                <div className="print-section">
-                                    <strong>Metodologia / Recursos / Avaliação:</strong>
-                                    <span>{lesson.metodologia_recurso.join(', ')}</span>
-                                </div>
-                            )}
+                            {lesson.metodologia_recurso.length > 0 && (() => {
+                                const { metodologias, recursos, avaliacoes } = classifyItems(lesson.metodologia_recurso);
+                                return (
+                                    <>
+                                        {metodologias.length > 0 && (
+                                            <div className="print-section">
+                                                <strong>Metodologias:</strong>
+                                                <span>{metodologias.join(', ')}</span>
+                                            </div>
+                                        )}
+                                        {recursos.length > 0 && (
+                                            <div className="print-section">
+                                                <strong>Recursos:</strong>
+                                                <span>{recursos.join(', ')}</span>
+                                            </div>
+                                        )}
+                                        {avaliacoes.length > 0 && (
+                                            <div className="print-section">
+                                                <strong>Avaliação:</strong>
+                                                <span>{avaliacoes.join(', ')}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </div>
                     ))}
 
