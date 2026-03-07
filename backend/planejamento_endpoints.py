@@ -102,7 +102,79 @@ async def get_aula_hoje(plano_id: int, user: users_db.User = Depends(get_current
         "titulo": aula_hoje.titulo,
         "ordem": aula_hoje.ordem,
         "scheduled_date": aula_hoje.scheduled_date,
-        "status": aula_hoje.status
+        "status": aula_hoje.status,
+        "metodologia_recurso": json.loads(aula_hoje.metodologia_recurso) if aula_hoje.metodologia_recurso else [],
+        "bncc_skills": json.loads(aula_hoje.bncc_skills) if aula_hoje.bncc_skills else []
+    }
+
+@app.get("/planos/{plano_id}")
+async def get_plano(plano_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    plano = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    
+    # RBAC
+    if user.role != "admin" and plano.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    return {
+        "id": plano.id,
+        "titulo": plano.titulo,
+        "disciplina": plano.disciplina,
+        "data_inicio": plano.data_inicio,
+        "total_aulas": plano.total_aulas,
+        "dias_semana": json.loads(plano.dias_semana) if plano.dias_semana else []
+    }
+
+@app.get("/planos/{plano_id}/aulas")
+async def get_plano_aulas(plano_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    plano = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    
+    # RBAC
+    if user.role != "admin" and plano.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    aulas = db.query(models.AulaPlanejada).filter(models.AulaPlanejada.plano_id == plano_id).order_by(models.AulaPlanejada.ordem).all()
+    
+    return [
+        {
+            "id": a.id,
+            "titulo": a.titulo,
+            "ordem": a.ordem,
+            "scheduled_date": a.scheduled_date,
+            "status": a.status,
+            "metodologia_recurso": json.loads(a.metodologia_recurso) if a.metodologia_recurso else [],
+            "bncc_skills": json.loads(a.bncc_skills) if a.bncc_skills else []
+        }
+        for a in aulas
+    ]
+
+@app.get("/planos/{plano_id}/cobertura-pedagogica")
+async def get_cobertura_pedagogica(plano_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    plano = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    
+    # RBAC
+    if user.role != "admin" and plano.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    aulas = db.query(models.AulaPlanejada).filter(models.AulaPlanejada.plano_id == plano_id).all()
+    
+    all_skills = []
+    for a in aulas:
+        if a.bncc_skills:
+            all_skills.extend(json.loads(a.bncc_skills))
+    
+    # Contagem de habilidades únicas
+    unique_skills = list(set(all_skills))
+    
+    return {
+        "plano_id": plano_id,
+        "total_habilidades": len(unique_skills),
+        "habilidades": unique_skills
     }
 
 @app.post("/aulas/{aula_id}/concluir")
