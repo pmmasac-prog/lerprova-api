@@ -1,0 +1,1711 @@
+{
+  "timestamp": "2026-03-07T14:55:56.398097",
+  "database_url": "***s***q***l***i***t***e***:***/***/***/***.***/***l***e***r***p***r***o***v***a***_***s***e***r***v***e***r***.***d***b***",
+  "tables": [
+    {
+      "name": "academic_years",
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "school_id",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "year_label",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "start_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "end_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "total_school_days",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 1,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_academic_years_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "aluno_turma",
+      "columns": [
+        {
+          "name": "aluno_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "turma_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "aluno_id",
+        "turma_id"
+      ],
+      "indexes": []
+    },
+    {
+      "name": "alunos",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "codigo",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "qr_token",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "hashed_password",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_alunos_codigo",
+          "columns": [
+            "codigo"
+          ]
+        },
+        {
+          "name": "ix_alunos_id",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "ix_alunos_qr_token",
+          "columns": [
+            "qr_token"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "analytics_daily",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "turma_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "data",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "engajamento_score",
+          "type": "FLOAT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "alerta_score",
+          "type": "FLOAT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_analytics_daily_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "aulas_planejadas",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "plano_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "ordem",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "titulo",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "scheduled_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "metodologia_recurso",
+          "type": "JSON",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "bncc_skills",
+          "type": "JSON",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "gabarito_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 1,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_aulas_planejadas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bncc_competencies",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "area",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "grade",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "source",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 126,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_bncc_competencies_code",
+          "columns": [
+            "code"
+          ]
+        },
+        {
+          "name": "ix_bncc_competencies_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bncc_skill_competency",
+      "columns": [
+        {
+          "name": "skill_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "competency_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "skill_id",
+        "competency_id"
+      ],
+      "indexes": []
+    },
+    {
+      "name": "bncc_skills",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "area",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "grade",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "difficulty",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "tags",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "source",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 209,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_bncc_skills_code",
+          "columns": [
+            "code"
+          ]
+        },
+        {
+          "name": "ix_bncc_skills_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "events",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "academic_year_id",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "event_type_id",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "start_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "end_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "is_school_day",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 65,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_events_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "frequencia",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "turma_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "aluno_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "data",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "presente",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_frequencia_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gabarito_turma",
+      "columns": [
+        {
+          "name": "gabarito_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "turma_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "gabarito_id",
+        "turma_id"
+      ],
+      "indexes": []
+    },
+    {
+      "name": "gabaritos",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "titulo",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "assunto",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "disciplina",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "data_prova",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "num_questoes",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "respostas_corretas",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "periodo",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_gabaritos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "message",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "is_read",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_notifications_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "periods",
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "academic_year_id",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "period_number",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "period_name",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "start_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "end_date",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 4,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_periods_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "planos",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "turma_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "titulo",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "disciplina",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "data_inicio",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "dias_semana",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 1,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_planos_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "registros_aula",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "aula_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "data_registro",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "percepcoes",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "observacoes",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "ajustes_feitos",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_registros_aula_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resultados",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "aluno_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "gabarito_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "acertos",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "nota",
+          "type": "FLOAT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "respostas_aluno",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "data_correcao",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "imagem_path",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "status_list",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "confidence_scores",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "avg_confidence",
+          "type": "FLOAT",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "layout_version",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "anchors_found",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "needs_review",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "FALSE"
+        },
+        {
+          "name": "review_reasons",
+          "type": "JSON",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "review_status",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "'confirmed'"
+        }
+      ],
+      "row_count": 0,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_resultados_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "schools",
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "school_name",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "organization_name",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 1,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_schools_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "turmas",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "disciplina",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "dias_semana",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "quantidade_aulas",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "1"
+        }
+      ],
+      "row_count": 1,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_turmas_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "None"
+        },
+        {
+          "name": "nome",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "hashed_password",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "escola",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "disciplina",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "plan_type",
+          "type": "VARCHAR",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "subscription_expires_at",
+          "type": "DATETIME",
+          "nullable": true,
+          "default": "None"
+        },
+        {
+          "name": "total_corrections_used",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": "None"
+        }
+      ],
+      "row_count": 1,
+      "primary_key": [
+        "id"
+      ],
+      "indexes": [
+        {
+          "name": "ix_users_email",
+          "columns": [
+            "email"
+          ]
+        },
+        {
+          "name": "ix_users_id",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from_table": "users",
+      "from_model": "User",
+      "relationship": "turmas",
+      "target_table": "turmas",
+      "target_model": "Turma",
+      "type": "RelationshipDirection.ONETOMANY",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "professor"
+    },
+    {
+      "from_table": "turmas",
+      "from_model": "Turma",
+      "relationship": "professor",
+      "target_table": "users",
+      "target_model": "User",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "turmas"
+    },
+    {
+      "from_table": "turmas",
+      "from_model": "Turma",
+      "relationship": "alunos",
+      "target_table": "alunos",
+      "target_model": "Aluno",
+      "type": "RelationshipDirection.MANYTOMANY",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "turmas"
+    },
+    {
+      "from_table": "turmas",
+      "from_model": "Turma",
+      "relationship": "gabaritos",
+      "target_table": "gabaritos",
+      "target_model": "Gabarito",
+      "type": "RelationshipDirection.MANYTOMANY",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "turmas"
+    },
+    {
+      "from_table": "alunos",
+      "from_model": "Aluno",
+      "relationship": "turmas",
+      "target_table": "turmas",
+      "target_model": "Turma",
+      "type": "RelationshipDirection.MANYTOMANY",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "alunos"
+    },
+    {
+      "from_table": "alunos",
+      "from_model": "Aluno",
+      "relationship": "resultados",
+      "target_table": "resultados",
+      "target_model": "Resultado",
+      "type": "RelationshipDirection.ONETOMANY",
+      "cascade": "CascadeOptions('delete,delete-orphan,expunge,merge,refresh-expire,save-update')",
+      "back_populates": "aluno"
+    },
+    {
+      "from_table": "gabaritos",
+      "from_model": "Gabarito",
+      "relationship": "turmas",
+      "target_table": "turmas",
+      "target_model": "Turma",
+      "type": "RelationshipDirection.MANYTOMANY",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "gabaritos"
+    },
+    {
+      "from_table": "gabaritos",
+      "from_model": "Gabarito",
+      "relationship": "resultados",
+      "target_table": "resultados",
+      "target_model": "Resultado",
+      "type": "RelationshipDirection.ONETOMANY",
+      "cascade": "CascadeOptions('delete,delete-orphan,expunge,merge,refresh-expire,save-update')",
+      "back_populates": "gabarito"
+    },
+    {
+      "from_table": "resultados",
+      "from_model": "Resultado",
+      "relationship": "aluno",
+      "target_table": "alunos",
+      "target_model": "Aluno",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "resultados"
+    },
+    {
+      "from_table": "resultados",
+      "from_model": "Resultado",
+      "relationship": "gabarito",
+      "target_table": "gabaritos",
+      "target_model": "Gabarito",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "resultados"
+    },
+    {
+      "from_table": "frequencia",
+      "from_model": "Frequencia",
+      "relationship": "turma",
+      "target_table": "turmas",
+      "target_model": "Turma",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": null
+    },
+    {
+      "from_table": "frequencia",
+      "from_model": "Frequencia",
+      "relationship": "aluno",
+      "target_table": "alunos",
+      "target_model": "Aluno",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": null
+    },
+    {
+      "from_table": "planos",
+      "from_model": "Plano",
+      "relationship": "turma",
+      "target_table": "turmas",
+      "target_model": "Turma",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": null
+    },
+    {
+      "from_table": "planos",
+      "from_model": "Plano",
+      "relationship": "aulas",
+      "target_table": "aulas_planejadas",
+      "target_model": "AulaPlanejada",
+      "type": "RelationshipDirection.ONETOMANY",
+      "cascade": "CascadeOptions('delete,delete-orphan,expunge,merge,refresh-expire,save-update')",
+      "back_populates": "plano"
+    },
+    {
+      "from_table": "aulas_planejadas",
+      "from_model": "AulaPlanejada",
+      "relationship": "plano",
+      "target_table": "planos",
+      "target_model": "Plano",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "aulas"
+    },
+    {
+      "from_table": "aulas_planejadas",
+      "from_model": "AulaPlanejada",
+      "relationship": "registros",
+      "target_table": "registros_aula",
+      "target_model": "RegistroAula",
+      "type": "RelationshipDirection.ONETOMANY",
+      "cascade": "CascadeOptions('delete,delete-orphan,expunge,merge,refresh-expire,save-update')",
+      "back_populates": "aula"
+    },
+    {
+      "from_table": "registros_aula",
+      "from_model": "RegistroAula",
+      "relationship": "aula",
+      "target_table": "aulas_planejadas",
+      "target_model": "AulaPlanejada",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": "registros"
+    },
+    {
+      "from_table": "analytics_daily",
+      "from_model": "AnalyticsDaily",
+      "relationship": "turma",
+      "target_table": "turmas",
+      "target_model": "Turma",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": null
+    },
+    {
+      "from_table": "notifications",
+      "from_model": "Notification",
+      "relationship": "user",
+      "target_table": "users",
+      "target_model": "User",
+      "type": "RelationshipDirection.MANYTOONE",
+      "cascade": "CascadeOptions('merge,save-update')",
+      "back_populates": null
+    }
+  ],
+  "foreign_keys": [
+    {
+      "table": "academic_years",
+      "columns": [
+        "school_id"
+      ],
+      "referred_table": "schools",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "aluno_turma",
+      "columns": [
+        "aluno_id"
+      ],
+      "referred_table": "alunos",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "aluno_turma",
+      "columns": [
+        "turma_id"
+      ],
+      "referred_table": "turmas",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "analytics_daily",
+      "columns": [
+        "turma_id"
+      ],
+      "referred_table": "turmas",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "aulas_planejadas",
+      "columns": [
+        "plano_id"
+      ],
+      "referred_table": "planos",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "bncc_skill_competency",
+      "columns": [
+        "skill_id"
+      ],
+      "referred_table": "bncc_skills",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "bncc_skill_competency",
+      "columns": [
+        "competency_id"
+      ],
+      "referred_table": "bncc_competencies",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "events",
+      "columns": [
+        "academic_year_id"
+      ],
+      "referred_table": "academic_years",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "frequencia",
+      "columns": [
+        "turma_id"
+      ],
+      "referred_table": "turmas",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "frequencia",
+      "columns": [
+        "aluno_id"
+      ],
+      "referred_table": "alunos",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "gabarito_turma",
+      "columns": [
+        "gabarito_id"
+      ],
+      "referred_table": "gabaritos",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "gabarito_turma",
+      "columns": [
+        "turma_id"
+      ],
+      "referred_table": "turmas",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "notifications",
+      "columns": [
+        "user_id"
+      ],
+      "referred_table": "users",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "periods",
+      "columns": [
+        "academic_year_id"
+      ],
+      "referred_table": "academic_years",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "planos",
+      "columns": [
+        "turma_id"
+      ],
+      "referred_table": "turmas",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "planos",
+      "columns": [
+        "user_id"
+      ],
+      "referred_table": "users",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "registros_aula",
+      "columns": [
+        "aula_id"
+      ],
+      "referred_table": "aulas_planejadas",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "registros_aula",
+      "columns": [
+        "user_id"
+      ],
+      "referred_table": "users",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "resultados",
+      "columns": [
+        "aluno_id"
+      ],
+      "referred_table": "alunos",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "resultados",
+      "columns": [
+        "gabarito_id"
+      ],
+      "referred_table": "gabaritos",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    },
+    {
+      "table": "turmas",
+      "columns": [
+        "user_id"
+      ],
+      "referred_table": "users",
+      "referred_columns": [
+        "id"
+      ],
+      "ondelete": "RESTRICT",
+      "onupdate": "RESTRICT"
+    }
+  ],
+  "issues": [],
+  "statistics": {
+    "users": 1,
+    "turmas": 1,
+    "alunos": 0,
+    "gabaritos": 0,
+    "resultados": 0,
+    "frequencia": 0,
+    "planos": 1,
+    "aulas_planejadas": 1,
+    "bncc_skills": 209,
+    "bncc_competencies": 126,
+    "notifications": 0,
+    "schools": 1,
+    "academic_years": 1,
+    "periods": 4,
+    "events": 65
+  },
+  "recommendations": [
+    "✅ Tabelas de associação M2M encontradas e bem nomeadas: aulas_planejadas, bncc_competencies, bncc_skill_competency",
+    "⚠️  21 Foreign Keys sem CASCADE - considere adicionar para melhorar limpeza de dados órfãos",
+    "✅ 22 índices encontrados para otimização de queries",
+    "✅ Calendário populado com 65 eventos",
+    "✅ BNCC populada com 209 habilidades"
+  ]
+}
