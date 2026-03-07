@@ -1,0 +1,146 @@
+.student-card-container {
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+}
+
+.student-card {
+    width: 380px;
+    height: 240px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-text h3 {
+    font-size: 13px;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-text span {
+    font-size: 10px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.card-body {
+    padding: 15px;
+    display: grid;
+    grid-template-columns: 80px 1fr 80px;
+    gap: 15px;
+    align-items: center;
+}
+
+.photo-placeholder {
+    width: 80px;
+    height: 100px;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item label {
+    display: block;
+    font-size: 8px;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.info-item p {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.student-name {
+    font-size: 15px !important;
+    line-height: 1.2;
+}
+
+.info-row {
+    display: flex;
+    gap: 20px;
+}
+
+.card-qr {
+    background-color: white;
+    padding: 5px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.qr-label {
+    font-size: 7px;
+    color: #1e3a8a;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+.card-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-footer p {
+    font-size: 9px;
+    font-weight: 700;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.footer-deco {
+    width: 60px;
+    height: 3px;
+    background-color: #fbbf24;
+    border-radius: 2px;
+}
+
+/* Estilos de Impressão */
+@media print {
+    .student-card-container {
+        padding: 0;
+        background: transparent;
+    }
+    .student-card {
+        box-shadow: none;
+        -webkit-print-color-adjust: exact;
+    }
+}

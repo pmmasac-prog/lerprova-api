@@ -509,5 +509,33 @@ export const api = {
         return request(`${API_URL}/planos/${planoId}/cobertura-pedagogica`, {
             headers: getAuthHeaders()
         });
+    },
+
+    // --- GESTÃO ESCOLAR MASTER (2026) ---
+    async importMasterData(payload: any) {
+        return request(`${API_URL}/admin/import-master`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        });
+    },
+
+    async getSchoolData() {
+        return request(`${API_URL}/admin/schools`, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    async getAcademicCalendar(yearId: string) {
+        return request(`${API_URL}/admin/academic-years/${yearId}/calendar`, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    async generateStudentCard(alunoId: number) {
+        return request(`${API_URL}/admin/generate-carteirinha?aluno_id=${alunoId}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
     }
 };

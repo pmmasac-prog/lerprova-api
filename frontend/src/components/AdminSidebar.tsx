@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ShieldAlert, LogOut, Settings, Award } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldAlert, LogOut, Settings, Award, School, Calendar, Contact } from 'lucide-react';
 import '../pages/Admin.css';
 
 export const AdminSidebar: React.FC = () => {
@@ -13,35 +13,53 @@ export const AdminSidebar: React.FC = () => {
     };
 
     return (
-        <aside className="admin-sidebar">
-            <div className="admin-logo" style={{ marginBottom: '40px' }}>
+        <aside className="admin-sidebar shadow-xl">
+            <div className="admin-logo" style={{ marginBottom: '30px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '40px', height: '40px', background: 'var(--admin-emerald)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                    <div style={{ width: '40px', height: '40px', background: 'var(--admin-emerald)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 6px -1px var(--admin-emerald-alpha)' }}>
                         <ShieldAlert size={24} />
                     </div>
                     <span style={{ fontWeight: 900, fontSize: '18px', letterSpacing: '1px' }}>ADMIN<span style={{ color: 'var(--admin-emerald)' }}>PROVA</span></span>
                 </div>
             </div>
 
-            <nav className="admin-nav" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <nav className="admin-nav" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <NavLink to="/admin" end className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <LayoutDashboard size={20} />
+                    <LayoutDashboard size={18} />
                     <span>Dashboard</span>
                 </NavLink>
                 <NavLink to="/admin/users" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <Users size={20} />
+                    <Users size={18} />
                     <span>Gerir Usuários</span>
                 </NavLink>
+                
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Estrutura escolar</div>
+                
+                <NavLink to="/admin/escolas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
+                    <School size={18} />
+                    <span>Gestão Escolas</span>
+                </NavLink>
+                <NavLink to="/admin/calendario" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
+                    <Calendar size={18} />
+                    <span>Calendário 2026</span>
+                </NavLink>
                 <NavLink to="/admin/turmas-master" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <Users size={20} />
+                    <Users size={18} />
                     <span>Base Central (Salas)</span>
                 </NavLink>
+                <NavLink to="/admin/carteirinhas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
+                    <Contact size={18} />
+                    <span>Carteirinhas</span>
+                </NavLink>
+
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Sistema</div>
+
                 <NavLink to="/admin/licencas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <Award size={20} />
+                    <Award size={18} />
                     <span>Licenças & Planos</span>
                 </NavLink>
                 <NavLink to="/admin/config" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <Settings size={20} />
+                    <Settings size={18} />
                     <span>Configurações</span>
                 </NavLink>
             </nav>
