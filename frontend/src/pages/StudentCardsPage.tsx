@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CreditCard, Printer, Search, Download, FileText, CheckCircle } from 'lucide-react';
+import { CreditCard, Printer, Search, Download, FileText, CheckCircle, FileDown } from 'lucide-react';
 import { StudentCard } from '../components/StudentCard';
 import { api } from '../services/api';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface Student {
   id: number;
@@ -16,6 +18,7 @@ export const StudentCardsPage: React.FC = () => {
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -31,6 +34,34 @@ export const StudentCardsPage: React.FC = () => {
     const handlePrint = () => {
         if (!selectedStudent) return;
         window.print();
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!cardRef.current || !selectedStudent) return;
+        
+        try {
+            setExporting(true);
+            const canvas = await html2canvas(cardRef.current, {
+                scale: 3, // Alta qualidade
+                useCORS: true,
+                backgroundColor: null
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: [85.6, 54] // Tamanho padrão de cartão de crédito
+            });
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
+            pdf.save(`Carteirinha_${selectedStudent.codigo}_${selectedStudent.nome.replace(/\s+/g, '_')}.pdf`);
+        } catch (err) {
+            console.error("Erro ao gerar PDF:", err);
+            alert("Erro ao gerar o arquivo PDF. Tente novamente.");
+        } finally {
+            setExporting(false);
+        }
     };
 
     const filteredStudents = students.filter(s => 
@@ -49,8 +80,16 @@ export const StudentCardsPage: React.FC = () => {
                     <button className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <Download size={18} /> Lote Completo (PDF)
                     </button>
+                    <button 
+                        className="btn-emerald" 
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }} 
+                        onClick={handleDownloadPDF} 
+                        disabled={!selectedStudent || exporting}
+                    >
+                        <FileDown size={18} /> {exporting ? 'Gerando...' : 'Salvar PDF'}
+                    </button>
                     <button className="btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }} onClick={handlePrint} disabled={!selectedStudent}>
-                        <Printer size={18} /> Imprimir Selecionada
+                        <Printer size={18} /> Imprimir Agora
                     </button>
                 </div>
             </header>
