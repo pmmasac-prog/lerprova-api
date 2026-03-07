@@ -246,3 +246,42 @@ class Notification(Base):
 
     # Relacionamentos
     user = relationship("User")
+
+class School(Base):
+    __tablename__ = "schools"
+    id = Column(String, primary_key=True, index=True) # school_id do JSON
+    school_name = Column(String)
+    organization_name = Column(String, nullable=True)
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class AcademicYear(Base):
+    __tablename__ = "academic_years"
+    id = Column(String, primary_key=True, index=True)
+    school_id = Column(String, ForeignKey("schools.id", ondelete="CASCADE"))
+    year_label = Column(String) # Ex: "2026"
+    start_date = Column(String) # YYYY-MM-DD
+    end_date = Column(String) # YYYY-MM-DD
+    total_school_days = Column(Integer, default=200)
+    notes = Column(Text, nullable=True)
+
+class Period(Base):
+    __tablename__ = "periods"
+    id = Column(String, primary_key=True, index=True)
+    academic_year_id = Column(String, ForeignKey("academic_years.id", ondelete="CASCADE"))
+    period_number = Column(Integer) # 1 a 4
+    period_name = Column(String) # Ex: "1º período"
+    start_date = Column(String)
+    end_date = Column(String)
+    status = Column(String, default="active")
+
+class Event(Base):
+    __tablename__ = "events"
+    id = Column(Integer, primary_key=True, index=True)
+    academic_year_id = Column(String, ForeignKey("academic_years.id", ondelete="CASCADE"))
+    event_type_id = Column(String) # holiday, planning, meeting, administrative
+    title = Column(String)
+    start_date = Column(String)
+    end_date = Column(String)
+    is_school_day = Column(Boolean, default=False)
+    description = Column(Text, nullable=True)

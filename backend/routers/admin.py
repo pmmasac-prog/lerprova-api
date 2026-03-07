@@ -104,6 +104,112 @@ async def transfer_turma(turma_id: int, user_id: int, admin_user = Depends(verif
     
     return {"message": f"Turma '{turma.nome}' transferida para {new_prof.nome}"}
 
+# --- GESTÃO ESCOLAR MASTER ---
+
+class StudentImport(BaseModel):
+    nome: str
+    codigo: str
+
+class RoomImport(BaseModel):
+    nome: str
+    alunos: List[StudentImport]
+
+class SchoolImport(BaseModel):
+    school_id: str
+    school_name: str
+    organization_name: Optional[str] = None
+
+class AcademicYearImport(BaseModel):
+    id: str
+    school_id: str
+    year_label: str
+    official_class_start_date: str
+    academic_year_end_date: str
+    total_school_days: int
+
+class PeriodImport(BaseModel):
+    period_id: str
+    academic_year_id: str
+    period_number: int
+    period_name: str
+    start_date: str
+    end_date: str
+
+class EventImport(BaseModel):
+    academic_year_id: str
+    event_type_id: str
+    title: str
+    start_date: str
+    end_date: str
+    is_school_day: bool
+
+@router.post("/import-master")
+async def import_master_data(
+    schools: List[SchoolImport],
+    academic_years: List[AcademicYearImport],
+    periods: List[PeriodImport],
+    events: List[EventImport],
+    admin_user = Depends(verify_admin), 
+    db: Session = Depends(get_db)
+):
+    """
+    Importação da estrutura completa de 2026 via JSON (Alcides César Meneses).
+    """
+    # 1. Escolas
+    for s in schools:
+        exists = db.query(models.School).filter(models.School.id == s.school_id).first()
+        if not exists:
+            db.add(models.School(id=s.school_id, school_name=s.school_name, organization_name=s.organization_name))
+    
+    # 2. Anos Letivos
+    for ay in academic_years:
+        exists = db.query(models.AcademicYear).filter(models.AcademicYear.id == ay.id).first()
+        if not exists:
+            db.add(models.AcademicYear(
+                id=ay.id, school_id=ay.school_id, year_label=ay.year_label,
+                start_date=ay.official_class_start_date, end_date=ay.academic_year_end_date,
+                total_school_days=ay.total_school_days
+            ))
+
+    # 3. Períodos
+    for p in periods:
+        exists = db.query(models.Period).filter(models.Period.id == p.period_id).first()
+        if not exists:
+            db.add(models.Period(
+                id=p.period_id, academic_year_id=p.academic_year_id,
+                period_number=p.period_number, period_name=p.period_name,
+                start_date=p.start_date, end_date=p.end_date
+            ))
+
+    # 4. Eventos
+    for e in events:
+        db.add(models.Event(
+            academic_year_id=e.academic_year_id, event_type_id=e.event_type_id,
+            title=e.title, start_date=e.start_date, end_date=e.end_date,
+            is_school_day=e.is_school_day
+        ))
+
+    db.commit()
+    return {"message": "Estrutura master importada com sucesso"}
+
+@router.post("/generate-carteirinha")
+async def generate_student_card(aluno_id: int, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """
+    Gera dados estruturados para a carteirinha (identidade estudantil).
+    No futuro gerará PDF, por ora retorna o template de dados.
+    """
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    
+    return {
+        "nome": aluno.nome,
+        "matricula": aluno.codigo,
+        "token": aluno.qr_token,
+        "expiracao": "2026-12-31",
+        "escola": "C.E. Alcides César Meneses"
+    }
+
 @router.get("/pendencias")
 async def list_teacher_pendencies(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
     """Busca pendências críticas de todos os professores no ecossistema."""
