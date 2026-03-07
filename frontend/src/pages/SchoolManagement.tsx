@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { School, MapPin, Search, Plus, Filter, Eye } from 'lucide-react';
+import { api } from '../services/api';
 
 interface SchoolData {
   id: number;
@@ -89,6 +90,7 @@ export const SchoolManagement: React.FC = () => {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 };
