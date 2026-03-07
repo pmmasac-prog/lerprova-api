@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List, Grid } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List, Grid, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
 import { api } from '../services/api';
 
 interface Period {
@@ -48,41 +48,56 @@ export const AcademicCalendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [calRes, periodRes] = await Promise.all([
-          api.calendar.getEvents().catch(() => api.getMasterCalendar()),
-          api.calendar.getPeriods().catch(() => null),
-        ]);
+  // CRUD state
+  const [showModal, setShowModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<CalendarEvent | null>(null);
+  const emptyForm = { title: '', event_type_id: 'holiday', start_date: '', end_date: '', description: '', is_school_day: false };
+  const [formData, setFormData] = useState(emptyForm);
 
-        if (calRes?.data) {
-          setEvents(calRes.data.map((e: any) => ({
-            id: e.id, title: e.title, type: e.type || e.event_type_id,
-            start_date: e.start_date || e.startDate,
-            end_date: e.end_date || e.endDate,
-            description: e.description, is_school_day: e.is_school_day,
-          })));
-        } else if (calRes?.events) {
-          setEvents(calRes.events.map((e: any) => ({
-            id: e.id, title: e.title, type: e.type,
-            start_date: e.startDate || e.start_date,
-            end_date: e.endDate || e.end_date,
-            description: e.description,
-          })));
-        }
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
-        if (periodRes?.data) {
-          setPeriods(periodRes.data);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar calendário:", err);
-      } finally {
-        setLoading(false);
+  const loadEvents = useCallback(async () => {
+    try {
+      const [calRes, periodRes] = await Promise.all([
+        api.calendar.getEvents().catch(() => api.getMasterCalendar()),
+        api.calendar.getPeriods().catch(() => null),
+      ]);
+
+      if (calRes?.data) {
+        setEvents(calRes.data.map((e: any) => ({
+          id: e.id, title: e.title, type: e.type || e.event_type_id,
+          start_date: e.start_date || e.startDate,
+          end_date: e.end_date || e.endDate,
+          description: e.description, is_school_day: e.is_school_day,
+        })));
+      } else if (calRes?.events) {
+        setEvents(calRes.events.map((e: any) => ({
+          id: e.id, title: e.title, type: e.type,
+          start_date: e.startDate || e.start_date,
+          end_date: e.endDate || e.end_date,
+          description: e.description,
+        })));
       }
-    };
-    loadData();
+
+      if (periodRes?.data) {
+        setPeriods(periodRes.data);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar calendário:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   // Detect first period if none expanded
   useEffect(() => {
@@ -116,6 +131,56 @@ export const AcademicCalendar: React.FC = () => {
   const getEventsForDate = (year: number, month: number, day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return filteredEvents.filter(e => e.start_date <= dateStr && e.end_date >= dateStr);
+  };
+
+  const openCreate = () => {
+    setEditingEvent(null);
+    setFormData(emptyForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (ev: CalendarEvent) => {
+    setEditingEvent(ev);
+    setFormData({
+      title: ev.title,
+      event_type_id: ev.type,
+      start_date: ev.start_date,
+      end_date: ev.end_date,
+      description: ev.description || '',
+      is_school_day: ev.is_school_day || false,
+    });
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.title || !formData.start_date || !formData.end_date) return;
+    setSaving(true);
+    try {
+      if (editingEvent) {
+        await api.calendar.updateEvent(editingEvent.id, formData);
+        showToast('Evento atualizado com sucesso!');
+      } else {
+        await api.calendar.createEvent(formData);
+        showToast('Evento criado com sucesso!');
+      }
+      setShowModal(false);
+      await loadEvents();
+    } catch {
+      showToast('Erro ao salvar evento.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (ev: CalendarEvent) => {
+    try {
+      await api.calendar.deleteEvent(ev.id);
+      setDeleteConfirm(null);
+      showToast('Evento removido com sucesso!');
+      await loadEvents();
+    } catch {
+      showToast('Erro ao remover evento.', 'error');
+    }
   };
 
   const navigateMonth = (dir: number) => {
@@ -153,6 +218,16 @@ export const AcademicCalendar: React.FC = () => {
           <p className="admin-subtitle">{events.length} eventos · {periods.length} períodos letivos</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={openCreate}
+            style={{
+              padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
+              background: '#10b981', border: 'none',
+              color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold'
+            }}
+          >
+            <Plus size={16} /> Novo Evento
+          </button>
           <button
             onClick={() => setViewMode('month')}
             style={{
@@ -274,6 +349,7 @@ export const AcademicCalendar: React.FC = () => {
                         <div
                           key={ev.id}
                           title={`${et.label}: ${ev.title}`}
+                          onClick={() => openEdit(ev)}
                           style={{
                             fontSize: '0.6rem',
                             padding: '1px 3px',
@@ -283,7 +359,7 @@ export const AcademicCalendar: React.FC = () => {
                             overflow: 'hidden',
                             whiteSpace: 'nowrap',
                             textOverflow: 'ellipsis',
-                            cursor: 'default',
+                            cursor: 'pointer',
                           }}
                         >
                           {et.emoji} {ev.title}
@@ -356,8 +432,16 @@ export const AcademicCalendar: React.FC = () => {
                           return (
                             <div
                               key={event.id}
-                              style={{ padding: '12px', borderRadius: '8px', background: et.bgColor, border: `1px solid ${et.color}` }}
+                              style={{ padding: '12px', borderRadius: '8px', background: et.bgColor, border: `1px solid ${et.color}`, position: 'relative' }}
                             >
+                              <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
+                                <button onClick={() => openEdit(event)} title="Editar" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#94a3b8', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
+                                  <Edit2 size={14} />
+                                </button>
+                                <button onClick={() => setDeleteConfirm(event)} title="Remover" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', color: '#ef4444', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                               <p style={{ color: et.color, fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 3px 0' }}>
                                 {et.emoji} {et.label}
                               </p>
@@ -408,6 +492,117 @@ export const AcademicCalendar: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* ===== MODAL CRIAR/EDITAR ===== */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', width: '95%', maxWidth: '500px', border: '1px solid #374151' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ color: '#f1f5f9', margin: 0, fontSize: '1.1rem' }}>
+                {editingEvent ? '✏️ Editar Evento' : '➕ Novo Evento'}
+              </h3>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label htmlFor="ev-title" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Título *</label>
+                <input id="ev-title" name="title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  placeholder="Nome do evento" />
+              </div>
+
+              <div>
+                <label htmlFor="ev-type" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Tipo *</label>
+                <select id="ev-type" name="event_type_id" value={formData.event_type_id} onChange={e => setFormData({ ...formData, event_type_id: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }}>
+                  {Object.entries(EVENT_TYPES).map(([key, { label, emoji }]) => (
+                    <option key={key} value={key}>{emoji} {label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label htmlFor="ev-start" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Data Início *</label>
+                  <input id="ev-start" name="start_date" type="date" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label htmlFor="ev-end" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Data Fim *</label>
+                  <input id="ev-end" name="end_date" type="date" value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="ev-desc" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Descrição</label>
+                <textarea id="ev-desc" name="description" rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+                  placeholder="Descrição opcional" />
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={formData.is_school_day} onChange={e => setFormData({ ...formData, is_school_day: e.target.checked })} />
+                Dia letivo
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowModal(false)}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #374151', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={handleSave} disabled={saving || !formData.title || !formData.start_date || !formData.end_date}
+                style={{
+                  padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                  background: saving ? '#374151' : '#10b981', color: '#fff', fontWeight: 'bold',
+                  display: 'flex', alignItems: 'center', gap: '6px', opacity: (!formData.title || !formData.start_date || !formData.end_date) ? 0.5 : 1
+                }}>
+                <Save size={16} /> {saving ? 'Salvando...' : editingEvent ? 'Atualizar' : 'Criar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== CONFIRMAÇÃO DE EXCLUSÃO ===== */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', width: '90%', maxWidth: '400px', border: '1px solid #ef4444', textAlign: 'center' }}>
+            <Trash2 size={36} color="#ef4444" style={{ marginBottom: '12px' }} />
+            <h3 style={{ color: '#f1f5f9', margin: '0 0 8px 0' }}>Remover Evento?</h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0 0 20px 0' }}>
+              <strong style={{ color: '#f1f5f9' }}>{deleteConfirm.title}</strong><br />
+              Esta ação não pode ser desfeita.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={() => setDeleteConfirm(null)}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #374151', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={() => handleDelete(deleteConfirm)}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== TOAST ===== */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+          padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem',
+          background: toast.type === 'success' ? '#10b981' : '#ef4444', color: '#fff',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        }}>
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 };

@@ -5,16 +5,36 @@ Disponível para todos os usuários autenticados
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from database import get_db
 from models import Event, Period, AcademicYear, School
 from dependencies import get_current_user
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/calendar",
     tags=["calendar"],
     dependencies=[Depends(get_current_user)]  # Requer autenticação
 )
+
+
+class EventCreate(BaseModel):
+    title: str
+    event_type_id: str
+    start_date: str
+    end_date: str
+    description: Optional[str] = None
+    is_school_day: bool = False
+    academic_year_id: Optional[str] = None
+
+
+class EventUpdate(BaseModel):
+    title: Optional[str] = None
+    event_type_id: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+    is_school_day: Optional[bool] = None
 
 
 @router.get("/events")
@@ -216,4 +236,99 @@ async def get_full_calendar(db: Session = Depends(get_db)):
             }
         }
     except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+# ==================== CRUD ENDPOINTS ====================
+
+@router.post("/events")
+async def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
+    """Criar novo evento no calendário"""
+    try:
+        academic_year_id = event_data.academic_year_id
+        if not academic_year_id:
+            year = db.query(AcademicYear).first()
+            academic_year_id = year.id if year else None
+
+        new_event = Event(
+            title=event_data.title,
+            event_type_id=event_data.event_type_id,
+            start_date=event_data.start_date,
+            end_date=event_data.end_date,
+            description=event_data.description,
+            is_school_day=event_data.is_school_day,
+            academic_year_id=academic_year_id,
+        )
+        db.add(new_event)
+        db.commit()
+        db.refresh(new_event)
+
+        return {
+            "success": True,
+            "event": {
+                "id": new_event.id,
+                "title": new_event.title,
+                "type": new_event.event_type_id,
+                "start_date": new_event.start_date,
+                "end_date": new_event.end_date,
+                "description": new_event.description,
+                "is_school_day": new_event.is_school_day,
+            }
+        }
+    except Exception as ex:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@router.put("/events/{event_id}")
+async def update_event(event_id: int, event_data: EventUpdate, db: Session = Depends(get_db)):
+    """Atualizar evento existente"""
+    try:
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+        update_fields = event_data.dict(exclude_unset=True)
+        for field, value in update_fields.items():
+            if value is not None:
+                setattr(event, field, value)
+
+        db.commit()
+        db.refresh(event)
+
+        return {
+            "success": True,
+            "event": {
+                "id": event.id,
+                "title": event.title,
+                "type": event.event_type_id,
+                "start_date": event.start_date,
+                "end_date": event.end_date,
+                "description": event.description,
+                "is_school_day": event.is_school_day,
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as ex:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(ex))
+
+
+@router.delete("/events/{event_id}")
+async def delete_event(event_id: int, db: Session = Depends(get_db)):
+    """Remover evento do calendário"""
+    try:
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+        db.delete(event)
+        db.commit()
+
+        return {"success": True, "message": f"Evento #{event_id} removido"}
+    except HTTPException:
+        raise
+    except Exception as ex:
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(ex))

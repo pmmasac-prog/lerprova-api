@@ -717,6 +717,26 @@ export const api = {
             return request(`${API_URL}/calendar/full-calendar`, {
                 headers: getAuthHeaders()
             });
+        },
+        async createEvent(data: { title: string; event_type_id: string; start_date: string; end_date: string; description?: string; is_school_day?: boolean }) {
+            return request(`${API_URL}/calendar/events`, {
+                method: 'POST',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        },
+        async updateEvent(eventId: number, data: { title?: string; event_type_id?: string; start_date?: string; end_date?: string; description?: string; is_school_day?: boolean }) {
+            return request(`${API_URL}/calendar/events/${eventId}`, {
+                method: 'PUT',
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        },
+        async deleteEvent(eventId: number) {
+            return request(`${API_URL}/calendar/events/${eventId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
         }
     }
 };
