@@ -113,7 +113,12 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                             <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '32px' }}>
                                 <span style={{ fontSize: '14px', color: '#94a3b8' }}>Nota Manual:</span>
                                 <input
-                                    type="text"
+                                    id="manual-nota-override"
+                                    name="manual-nota-override"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="10"
                                     value={manualNota}
                                     onChange={(e) => setManualNota(e.target.value)}
                                     style={{

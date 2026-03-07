@@ -223,8 +223,10 @@ export const Turmas: React.FC = () => {
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <h2 className="modal-title">{editingTurmaId ? 'Editar Turma' : 'Nova Turma'}</h2>
                         <div className="form-group">
-                            <label className="form-label">Nome da Turma</label>
+                            <label className="form-label" htmlFor="turma-nome">Nome da Turma</label>
                             <input
+                                id="turma-nome"
+                                name="turma-nome"
                                 type="text"
                                 className="form-input"
                                 placeholder="Ex: 3º Ano A"
@@ -233,8 +235,10 @@ export const Turmas: React.FC = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Disciplina</label>
+                            <label className="form-label" htmlFor="turma-disciplina">Disciplina</label>
                             <input
+                                id="turma-disciplina"
+                                name="turma-disciplina"
                                 type="text"
                                 className="form-input"
                                 placeholder="Ex: Matemática"
@@ -244,8 +248,10 @@ export const Turmas: React.FC = () => {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Quantidade de Aulas (Semanal)</label>
+                            <label className="form-label" htmlFor="turma-qtd-aulas">Quantidade de Aulas (Semanal)</label>
                             <input
+                                id="turma-qtd-aulas"
+                                name="turma-qtd-aulas"
                                 type="number"
                                 className="form-input"
                                 min="1"
@@ -289,8 +295,10 @@ export const Turmas: React.FC = () => {
                         <p className="modal-subtitle">Escolha uma lista de alunos da base central e indique sua disciplina</p>
 
                         <div className="form-group">
-                            <label className="form-label">Turma (Base Central)</label>
+                            <label className="form-label" htmlFor="inc-turma-central">Turma (Base Central)</label>
                             <select
+                                id="inc-turma-central"
+                                name="inc-turma-central"
                                 className="form-input"
                                 value={incData.master_turma_id}
                                 onChange={e => setIncData({ ...incData, master_turma_id: parseInt(e.target.value) })}

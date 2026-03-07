@@ -154,8 +154,14 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                             <div className="selected-student-name">{selectedAluno?.nome}</div>
 
                             <div className="nota-input-wrapper">
+                                <label htmlFor="manual-nota-input" className="selected-student-label" style={{ marginBottom: '6px', display: 'block' }}>Nota</label>
                                 <input
-                                    type="text"
+                                    id="manual-nota-input"
+                                    name="manual-nota-input"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="10"
                                     autoFocus
                                     className="nota-large-field"
                                     inputMode="decimal"

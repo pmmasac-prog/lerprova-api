@@ -480,7 +480,10 @@ export const Gabarito: React.FC = () => {
                             <div className="input-row">
                                 <div className="input-group">
                                     <Calendar size={20} />
+                                    <label htmlFor="gabarito-data" className="sr-only">Data da avaliação</label>
                                     <input
+                                        id="gabarito-data"
+                                        name="gabarito-data"
                                         type="text"
                                         placeholder="Data *"
                                         value={data}
@@ -489,7 +492,10 @@ export const Gabarito: React.FC = () => {
                                 </div>
                                 <div className="input-group">
                                     <CheckSquare size={20} />
+                                    <label htmlFor="gabarito-num-questions" className="sr-only">Quantidade de questões</label>
                                     <input
+                                        id="gabarito-num-questions"
+                                        name="gabarito-num-questions"
                                         type="number"
                                         placeholder="Qtd. Questões"
                                         value={numQuestions}

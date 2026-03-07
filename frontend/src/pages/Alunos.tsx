@@ -157,21 +157,31 @@ export const Alunos: React.FC = () => {
             <div className="add-form">
                 <h3 className="add-form-title">Adicionar Aluno</h3>
                 <div className="add-form-row">
-                    <input
-                        type="text"
-                        placeholder="Nome do Aluno"
-                        className="form-input"
-                        value={newAluno.nome}
-                        onChange={(e) => setNewAluno({ ...newAluno, nome: e.target.value })}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Nº"
-                        className="form-input-small"
-                        value={newAluno.codigo}
-                        onChange={(e) => setNewAluno({ ...newAluno, codigo: e.target.value })}
-                    />
-                    <button className="add-btn" onClick={handleAddAluno}>
+                    <div style={{ flex: 1 }}>
+                        <label htmlFor="aluno-nome" className="form-label" style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '4px', display: 'block' }}>Nome</label>
+                        <input
+                            id="aluno-nome"
+                            name="aluno-nome"
+                            type="text"
+                            placeholder="Nome do Aluno"
+                            className="form-input"
+                            value={newAluno.nome}
+                            onChange={(e) => setNewAluno({ ...newAluno, nome: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="aluno-codigo" className="form-label" style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: '4px', display: 'block' }}>Nº</label>
+                        <input
+                            id="aluno-codigo"
+                            name="aluno-codigo"
+                            type="text"
+                            placeholder="Nº"
+                            className="form-input-small"
+                            value={newAluno.codigo}
+                            onChange={(e) => setNewAluno({ ...newAluno, codigo: e.target.value })}
+                        />
+                    </div>
+                    <button className="add-btn" onClick={handleAddAluno} title="Adicionar aluno">
                         <Plus size={20} />
                     </button>
                 </div>
@@ -213,11 +223,11 @@ export const Alunos: React.FC = () => {
                     <FileUp size={24} />
                     <span>Importar CSV</span>
                 </button>
-                <button className="footer-btn">
+                <button className="footer-btn" onClick={() => navigate('/admin/relatorios')}>
                     <BarChart3 size={24} />
                     <span>Relatórios</span>
                 </button>
-                <button className="footer-btn">
+                <button className="footer-btn" onClick={() => { if (alunos.length > 0) handleShowQR(alunos[0]); else alert('Nenhum aluno cadastrado'); }}>
                     <QrCode size={24} />
                     <span>QR Codes</span>
                 </button>

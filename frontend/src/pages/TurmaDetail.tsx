@@ -317,6 +317,8 @@ export const TurmaDetail: React.FC = () => {
                         style={{ display: 'none' }}
                         accept=".csv"
                         onChange={handleImportCSV}
+                        aria-label="Importar alunos via CSV"
+                        tabIndex={-1}
                     />
                     <button className="action-btn calendar" onClick={() => setShowFrequenciaModal(true)}>
                         <Calendar size={16} />
@@ -384,8 +386,10 @@ export const TurmaDetail: React.FC = () => {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Data da Chamada</label>
+                            <label className="form-label" htmlFor="freq-data">Data da Chamada</label>
                             <input
+                                id="freq-data"
+                                name="freq-data"
                                 type="date"
                                 className="form-input"
                                 value={selectedDate}
@@ -435,8 +439,10 @@ export const TurmaDetail: React.FC = () => {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Nome do Aluno</label>
+                            <label className="form-label" htmlFor="add-aluno-nome">Nome do Aluno</label>
                             <input
+                                id="add-aluno-nome"
+                                name="add-aluno-nome"
                                 type="text"
                                 className="form-input"
                                 placeholder="Ex: João Silva"
@@ -446,8 +452,10 @@ export const TurmaDetail: React.FC = () => {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Código / Matrícula</label>
+                            <label className="form-label" htmlFor="add-aluno-codigo">Código / Matrícula</label>
                             <input
+                                id="add-aluno-codigo"
+                                name="add-aluno-codigo"
                                 type="text"
                                 className="form-input"
                                 placeholder="Ex: 2024001"

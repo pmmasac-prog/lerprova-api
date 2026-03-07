@@ -148,6 +148,8 @@ export const Admin: React.FC = () => {
                     <div className="search-box">
                         <Search size={18} />
                         <input
+                            id="admin-search"
+                            name="admin-search"
                             type="text"
                             placeholder="Buscar por nome, email ou escola..."
                             value={searchTerm}
@@ -236,8 +238,10 @@ export const Admin: React.FC = () => {
                         <form onSubmit={handleCreateUser} className="admin-form">
                             <div className="form-grid">
                                 <div className="form-group full-width">
-                                    <label>Nome Completo</label>
+                                    <label htmlFor="admin-user-nome">Nome Completo</label>
                                     <input
+                                        id="admin-user-nome"
+                                        name="admin-user-nome"
                                         type="text"
                                         className="admin-input"
                                         required
@@ -247,8 +251,10 @@ export const Admin: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Email de Acesso</label>
+                                    <label htmlFor="admin-user-email">Email de Acesso</label>
                                     <input
+                                        id="admin-user-email"
+                                        name="admin-user-email"
                                         type="email"
                                         className="admin-input"
                                         required
@@ -258,8 +264,10 @@ export const Admin: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Senha Provisória</label>
+                                    <label htmlFor="admin-user-password">Senha Provisória</label>
                                     <input
+                                        id="admin-user-password"
+                                        name="admin-user-password"
                                         type="password"
                                         className="admin-input"
                                         required
@@ -269,8 +277,10 @@ export const Admin: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Nível de Acesso</label>
+                                    <label htmlFor="admin-user-role">Nível de Acesso</label>
                                     <select
+                                        id="admin-user-role"
+                                        name="admin-user-role"
                                         className="admin-select"
                                         value={newUser.role}
                                         onChange={e => setNewUser({ ...newUser, role: e.target.value })}
@@ -280,8 +290,10 @@ export const Admin: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Instituição / Escola</label>
+                                    <label htmlFor="admin-user-escola">Instituição / Escola</label>
                                     <input
+                                        id="admin-user-escola"
+                                        name="admin-user-escola"
                                         type="text"
                                         className="admin-input"
                                         value={newUser.escola}
@@ -290,8 +302,10 @@ export const Admin: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-group full-width">
-                                    <label>Disciplina Principal</label>
+                                    <label htmlFor="admin-user-disciplina">Disciplina Principal</label>
                                     <input
+                                        id="admin-user-disciplina"
+                                        name="admin-user-disciplina"
                                         type="text"
                                         className="admin-input"
                                         value={newUser.disciplina}

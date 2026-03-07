@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { School, MapPin, Search, Plus, Filter, Eye } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -12,9 +12,10 @@ interface SchoolData {
 export const SchoolManagement: React.FC = () => {
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showNewModal, setShowNewModal] = useState(false);
 
   useEffect(() => {
-    // Busca real do banco de dados via API
     api.getSchoolData()
       .then(data => {
         setSchools(data || []);
@@ -22,6 +23,14 @@ export const SchoolManagement: React.FC = () => {
       .catch(err => console.error("Erro ao carregar escolas:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  const filteredSchools = useMemo(() => {
+    if (!searchTerm) return schools;
+    const term = searchTerm.toLowerCase();
+    return schools.filter(s =>
+      s.name.toLowerCase().includes(term) || s.address.toLowerCase().includes(term)
+    );
+  }, [schools, searchTerm]);
 
   if (loading) {
     return (
@@ -31,9 +40,6 @@ export const SchoolManagement: React.FC = () => {
             <h1 className="admin-title">Gestão de Escolas</h1>
             <p className="admin-subtitle">Gerencie as unidades e instituições cadastradas no sistema.</p>
           </div>
-          <button className="btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Plus size={18} /> Nova Escola
-          </button>
         </header>
         <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados reais...</div>
       </div>
@@ -47,25 +53,33 @@ export const SchoolManagement: React.FC = () => {
           <h1 className="admin-title">Gestão de Escolas</h1>
           <p className="admin-subtitle">Gerencie as unidades e instituições cadastradas no sistema.</p>
         </div>
-        <button className="btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button className="btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }} onClick={() => setShowNewModal(true)}>
           <Plus size={18} /> Nova Escola
         </button>
       </header>
+
+      {showNewModal && (
+        <div className="admin-card" style={{ marginTop: '16px', border: '1px solid #f59e0b33' }}>
+          <p style={{ color: '#f59e0b', fontSize: '0.9rem', margin: 0 }}>Funcionalidade de cadastro de escola em desenvolvimento.</p>
+          <button onClick={() => setShowNewModal(false)} style={{ marginTop: '8px', color: '#94a3b8', background: 'none', border: '1px solid #374151', borderRadius: '6px', padding: '4px 12px', cursor: 'pointer', fontSize: '0.8rem' }}>Fechar</button>
+        </div>
+      )}
 
       <div className="admin-card" style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
             <input
+              id="school-search"
+              name="school-search"
               type="text"
               placeholder="Buscar por nome ou endereço..."
               className="admin-input"
               style={{ paddingLeft: '40px' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Filter size={18} /> Filtros
-          </button>
         </div>
 
         <table className="admin-table">
@@ -78,7 +92,9 @@ export const SchoolManagement: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {schools.map(school => (
+            {filteredSchools.length === 0 ? (
+              <tr><td colSpan={4} style={{ textAlign: 'center', color: '#94a3b8', padding: '30px' }}>Nenhuma escola encontrada</td></tr>
+            ) : filteredSchools.map(school => (
               <tr key={school.id}>
                 <td style={{ fontWeight: '600' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -95,7 +111,7 @@ export const SchoolManagement: React.FC = () => {
                 </td>
                 <td>{school.units} Unidade(s)</td>
                 <td>
-                  <button className="btn-icon" title="Ver Detalhes">
+                  <button className="btn-icon" title="Ver Detalhes" onClick={() => alert(`Detalhes: ${school.name} — ${school.units} unidade(s)`)}>
                     <Eye size={18} />
                   </button>
                 </td>
