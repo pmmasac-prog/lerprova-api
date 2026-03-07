@@ -1,0 +1,182 @@
+{
+  "schools": [
+    {
+      "school_id": "CEACM2026",
+      "school_name": "C.E. ALCIDES CÉSAR MENESES",
+      "organization_name": "Secretaria de Educação - Estado de São Paulo"
+    },
+    {
+      "school_id": "EMJP2026",
+      "school_name": "E.M. JOSÉ PAULO",
+      "organization_name": "Secretaria de Educação - Município"
+    }
+  ],
+  "academic_years": [
+    {
+      "id": "2026",
+      "school_id": "CEACM2026",
+      "year_label": "2026",
+      "start_date": "2026-01-01",
+      "end_date": "2026-12-31",
+      "total_school_days": 200,
+      "notes": "Ano letivo completo de 2026"
+    },
+    {
+      "id": "2026_EMJP",
+      "school_id": "EMJP2026",
+      "year_label": "2026",
+      "start_date": "2026-01-01",
+      "end_date": "2026-12-31",
+      "total_school_days": 200,
+      "notes": "Ano letivo 2026 - E.M. José Paulo"
+    }
+  ],
+  "periods": [
+    {
+      "id": "P1_2026",
+      "academic_year_id": "2026",
+      "period_number": 1,
+      "period_name": "1º Bimestre",
+      "start_date": "2026-01-01",
+      "end_date": "2026-03-31"
+    },
+    {
+      "id": "P2_2026",
+      "academic_year_id": "2026",
+      "period_number": 2,
+      "period_name": "2º Bimestre",
+      "start_date": "2026-04-01",
+      "end_date": "2026-06-30"
+    },
+    {
+      "id": "P3_2026",
+      "academic_year_id": "2026",
+      "period_number": 3,
+      "period_name": "3º Bimestre",
+      "start_date": "2026-07-01",
+      "end_date": "2026-09-30"
+    },
+    {
+      "id": "P4_2026",
+      "academic_year_id": "2026",
+      "period_number": 4,
+      "period_name": "4º Bimestre",
+      "start_date": "2026-10-01",
+      "end_date": "2026-12-31"
+    }
+  ],
+  "events": [
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Confraternização Universal",
+      "start_date": "2026-01-01",
+      "end_date": "2026-01-01",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "planning",
+      "title": "Planejamento Pedagógico",
+      "start_date": "2026-01-30",
+      "end_date": "2026-02-02",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "exam",
+      "title": "Avaliação Diagnóstica 1º Bimestre",
+      "start_date": "2026-02-15",
+      "end_date": "2026-02-19",
+      "is_school_day": true
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "exam",
+      "title": "Avaliação Bimestral 1º Bimestre",
+      "start_date": "2026-03-15",
+      "end_date": "2026-03-20",
+      "is_school_day": true
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Tiradentes",
+      "start_date": "2026-04-21",
+      "end_date": "2026-04-21",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Dia do Trabalho",
+      "start_date": "2026-05-01",
+      "end_date": "2026-05-01",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "exam",
+      "title": "Avaliação Bimestral 2º Bimestre",
+      "start_date": "2026-06-15",
+      "end_date": "2026-06-20",
+      "is_school_day": true
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "exam",
+      "title": "Avaliação Bimestral 3º Bimestre",
+      "start_date": "2026-09-15",
+      "end_date": "2026-09-20",
+      "is_school_day": true
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Independência do Brasil",
+      "start_date": "2026-09-07",
+      "end_date": "2026-09-07",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Nossa Senhora Aparecida",
+      "start_date": "2026-10-12",
+      "end_date": "2026-10-12",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Finados",
+      "start_date": "2026-11-02",
+      "end_date": "2026-11-02",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "exam",
+      "title": "Avaliação Final 4º Bimestre",
+      "start_date": "2026-11-15",
+      "end_date": "2026-11-20",
+      "is_school_day": true
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Consciência Negra",
+      "start_date": "2026-11-20",
+      "end_date": "2026-11-20",
+      "is_school_day": false
+    },
+    {
+      "academic_year_id": "2026",
+      "event_type_id": "holiday",
+      "title": "Natal",
+      "start_date": "2026-12-25",
+      "end_date": "2026-12-25",
+      "is_school_day": false
+    }
+  ]
+}
