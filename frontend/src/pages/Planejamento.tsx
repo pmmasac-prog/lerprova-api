@@ -31,6 +31,7 @@ type AulaStatus = 'pending' | 'done' | 'skipped' | 'canceled' | string;
 interface Aula {
     id: number;
     titulo: string;
+    objetivo?: string;
     ordem: number;
     scheduled_date: string;
     status: AulaStatus;
