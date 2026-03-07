@@ -115,7 +115,6 @@ export const StudentCardsPage: React.FC = () => {
     };
 
     const handlePrint = () => {
-        if (!selectedStudent) return;
         window.print();
     };
 
@@ -239,6 +238,18 @@ export const StudentCardsPage: React.FC = () => {
                     <button
                         className="btn-emerald"
                         style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+                        onClick={handlePrint}
+                        disabled={students.length === 0}
+                    >
+                        <Printer size={16} />
+                        {selectedIds.size > 0
+                            ? `Imprimir ${selectedIds.size} Carteirinhas`
+                            : `Imprimir Todos (${filteredStudents.length})`
+                        }
+                    </button>
+                    <button
+                        className="btn-emerald"
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center', background: '#1e40af' }}
                         onClick={handleBatchPDF}
                         disabled={exporting || students.length === 0}
                     >
@@ -559,6 +570,24 @@ export const StudentCardsPage: React.FC = () => {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* PRINT AREA — hidden on screen, visible during print (8 per page) */}
+            <div className="print-area">
+                {(selectedIds.size > 0
+                    ? students.filter(s => selectedIds.has(s.id))
+                    : filteredStudents
+                ).map(student => (
+                    <StudentCard
+                        key={student.id}
+                        studentName={student.nome}
+                        studentCode={student.codigo}
+                        schoolName={student.unidade}
+                        className={student.turma}
+                        academicYear="2026"
+                        photoUrl=""
+                    />
+                ))}
             </div>
         </div>
     );

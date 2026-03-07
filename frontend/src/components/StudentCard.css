@@ -181,28 +181,77 @@
     border-radius: 2px;
 }
 
-/* ======= Print ======= */
+/* ======= Print area (hidden on screen) ======= */
+.print-area {
+    display: none;
+}
+
+/* ======= Print — 8 cards per A4 page (2×4) ======= */
 @media print {
-    body * {
-        visibility: hidden;
+    /* Hide all screen UI */
+    .no-print,
+    .admin-header,
+    .admin-container > *:not(.print-area) {
+        display: none !important;
     }
-    .student-card-container,
-    .student-card-container * {
-        visibility: visible;
-    }
-    .student-card-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        padding: 10mm;
+
+    body, html {
+        margin: 0;
+        padding: 0;
         background: white;
     }
-    .student-card {
+
+    .admin-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+    }
+
+    .print-area {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 4mm;
+        padding: 5mm;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .print-area .student-card-container {
+        padding: 0;
+        justify-content: center;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .print-area .student-card {
+        width: 95mm;
+        aspect-ratio: 85.6 / 54;
+        border-radius: 8px;
         box-shadow: none;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
-    .no-print {
-        display: none !important;
+
+    /* Page break after every 8 cards */
+    .print-area .student-card-container:nth-child(8n) {
+        page-break-after: always;
+        break-after: page;
     }
+
+    /* Reduce internal sizes for print */
+    .print-area .card-header { padding: 4px 8px; }
+    .print-area .header-text h3 { font-size: 8px; }
+    .print-area .header-text span { font-size: 6px; }
+    .print-area .card-body { padding: 6px 8px; gap: 6px; grid-template-columns: 50px 1fr 52px; }
+    .print-area .photo-area { width: 50px; height: 62px; }
+    .print-area .photo-initials { font-size: 16px; }
+    .print-area .student-name { font-size: 9px !important; }
+    .print-area .info-item label { font-size: 5px; }
+    .print-area .info-item p { font-size: 8px; }
+    .print-area .card-qr { width: 52px; padding: 3px; }
+    .print-area .card-qr svg { width: 38px !important; height: 38px !important; }
+    .print-area .qr-label { font-size: 5px; }
+    .print-area .card-footer { padding: 3px 8px; }
+    .print-area .card-footer span { font-size: 6px; }
+    .print-area .card-accent-bar { height: 3px; }
 }
