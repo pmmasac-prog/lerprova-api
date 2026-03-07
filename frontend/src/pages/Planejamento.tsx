@@ -1,7 +1,7 @@
 // Planejamento.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, CheckCircle2, AlertCircle, BookOpen, Pencil, ArrowLeft } from 'lucide-react';
+import { Plus, CheckCircle2, AlertCircle, BookOpen, Pencil, ArrowLeft, Copy, X } from 'lucide-react';
 import { api } from '../services/api';
 import './Planejamento.css';
 import { PlanejamentoStudio } from './PlanejamentoStudio';
@@ -74,6 +74,10 @@ export const Planejamento: React.FC = () => {
     const [loadingPlanos, setLoadingPlanos] = useState(false);
     const [loadingAulas, setLoadingAulas] = useState(false);
     const [cobertura, setCobertura] = useState<any>(null);
+    const [showVincularModal, setShowVincularModal] = useState(false);
+    const [vincularDataInicio, setVincularDataInicio] = useState(() => new Date().toISOString().slice(0, 10));
+    const [vincularTurmaId, setVincularTurmaId] = useState<number | null>(null);
+    const [vinculando, setVinculando] = useState(false);
 
     const lastLoadToken = useRef(0);
 
@@ -334,6 +338,11 @@ export const Planejamento: React.FC = () => {
                                 <Pencil size={18} />
                             </button>
                         )}
+                        {currentPlano && (
+                            <button className="btn-icon-subtle" onClick={() => setShowVincularModal(true)} title="Vincular a outra turma">
+                                <Copy size={18} />
+                            </button>
+                        )}
                     </div>
                     <div className="plan-meta">
                         {loadingPlanos || loadingAulas ? (
@@ -494,6 +503,67 @@ export const Planejamento: React.FC = () => {
                         }))
                     } : undefined}
                 />
+            )}
+
+            {/* Modal: Vincular a outra turma */}
+            {showVincularModal && currentPlano && (
+                <div className="modal-overlay" onClick={() => setShowVincularModal(false)}>
+                    <div className="modal-vincular" onClick={e => e.stopPropagation()}>
+                        <div className="modal-vincular-header">
+                            <h3>Vincular Sequência a Outra Turma</h3>
+                            <button className="btn-icon-subtle" onClick={() => setShowVincularModal(false)}><X size={18} /></button>
+                        </div>
+                        <p className="modal-vincular-desc">
+                            A sequência <strong>"{currentPlano.titulo}"</strong> será duplicada para a turma selecionada.
+                            As datas serão recalculadas conforme os dias de aula da nova turma.
+                        </p>
+                        <div className="modal-vincular-fields">
+                            <label>
+                                Turma destino
+                                <select
+                                    value={vincularTurmaId ?? ''}
+                                    onChange={e => setVincularTurmaId(Number(e.target.value) || null)}
+                                >
+                                    <option value="">Selecione uma turma...</option>
+                                    {turmas.filter(t => t.id !== selectedTurmaId).map(t => (
+                                        <option key={t.id} value={t.id}>{t.nome}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label>
+                                Data de início
+                                <input
+                                    type="date"
+                                    value={vincularDataInicio}
+                                    onChange={e => setVincularDataInicio(e.target.value)}
+                                />
+                            </label>
+                        </div>
+                        <div className="modal-vincular-actions">
+                            <button className="btn-cancel" onClick={() => setShowVincularModal(false)}>Cancelar</button>
+                            <button
+                                className="btn-vincular"
+                                disabled={!vincularTurmaId || !vincularDataInicio || vinculando}
+                                onClick={async () => {
+                                    if (!vincularTurmaId || !vincularDataInicio || !selectedPlanoId) return;
+                                    setVinculando(true);
+                                    try {
+                                        const res = await api.vincularPlano(selectedPlanoId, vincularTurmaId, vincularDataInicio);
+                                        window.alert(`Sequência vinculada com sucesso à turma "${res.turma_nome}"!`);
+                                        setShowVincularModal(false);
+                                        setVincularTurmaId(null);
+                                    } catch (e: any) {
+                                        window.alert(e?.message || 'Erro ao vincular plano');
+                                    } finally {
+                                        setVinculando(false);
+                                    }
+                                }}
+                            >
+                                {vinculando ? 'Vinculando...' : <><Copy size={16} /> Vincular</>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

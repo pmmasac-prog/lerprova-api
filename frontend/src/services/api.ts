@@ -417,6 +417,14 @@ export const api = {
         });
     },
 
+    async vincularPlano(planoId: number, turmaDestinoId: number, dataInicio: string) {
+        return request(`${API_URL}/planos/${planoId}/vincular`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ turma_destino_id: turmaDestinoId, data_inicio: dataInicio })
+        });
+    },
+
     async getAulaHoje(planoId: number) {
         if (!planoId || isNaN(planoId)) return { message: 'ID inválido' };
         return request(`${API_URL}/planos/${planoId}/hoje`, {

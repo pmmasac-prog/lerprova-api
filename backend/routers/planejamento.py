@@ -696,3 +696,97 @@ async def get_cobertura_pedagogica(plano_id: int, db: Session = Depends(get_db))
         "labels": list(areas.keys()),
         "values": list(areas.values())
     }
+
+
+class VincularPlanoRequest(BaseModel):
+    turma_destino_id: int
+    data_inicio: constr(pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+
+@router.post("/{plano_id}/vincular")
+async def vincular_plano_outra_turma(
+    plano_id: int,
+    data: VincularPlanoRequest,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Duplica um plano existente para outra turma, recalculando datas."""
+    plano_orig = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano_orig:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    _rbac_check_plano_owner(user, plano_orig.user_id)
+
+    turma_dest = db.query(models.Turma).filter(models.Turma.id == data.turma_destino_id).first()
+    if not turma_dest:
+        raise HTTPException(status_code=404, detail="Turma destino não encontrada")
+
+    _rbac_check_turma(db, user, data.turma_destino_id)
+
+    if plano_orig.turma_id == data.turma_destino_id:
+        raise HTTPException(status_code=400, detail="A turma destino deve ser diferente da turma original")
+
+    # Usar dias_semana da turma destino
+    dias_semana_dest = None
+    if turma_dest.dias_semana:
+        try:
+            parsed = turma_dest.dias_semana
+            if isinstance(parsed, str):
+                parsed = json.loads(parsed)
+            if isinstance(parsed, list) and len(parsed) > 0:
+                dias_semana_dest = parsed
+        except Exception:
+            pass
+    if not dias_semana_dest:
+        dias_semana_dest = [0, 1, 2, 3, 4]
+
+    dias = _normalize_days(dias_semana_dest)
+    disciplina = turma_dest.disciplina or plano_orig.disciplina
+
+    # Buscar aulas originais ordenadas
+    aulas_orig = (
+        db.query(models.AulaPlanejada)
+        .filter(models.AulaPlanejada.plano_id == plano_id)
+        .order_by(models.AulaPlanejada.ordem.asc())
+        .all()
+    )
+
+    if not aulas_orig:
+        raise HTTPException(status_code=400, detail="O plano original não possui aulas")
+
+    # Criar novo plano
+    novo_plano = models.Plano(
+        turma_id=data.turma_destino_id,
+        user_id=user.id,
+        titulo=plano_orig.titulo,
+        disciplina=disciplina,
+        data_inicio=data.data_inicio,
+        dias_semana=json.dumps(dias_semana_dest),
+    )
+    db.add(novo_plano)
+    db.flush()
+
+    # Recalcular datas com os dias da turma destino
+    start_date = _parse_date_yyyy_mm_dd(data.data_inicio)
+    schedule = _build_schedule(start_date, dias, len(aulas_orig))
+
+    for i, aula in enumerate(aulas_orig):
+        nova_aula = models.AulaPlanejada(
+            plano_id=novo_plano.id,
+            ordem=aula.ordem,
+            titulo=aula.titulo,
+            objetivo=aula.objetivo,
+            scheduled_date=schedule[i].isoformat(),
+            metodologia_recurso=aula.metodologia_recurso,
+            bncc_skills=aula.bncc_skills,
+            status="pending",
+        )
+        db.add(nova_aula)
+
+    db.commit()
+    db.refresh(novo_plano)
+    return {
+        "message": f"Plano vinculado à turma '{turma_dest.nome}' com sucesso",
+        "id": novo_plano.id,
+        "turma_nome": turma_dest.nome,
+    }
