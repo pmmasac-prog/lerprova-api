@@ -1,6 +1,6 @@
 // PlanejamentoStudio.tsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Save, Plus, Trash2, BookOpen, ChevronRight, GripVertical, Target, Search, X, ArrowLeft } from 'lucide-react';
+import { Save, Plus, Trash2, BookOpen, ChevronRight, GripVertical, Target, Search, X, ArrowLeft, Printer } from 'lucide-react';
 import { api } from '../services/api';
 import './PlanejamentoStudio.css';
 
@@ -8,7 +8,10 @@ interface CurriculoItem {
     id: number;
     name: string;
     title?: string;
+    description?: string;
     order_index?: number;
+    type?: string;
+    modality?: string;
 }
 
 interface TeachingStudioProps {
@@ -27,7 +30,7 @@ interface TeachingStudioProps {
     } | null;
 }
 
-type PanelKey = 'config' | 'canvas' | 'curriculo' | 'bncc';
+type SidebarTab = 'matriz' | 'bncc' | 'metodologia' | 'recurso' | 'avaliacao';
 
 function safeParseISODate(iso: string): Date | null {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
@@ -63,8 +66,10 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     planoId,
     initialData
 }) => {
-    const [activePanel, setActivePanel] = useState<PanelKey>('canvas');
+    const [sidebarTab, setSidebarTab] = useState<SidebarTab>('matriz');
     const [targetLessonId, setTargetLessonId] = useState<string | null>(null);
+    const [showPrintPreview, setShowPrintPreview] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
 
     // Config
     const [titulo, setTitulo] = useState(initialData?.titulo || '');
@@ -85,6 +90,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         return [{ id: Math.random().toString(36).slice(2, 10), title: '', dateDisplay: '', metodologia_recurso: [], bncc_skills: [] }];
     });
 
+    // Currículo
     const [subjects, setSubjects] = useState<CurriculoItem[]>([]);
     const [units, setUnits] = useState<CurriculoItem[]>([]);
     const [topics, setTopics] = useState<CurriculoItem[]>([]);
@@ -104,6 +110,22 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
 
     const [saving, setSaving] = useState(false);
     const loadToken = useRef(0);
+
+    // Avaliação types
+    const AVALIACAO_TYPES = [
+        { id: 'prova_escrita', name: 'Prova Escrita' },
+        { id: 'trabalho_grupo', name: 'Trabalho em Grupo' },
+        { id: 'apresentacao', name: 'Apresentação Oral' },
+        { id: 'relatorio', name: 'Relatório' },
+        { id: 'portfolio', name: 'Portfólio' },
+        { id: 'autoavaliacao', name: 'Autoavaliação' },
+        { id: 'observacao', name: 'Observação' },
+        { id: 'participacao', name: 'Participação' },
+        { id: 'exercicio', name: 'Exercício Avaliativo' },
+        { id: 'seminario', name: 'Seminário' },
+        { id: 'debate', name: 'Debate' },
+        { id: 'projeto', name: 'Projeto' },
+    ];
 
     const reconcileDates = useCallback((baseISO: string, days: number[], ls: Lesson[]): Lesson[] => {
         if (days.length === 0) return ls.map(l => ({ ...l, dateDisplay: '' }));
@@ -199,12 +221,12 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         return () => clearTimeout(timeout);
     }, [bnccSearch]);
 
-    // Auto-select target lesson if null and panel changes
+    // Auto-select target lesson
     useEffect(() => {
-        if ((activePanel === 'bncc' || activePanel === 'curriculo') && !targetLessonId && lessons.length > 0) {
+        if (!targetLessonId && lessons.length > 0) {
             setTargetLessonId(lessons[0].id);
         }
-    }, [activePanel, targetLessonId, lessons]);
+    }, [targetLessonId, lessons]);
 
     // Reconcile dates 
     useEffect(() => {
@@ -219,7 +241,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
             ];
             return reconcileDates(dataInicio, diasSemana, next);
         });
-        setActivePanel('canvas');
     }, [dataInicio, diasSemana, reconcileDates]);
 
     const removeLesson = useCallback((index: number) => {
@@ -261,7 +282,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     const onDragStart = (e: React.DragEvent, index: number) => {
         setDraggingIndex(index);
         e.dataTransfer.effectAllowed = 'move';
-        // Add a class for styling
         (e.target as HTMLElement).classList.add('is-dragging');
     };
 
@@ -314,38 +334,157 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
         }
     };
 
+    const handlePrint = () => {
+        setShowPrintPreview(true);
+        setTimeout(() => window.print(), 300);
+    };
+
+    // Sidebar content renderers
+    const renderMatriz = () => (
+        <div className="sidebar-content">
+            <div className="panel-header">
+                <select className="studio-input" value={selectedSub ?? ''} onChange={e => setSelectedSub(Number(e.target.value))}>
+                    <option value="">Disciplina...</option>
+                    {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+            </div>
+            <div className="panel-content">
+                {targetLessonId && <div className="target-hint">Alvo: Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                {!selectedUnit && units.map(u => <div key={u.id} className="curr-item" onClick={() => setSelectedUnit(u.id)}><ChevronRight size={14} /> {u.title}</div>)}
+                {selectedUnit && (
+                    <>
+                        <button className="btn-back" onClick={() => setSelectedUnit(null)}>← Unidades</button>
+                        {topics.map(t => (
+                            <div key={t.id} className="topic-box">
+                                <div className="topic-header" onClick={() => setSelectedTopic(t.id)}><span>{t.name}</span> <Plus size={16} onClick={(e) => { e.stopPropagation(); addLesson(t.name); }} /></div>
+                                {selectedTopic === t.id && (
+                                    <div className="suggestions">
+                                        {methodologies.filter(m => suggestedMeths.includes(m.id)).map(m => <button key={m.id} className="suggest-btn" onClick={() => handleAddComplement(m.name)}>{m.name}</button>)}
+                                        {resources.filter(r => suggestedRes.includes(r.id)).map(r => <button key={r.id} className="suggest-btn" onClick={() => handleAddComplement(r.name)}>{r.name}</button>)}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+
+    const renderBNCC = () => (
+        <div className="sidebar-content">
+            <div className="panel-header">
+                <div className="search-box"><Search size={16} /><input placeholder="Habilidade/Código..." value={bnccSearch} onChange={e => setBnccSearch(e.target.value)} /></div>
+            </div>
+            <div className="panel-content">
+                {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                {searchingBncc && <div className="loading">Buscando...</div>}
+                {!searchingBncc && bnccSearch.trim().length >= 2 && bnccResults.length === 0 && <div className="loading">Nenhuma habilidade encontrada.</div>}
+                {!searchingBncc && bnccResults.map(s => (
+                    <div key={s.id} className="bncc-item" onClick={() => handleAddBNCC(s.code)}><strong>{s.code}</strong><p>{s.description}</p></div>
+                ))}
+            </div>
+        </div>
+    );
+
+    const renderMetodologia = () => (
+        <div className="sidebar-content">
+            <div className="panel-header">
+                <span className="sidebar-section-title">Metodologias de Ensino</span>
+            </div>
+            <div className="panel-content">
+                {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                {methodologies.map(m => {
+                    const isSuggested = suggestedMeths.includes(m.id);
+                    const isAdded = targetLessonId ? lessons.find(l => l.id === targetLessonId)?.metodologia_recurso.includes(m.name) : false;
+                    return (
+                        <div key={m.id}
+                            className={`sidebar-list-item ${isSuggested ? 'suggested' : ''} ${isAdded ? 'added' : ''}`}
+                            onClick={() => handleAddComplement(m.name)}>
+                            <span className="item-name">{m.name}</span>
+                            {isSuggested && <span className="badge-suggested">Sugerida</span>}
+                            {isAdded && <span className="badge-added">✓</span>}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    const renderRecurso = () => (
+        <div className="sidebar-content">
+            <div className="panel-header">
+                <span className="sidebar-section-title">Recursos Didáticos</span>
+            </div>
+            <div className="panel-content">
+                {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                {resources.map(r => {
+                    const isSuggested = suggestedRes.includes(r.id);
+                    const isAdded = targetLessonId ? lessons.find(l => l.id === targetLessonId)?.metodologia_recurso.includes(r.name) : false;
+                    return (
+                        <div key={r.id}
+                            className={`sidebar-list-item ${isSuggested ? 'suggested' : ''} ${isAdded ? 'added' : ''}`}
+                            onClick={() => handleAddComplement(r.name)}>
+                            <span className="item-name">{r.name}</span>
+                            {isSuggested && <span className="badge-suggested">Sugerido</span>}
+                            {isAdded && <span className="badge-added">✓</span>}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    const renderAvaliacao = () => (
+        <div className="sidebar-content">
+            <div className="panel-header">
+                <span className="sidebar-section-title">Instrumentos de Avaliação</span>
+            </div>
+            <div className="panel-content">
+                {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
+                {AVALIACAO_TYPES.map(a => {
+                    const isAdded = targetLessonId ? lessons.find(l => l.id === targetLessonId)?.metodologia_recurso.includes(a.name) : false;
+                    return (
+                        <div key={a.id}
+                            className={`sidebar-list-item ${isAdded ? 'added' : ''}`}
+                            onClick={() => handleAddComplement(a.name)}>
+                            <span className="item-name">{a.name}</span>
+                            {isAdded && <span className="badge-added">✓</span>}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    const SIDEBAR_TABS: { key: SidebarTab; label: string; icon: string }[] = [
+        { key: 'matriz', label: 'Matriz', icon: '📚' },
+        { key: 'bncc', label: 'BNCC', icon: '🎯' },
+        { key: 'metodologia', label: 'Metodologia', icon: '🧩' },
+        { key: 'recurso', label: 'Recurso', icon: '🛠️' },
+        { key: 'avaliacao', label: 'Avaliação', icon: '📝' },
+    ];
+
     return (
         <div className="studio-container">
             <header className="studio-header">
                 <div className="studio-title"><BookOpen size={20} color="#3b82f6" /> Studio: {turmaNome}</div>
-                <div className="studio-tabs">
-                    <button className="studio-tab" data-active={activePanel === 'config'} onClick={() => setActivePanel('config')}>Config</button>
-                    <button className="studio-tab" data-active={activePanel === 'canvas'} onClick={() => setActivePanel('canvas')}>Sequência</button>
-                    <button className="studio-tab" data-active={activePanel === 'curriculo'} onClick={() => setActivePanel('curriculo')}>Currículo</button>
-                    <button className="studio-tab" data-active={activePanel === 'bncc'} onClick={() => setActivePanel('bncc')}>BNCC</button>
+                <div className="studio-config-inline">
+                    <input className="studio-input compact" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título do Plano..." />
+                    <input type="date" className="studio-input compact date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} />
                 </div>
                 <div className="studio-actions">
                     <button className="btn-studio cancel" onClick={onClose}><ArrowLeft size={16} /> Voltar</button>
+                    <button className="btn-studio print" onClick={handlePrint}><Printer size={16} /> Imprimir</button>
                     <button className="btn-studio save" onClick={handleSave} disabled={saving || !titulo.trim()}>
                         {saving ? '...' : <><Save size={16} /> Publicar</>}
                     </button>
                 </div>
             </header>
 
-            <div className="studio-grid">
-                <div className="studio-panel left" data-visible={activePanel === 'config'}>
-                    <div className="panel-title">Configurações</div>
-                    <div className="studio-input-group">
-                        <label className="studio-label">Título</label>
-                        <input className="studio-input" value={titulo} onChange={e => setTitulo(e.target.value)} />
-                    </div>
-                    <div className="studio-input-group">
-                        <label className="studio-label">Início</label>
-                        <input type="date" className="studio-input" value={dataInicio} onChange={e => setDataInicio(e.target.value)} />
-                    </div>
-                </div>
-
-                <div className="studio-panel center" data-visible={activePanel === 'canvas'}>
+            <div className="studio-layout">
+                {/* CANVAS (main area) */}
+                <div className="studio-canvas">
                     <div className="timeline-canvas">
                         {lessons.map((lesson, index) => (
                             <div
@@ -373,8 +512,6 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                                     {lesson.metodologia_recurso.map(m => (
                                         <div key={m} className="content-tag">{m} <X size={12} onClick={() => setLessons(ls => ls.map(x => x.id === lesson.id ? { ...x, metodologia_recurso: x.metodologia_recurso.filter(y => y !== m) } : x))} /></div>
                                     ))}
-                                    <button className="btn-add-content-small" onClick={(e) => { e.stopPropagation(); setTargetLessonId(lesson.id); setActivePanel('curriculo'); }}>+ Met/Rec</button>
-                                    <button className="btn-add-bncc-small" onClick={(e) => { e.stopPropagation(); setTargetLessonId(lesson.id); setActivePanel('bncc'); }}>+ BNCC</button>
                                 </div>
                             </div>
                         ))}
@@ -382,48 +519,78 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
                     </div>
                 </div>
 
-                <div className="studio-panel right" data-visible={activePanel === 'curriculo'}>
-                    <div className="panel-header">
-                        <select className="studio-input" value={selectedSub ?? ''} onChange={e => setSelectedSub(Number(e.target.value))}>
-                            <option value="">Disciplina...</option>
-                            {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                    </div>
-                    <div className="panel-content">
-                        {targetLessonId && <div className="target-hint">Alvo: Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
-                        {!selectedUnit && units.map(u => <div key={u.id} className="curr-item" onClick={() => setSelectedUnit(u.id)}><ChevronRight size={14} /> {u.title}</div>)}
-                        {selectedUnit && (
-                            <>
-                                <button className="btn-back" onClick={() => setSelectedUnit(null)}>← Unidades</button>
-                                {topics.map(t => (
-                                    <div key={t.id} className="topic-box">
-                                        <div className="topic-header" onClick={() => setSelectedTopic(t.id)}><span>{t.name}</span> <Plus size={16} onClick={(e) => { e.stopPropagation(); addLesson(t.name); }} /></div>
-                                        {selectedTopic === t.id && (
-                                            <div className="suggestions">
-                                                {methodologies.filter(m => suggestedMeths.includes(m.id)).map(m => <button key={m.id} className="suggest-btn" onClick={() => handleAddComplement(m.name)}>{m.name}</button>)}
-                                                {resources.filter(r => suggestedRes.includes(r.id)).map(r => <button key={r.id} className="suggest-btn" onClick={() => handleAddComplement(r.name)}>{r.name}</button>)}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                <div className="studio-panel right" data-visible={activePanel === 'bncc'}>
-                    <div className="panel-header">
-                        <div className="search-box"><Search size={16} /><input placeholder="Habilidade/Código..." value={bnccSearch} onChange={e => setBnccSearch(e.target.value)} /></div>
-                    </div>
-                    <div className="panel-content">
-                        {targetLessonId && <div className="target-hint">Vinculando à Aula {lessons.findIndex(l => l.id === targetLessonId) + 1}</div>}
-                        {searchingBncc && <div className="loading">Buscando...</div>}
-                        {!searchingBncc && bnccSearch.trim().length >= 2 && bnccResults.length === 0 && <div className="loading">Nenhuma habilidade encontrada.</div>}
-                        {!searchingBncc && bnccResults.map(s => (
-                            <div key={s.id} className="bncc-item" onClick={() => handleAddBNCC(s.code)}><strong>{s.code}</strong><p>{s.description}</p></div>
+                {/* RIGHT SIDEBAR */}
+                <div className="studio-sidebar">
+                    <div className="sidebar-tabs">
+                        {SIDEBAR_TABS.map(tab => (
+                            <button
+                                key={tab.key}
+                                className={`sidebar-tab ${sidebarTab === tab.key ? 'active' : ''}`}
+                                onClick={() => setSidebarTab(tab.key)}
+                                title={tab.label}
+                            >
+                                <span className="tab-icon">{tab.icon}</span>
+                                <span className="tab-label">{tab.label}</span>
+                            </button>
                         ))}
                     </div>
+                    <div className="sidebar-body">
+                        {sidebarTab === 'matriz' && renderMatriz()}
+                        {sidebarTab === 'bncc' && renderBNCC()}
+                        {sidebarTab === 'metodologia' && renderMetodologia()}
+                        {sidebarTab === 'recurso' && renderRecurso()}
+                        {sidebarTab === 'avaliacao' && renderAvaliacao()}
+                    </div>
                 </div>
+            </div>
+
+            {/* PRINT OVERLAY — Relatório Sequência Didática */}
+            <div className={`print-report ${showPrintPreview ? 'preview' : ''}`} ref={printRef}>
+                <div className="print-page">
+                    <div className="print-header-report">
+                        <h1>Sequência Didática</h1>
+                        <div className="print-meta">
+                            <div><strong>Título:</strong> {titulo || '—'}</div>
+                            <div><strong>Turma:</strong> {turmaNome}</div>
+                            <div><strong>Disciplina:</strong> {disciplinaPre}</div>
+                            <div><strong>Data Início:</strong> {dataInicio ? new Date(dataInicio + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</div>
+                            <div><strong>Total de Aulas:</strong> {lessons.filter(l => l.title.trim()).length}</div>
+                        </div>
+                    </div>
+
+                    {lessons.filter(l => l.title.trim()).map((lesson, index) => (
+                        <div key={lesson.id} className="print-lesson">
+                            <div className="print-lesson-header">
+                                <span className="print-lesson-num">Aula {index + 1}</span>
+                                <span className="print-lesson-date">{lesson.dateDisplay}</span>
+                            </div>
+                            <div className="print-lesson-title">{lesson.title}</div>
+
+                            {lesson.bncc_skills.length > 0 && (
+                                <div className="print-section">
+                                    <strong>Habilidades BNCC:</strong>
+                                    <span>{lesson.bncc_skills.join(', ')}</span>
+                                </div>
+                            )}
+
+                            {lesson.metodologia_recurso.length > 0 && (
+                                <div className="print-section">
+                                    <strong>Metodologia / Recursos / Avaliação:</strong>
+                                    <span>{lesson.metodologia_recurso.join(', ')}</span>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+
+                    <div className="print-footer-report">
+                        <p>Gerado pelo LerProva — {new Date().toLocaleDateString('pt-BR')}</p>
+                    </div>
+                </div>
+                {showPrintPreview && (
+                    <button className="btn-close-preview no-print" onClick={() => setShowPrintPreview(false)}>
+                        <X size={20} /> Fechar Pré-visualização
+                    </button>
+                )}
             </div>
         </div>
     );
