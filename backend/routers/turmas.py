@@ -31,6 +31,27 @@ async def get_turmas(user: users_db.User = Depends(get_current_user), db: Sessio
         } for t in turmas
     ]
 
+
+@router.get("/{turma_id}")
+async def get_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada")
+
+    if user.role != "admin" and turma.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    return {
+        "id": turma.id,
+        "nome": turma.nome,
+        "disciplina": turma.disciplina,
+        "dias_semana": turma.dias_semana,
+        "quantidade_aulas": turma.quantidade_aulas,
+        "user_id": turma.user_id,
+        "created_at": turma.created_at.isoformat() if turma.created_at else None
+    }
+
+
 @router.post("")
 async def create_turma(data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     nome = data.get("nome")

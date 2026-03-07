@@ -108,6 +108,28 @@ def _rbac_check_plano_owner(user: users_db.User, plano_user_id: int) -> None:
         raise HTTPException(status_code=403, detail="Acesso negado")
 
 
+@router.get("/{plano_id}")
+async def get_plano_detalhado(
+    plano_id: int,
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    plano = db.query(models.Plano).filter(models.Plano.id == plano_id).first()
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    _rbac_check_plano_owner(user, plano.user_id)
+
+    return {
+        "id": plano.id,
+        "titulo": plano.titulo,
+        "disciplina": plano.disciplina,
+        "data_inicio": plano.data_inicio,
+        "dias_semana": json.loads(plano.dias_semana) if plano.dias_semana else [],
+        "turma_id": plano.turma_id
+    }
+
+
 def _get_plano_with_aulas(db: Session, plano_id: int):
     return (
         db.query(models.Plano)
@@ -195,11 +217,22 @@ async def create_plano(
     if not turma:
         raise HTTPException(status_code=404, detail="Turma não encontrada")
 
-    # Usa dados da turma (prioridade) ou do payload se não houver na turma (fallback)
-    dias_semana_raw = turma.dias_semana or json.dumps(data.dias_semana)
-    disciplina = turma.disciplina or data.disciplina
+    # Prioridade: dados enviados no JSON (Studio V2), fallback para dados da Turma
+    dias_semana_list = data.dias_semana if (data.dias_semana and len(data.dias_semana) > 0) else None
     
-    dias = _normalize_days(json.loads(dias_semana_raw))
+    if not dias_semana_list and turma.dias_semana:
+        try:
+            dias_semana_list = json.loads(turma.dias_semana)
+        except:
+            dias_semana_list = [0, 1, 2, 3, 4]
+            
+    if not dias_semana_list:
+        dias_semana_list = [0, 1, 2, 3, 4]
+
+    dias_semana_json = json.dumps(dias_semana_list)
+    disciplina = (data.disciplina and data.disciplina.strip()) or turma.disciplina
+    
+    dias = _normalize_days(dias_semana_list)
     
     if not data.aulas:
         raise HTTPException(status_code=422, detail="Você precisa enviar pelo menos 1 aula.")
@@ -211,7 +244,7 @@ async def create_plano(
         titulo=data.titulo,
         disciplina=disciplina,
         data_inicio=data.data_inicio,
-        dias_semana=dias_semana_raw,
+        dias_semana=dias_semana_json,
     )
     db.add(novo_plano)
     db.flush()
