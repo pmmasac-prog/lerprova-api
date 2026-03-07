@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Trash2, X, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Plus, Trash2, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../services/api';
 
 interface Period {
