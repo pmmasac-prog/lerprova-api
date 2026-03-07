@@ -23,6 +23,23 @@ export const SchoolManagement: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return (
+      <div className="admin-container">
+        <header className="admin-header">
+          <div>
+            <h1 className="admin-title">Gestão de Escolas</h1>
+            <p className="admin-subtitle">Gerencie as unidades e instituições cadastradas no sistema.</p>
+          </div>
+          <button className="btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <Plus size={18} /> Nova Escola
+          </button>
+        </header>
+        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados reais...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-container">
       <header className="admin-header">
@@ -35,17 +52,14 @@ export const SchoolManagement: React.FC = () => {
         </button>
       </header>
 
-      {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados reais...</div>
-      ) : (
-        <div className="admin-card" style={{ marginTop: '20px' }}>
+      <div className="admin-card" style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
-            <input 
-              type="text" 
-              placeholder="Buscar por nome ou endereço..." 
-              className="admin-input" 
+            <input
+              type="text"
+              placeholder="Buscar por nome ou endereço..."
+              className="admin-input"
               style={{ paddingLeft: '40px' }}
             />
           </div>
@@ -90,7 +104,6 @@ export const SchoolManagement: React.FC = () => {
           </tbody>
         </table>
       </div>
-      )}
     </div>
   );
 };

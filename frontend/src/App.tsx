@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Turmas } from './pages/Turmas';
@@ -17,6 +17,17 @@ import { StudentPortal } from './pages/StudentPortal';
 import { SchoolManagement } from './pages/SchoolManagement';
 import { AcademicCalendar } from './pages/AcademicCalendar';
 import { StudentCardsPage } from './pages/StudentCardsPage';
+import { BillingScreen } from './screens/BillingScreen';
+import { GenerateReportScreen } from './screens/GenerateReportScreen';
+import { BatchSyncComponent } from './components/BatchSyncComponent';
+
+// Wrapper para extrair params da URL
+const GenerateReportScreenWrapper = () => {
+  const { id } = useParams<{ id: string }>();
+  const turmaId = parseInt(id || '0', 10);
+  // Poderia buscar o turmaNome da API se necessário
+  return <GenerateReportScreen turmaId={turmaId} turmaNome={`Turma ${turmaId}`} />;
+};
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('token');
@@ -73,6 +84,13 @@ function App() {
         <Route path="/admin/carteirinhas" element={<PrivateRoute><AdminLayout><StudentCardsPage /></AdminLayout></PrivateRoute>} />
         <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
         <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/sincronizacao" element={<PrivateRoute><AdminLayout><BatchSyncComponent /></AdminLayout></PrivateRoute>} />
+
+        {/* Nova Feature: Billing/Assinatura */}
+        <Route path="/configuracoes/faturamento" element={<PrivateRoute><BillingScreen /></PrivateRoute>} />
+
+        {/* Nova Feature: Relatórios */}
+        <Route path="/turmas/:id/relatorio" element={<PrivateRoute><GenerateReportScreenWrapper /></PrivateRoute>} />
 
         {/* Student Portal */}
         <Route path="/portal-aluno" element={<PrivateRoute><StudentPortal /></PrivateRoute>} />

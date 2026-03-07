@@ -6,11 +6,11 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 interface Student {
-  id: number;
-  nome: string;
-  codigo: string;
-  turma: string;
-  unidade: string;
+    id: number;
+    nome: string;
+    codigo: string;
+    turma: string;
+    unidade: string;
 }
 
 export const StudentCardsPage: React.FC = () => {
@@ -24,11 +24,11 @@ export const StudentCardsPage: React.FC = () => {
     useEffect(() => {
         // Busca real de alunos via API
         api.getAllStudents()
-          .then(data => {
-            setStudents(data || []);
-          })
-          .catch(err => console.error("Erro ao carregar alunos:", err))
-          .finally(() => setLoading(false));
+            .then(data => {
+                setStudents(data || []);
+            })
+            .catch(err => console.error("Erro ao carregar alunos:", err))
+            .finally(() => setLoading(false));
     }, []);
 
     const handlePrint = () => {
@@ -38,7 +38,7 @@ export const StudentCardsPage: React.FC = () => {
 
     const handleDownloadPDF = async () => {
         if (!cardRef.current || !selectedStudent) return;
-        
+
         try {
             setExporting(true);
             const canvas = await html2canvas(cardRef.current, {
@@ -46,14 +46,14 @@ export const StudentCardsPage: React.FC = () => {
                 useCORS: true,
                 backgroundColor: null
             });
-            
+
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
                 format: [85.6, 54] // Tamanho padrão de cartão de crédito
             });
-            
+
             pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
             pdf.save(`Carteirinha_${selectedStudent.codigo}_${selectedStudent.nome.replace(/\s+/g, '_')}.pdf`);
         } catch (err) {
@@ -64,13 +64,16 @@ export const StudentCardsPage: React.FC = () => {
         }
     };
 
-    const filteredStudents = students.filter(s => 
-        s.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const filteredStudents = students.filter(s =>
+        s.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.codigo.includes(searchTerm)
     );
 
     return (
         <div className="admin-container">
+            {loading ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados...</div>
+            ) : null}
             <header className="admin-header no-print">
                 <div>
                     <h1 className="admin-title">Emissão de Carteirinhas</h1>
@@ -80,10 +83,10 @@ export const StudentCardsPage: React.FC = () => {
                     <button className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <Download size={18} /> Lote Completo (PDF)
                     </button>
-                    <button 
-                        className="btn-emerald" 
-                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }} 
-                        onClick={handleDownloadPDF} 
+                    <button
+                        className="btn-emerald"
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+                        onClick={handleDownloadPDF}
                         disabled={!selectedStudent || exporting}
                     >
                         <FileDown size={18} /> {exporting ? 'Gerando...' : 'Salvar PDF'}
@@ -98,10 +101,10 @@ export const StudentCardsPage: React.FC = () => {
                 <div className="admin-card">
                     <div style={{ marginBottom: '20px', position: 'relative' }}>
                         <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
-                        <input 
-                            type="text" 
-                            placeholder="Pesquisar aluno por nome ou matrícula..." 
-                            className="admin-input" 
+                        <input
+                            type="text"
+                            placeholder="Pesquisar aluno por nome ou matrícula..."
+                            className="admin-input"
                             style={{ paddingLeft: '40px' }}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -119,8 +122,8 @@ export const StudentCardsPage: React.FC = () => {
                         </thead>
                         <tbody>
                             {filteredStudents.map(student => (
-                                <tr 
-                                    key={student.id} 
+                                <tr
+                                    key={student.id}
                                     style={{ cursor: 'pointer', background: selectedStudent?.id === student.id ? '#1e293b' : '' }}
                                     onClick={() => setSelectedStudent(student)}
                                 >
@@ -149,10 +152,10 @@ export const StudentCardsPage: React.FC = () => {
                     <h3 className="admin-card-title" style={{ marginBottom: '25px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <CreditCard size={18} color="var(--admin-gold)" /> Pré-visualização Real
                     </h3>
-                    
+
                     {selectedStudent ? (
                         <div ref={cardRef}>
-                            <StudentCard 
+                            <StudentCard
                                 studentName={selectedStudent.nome}
                                 studentCode={selectedStudent.codigo}
                                 schoolName={selectedStudent.unidade}
@@ -183,7 +186,7 @@ export const StudentCardsPage: React.FC = () => {
             {/* Versão para Impressão - Apenas o cartão */}
             <div className="print-only">
                 {selectedStudent && (
-                    <StudentCard 
+                    <StudentCard
                         studentName={selectedStudent.nome}
                         studentCode={selectedStudent.codigo}
                         schoolName={selectedStudent.unidade}

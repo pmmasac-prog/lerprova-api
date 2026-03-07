@@ -46,12 +46,12 @@ export const AcademicCalendar: React.FC = () => {
           <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#94a3b8' }}>{d}</span>
           <div style={{ marginTop: '5px' }}>
             {hasEvents.map(e => (
-              <div 
-                key={e.id} 
-                style={{ 
-                  fontSize: '0.6rem', 
-                  padding: '2px 5px', 
-                  borderRadius: '4px', 
+              <div
+                key={e.id}
+                style={{
+                  fontSize: '0.6rem',
+                  padding: '2px 5px',
+                  borderRadius: '4px',
                   background: e.type === 'holiday' ? '#ef4444' : e.type === 'administrative' ? 'var(--admin-gold)' : '#3b82f6',
                   color: '#fff',
                   marginBottom: '2px',
@@ -74,6 +74,9 @@ export const AcademicCalendar: React.FC = () => {
 
   return (
     <div className="admin-container">
+      {loading ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados...</div>
+      ) : null}
       <header className="admin-header">
         <div>
           <h1 className="admin-title">Calendário Acadêmico 2026</h1>
@@ -96,13 +99,13 @@ export const AcademicCalendar: React.FC = () => {
               {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase()}
             </h3>
             <div style={{ display: 'flex', gap: '5px' }}>
-              <button 
-                className="btn-icon" 
+              <button
+                className="btn-icon"
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
               >
                 <ChevronLeft size={20} />
               </button>
-              <button 
+              <button
                 className="btn-icon"
                 onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
               >
@@ -135,7 +138,7 @@ export const AcademicCalendar: React.FC = () => {
               </div>
             ))}
           </div>
-          
+
           <div style={{ marginTop: '20px', padding: '15px', background: '#1e293b', borderRadius: '12px' }}>
             <h4 style={{ color: '#ca8a04', fontSize: '0.85rem', marginBottom: '10px' }}>Bimestres 2026</h4>
             <ul style={{ color: '#94a3b8', fontSize: '0.8rem', paddingLeft: '15px', lineHeight: '1.8' }}>

@@ -192,6 +192,59 @@ async def import_master_data(
     db.commit()
     return {"message": "Estrutura master importada com sucesso"}
 
+@router.get("/schools")
+async def list_schools(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Lista as escolas reais do banco de dados."""
+    schools = db.query(models.School).all()
+    return [
+        {
+            "id": s.id,
+            "name": s.school_name,
+            "address": s.organization_name or "Endereço não informado",
+            "units": 1 # Unidade padrão
+        } for s in schools
+    ]
+
+@router.get("/calendar")
+async def get_calendar_events(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Busca o calendário mestre real (2026)."""
+    events = db.query(models.Event).all()
+    periods = db.query(models.Period).all()
+    
+    return {
+        "events": [
+            {
+                "id": e.id,
+                "title": e.title,
+                "date": e.start_date,
+                "type": "holiday" if not e.is_school_day else "activity",
+                "description": f"Tipo: {e.event_type_id}"
+            } for e in events
+        ],
+        "periods": [
+            {
+                "id": p.id,
+                "name": p.period_name,
+                "start": p.start_date,
+                "end": p.end_date
+            } for p in periods
+        ]
+    }
+
+@router.get("/students")
+async def list_all_students(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Busca a lista real de todos os alunos no ecossistema."""
+    students = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).all()
+    return [
+        {
+            "id": s.id,
+            "nome": s.nome,
+            "codigo": s.codigo,
+            "turma": s.turmas[0].nome if s.turmas else "Sem Turma",
+            "unidade": "C.E. ALCIDES CÉSAR MENESES" # Default
+        } for s in students
+    ]
+
 @router.post("/generate-carteirinha")
 async def generate_student_card(aluno_id: int, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
     """

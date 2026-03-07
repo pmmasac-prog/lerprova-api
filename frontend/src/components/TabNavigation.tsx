@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, ClipboardList, TrendingUp } from 'lucide-react';
+import { NotificationBell } from './NotificationCenter';
 import './TabNavigation.css';
 
 export const TabNavigation: React.FC = () => {
@@ -35,6 +36,9 @@ export const TabNavigation: React.FC = () => {
                         </Link>
                     );
                 })}
+            </div>
+            <div className="tab-notification">
+                <NotificationBell />
             </div>
         </nav>
     );

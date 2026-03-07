@@ -543,5 +543,141 @@ export const api = {
             method: 'POST',
             headers: getAuthHeaders()
         });
+    },
+
+    // ============ ENDPOINTS NÃO UTILIZADOS (24) ============
+
+    // --- MONETIZAÇÃO (2 endpoints) ---
+    billing: {
+        async getStatus() {
+            return request(`${API_URL}/billing/status`, {
+                headers: getAuthHeaders()
+            });
+        },
+        async upgrade(planType: string, paymentMethod: string = 'credit_card', durationMonths: number = 12) {
+            return request(`${API_URL}/billing/upgrade`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    plan_type: planType,
+                    payment_method: paymentMethod,
+                    duration_months: durationMonths
+                })
+            });
+        }
+    },
+
+    // --- NOTIFICAÇÕES (3 endpoints) ---
+    notifications: {
+        async getAll(skip: number = 0, limit: number = 20, type?: string, isRead?: boolean) {
+            let url = `${API_URL}/notifications?skip=${skip}&limit=${limit}`;
+            if (type) url += `&type=${type}`;
+            if (isRead !== undefined) url += `&is_read=${isRead}`;
+            
+            return request(url, {
+                headers: getAuthHeaders()
+            });
+        },
+        async markAsRead(notificationId: number) {
+            return request(`${API_URL}/notifications/${notificationId}/read`, {
+                method: 'PATCH',
+                headers: getAuthHeaders()
+            });
+        },
+        async getUnreadCount() {
+            return request(`${API_URL}/notifications/unread/count`, {
+                headers: getAuthHeaders()
+            });
+        }
+    },
+
+    // --- RELATÓRIOS (1 endpoint) ---
+    async generateTurmaReport(turmaId: number, format: string = 'json', includePeriod?: string) {
+        let url = `${API_URL}/relatorios/${turmaId}?format=${format}`;
+        if (includePeriod) url += `&period=${includePeriod}`;
+        
+        return request(url, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    // --- PROCESSAMENTO OMR AVANÇADO (3 endpoints) ---
+    omr: {
+        async process(imageBase64: string, gabaritoId?: number, alunoId?: number, turmaId?: number) {
+            return request(`${API_URL}/omr/process`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    imagem_base64: imageBase64,
+                    gabarito_id: gabaritoId,
+                    aluno_id: alunoId,
+                    turma_id: turmaId
+                })
+            });
+        },
+        async preview(imageBase64: string, gabaritoId: number, showDetectedMarks: boolean = true) {
+            return request(`${API_URL}/omr/preview`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    imagem_base64: imageBase64,
+                    gabarito_id: gabaritoId,
+                    show_detected_marks: showDetectedMarks
+                })
+            });
+        }
+    },
+
+    // --- REVISÃO DE PROVAS (1 endpoint) ---
+    async revistarProva(resultadoId: number, revisoes: any[], observacoes?: string) {
+        return request(`${API_URL}/provas/revisar`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                resultado_id: resultadoId,
+                revisoes: revisoes,
+                observacoes: observacoes
+            })
+        });
+    },
+
+    // --- ADMINISTRAÇÃO (1 endpoint) ---
+    async transferirTurma(turmaId: number, newProfessorId: number, notifyTeacher: boolean = true, reason?: string) {
+        return request(`${API_URL}/admin/turmas/${turmaId}/transfer/${newProfessorId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                notify_teacher: notifyTeacher,
+                reason: reason
+            })
+        });
+    },
+
+    // --- SINCRONIZAÇÃO EM LOTE (1 endpoint) ---
+    async batchSync(action: string, data: any[], options?: { upsert?: boolean, validate_only?: boolean }) {
+        const apiKey = localStorage.getItem('api_key') || '';
+        return request(`${API_URL}/batch/sync`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey
+            },
+            body: JSON.stringify({
+                action: action,
+                data: data,
+                options: options || { upsert: true, validate_only: false }
+            })
+        });
+    },
+
+    // --- ROTA PLANEJAMENTO CORRIGIDA ---
+    async getPlanosAll() {
+        // GET /planos sem ID - se existir no backend
+        return request(`${API_URL}/planos`, {
+            headers: getAuthHeaders()
+        }).catch(() => {
+            console.warn('GET /planos sem parâmetros não disponível');
+            return [];
+        });
     }
 };
