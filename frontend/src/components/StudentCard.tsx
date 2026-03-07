@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, School } from 'lucide-react';
+import { School } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import './StudentCard.css';
 

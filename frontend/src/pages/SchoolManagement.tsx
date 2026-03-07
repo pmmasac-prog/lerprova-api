@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { School, MapPin, Search, Plus, Filter, Eye } from 'lucide-react';
+import { School, MapPin, Search, Plus, Eye } from 'lucide-react';
 import { api } from '../services/api';
 
 interface SchoolData {
