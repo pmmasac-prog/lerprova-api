@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { CreditCard, Printer, Search, Download, FileText, CheckCircle, FileDown, X, Filter } from 'lucide-react';
+import { CreditCard, Printer, Search, Download, CheckCircle, FileDown, X, Filter } from 'lucide-react';
 import { StudentCard } from '../components/StudentCard';
 import { api } from '../services/api';
 import html2canvas from 'html2canvas';
@@ -18,7 +18,7 @@ export const StudentCardsPage: React.FC = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
     const [selectedTurmas, setSelectedTurmas] = useState<Set<string>>(new Set());
     const [selectedTurnos, setSelectedTurnos] = useState<Set<string>>(new Set());
@@ -29,7 +29,7 @@ export const StudentCardsPage: React.FC = () => {
         // Busca real de alunos via API
         api.getAllStudents()
             .then(data => {
-                const studentsWithTurno = (data || []).map(s => ({
+                const studentsWithTurno = (data || []).map((s: Student) => ({
                     ...s,
                     turno: extrairTurno(s.turma) // Extrai turno do nome da turma
                 }));
