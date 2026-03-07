@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Pin, Clock, Bookmark, Event } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pin, Clock, Bookmark } from 'lucide-react';
 
 interface EventData {
   id: number;
@@ -18,8 +18,8 @@ export const AcademicCalendar: React.FC = () => {
     { id: 3, title: 'Semana de Planejamento', date: '2026-01-08', type: 'activity', description: 'Elaboração dos planos de ensino.' },
   ];
 
-  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-  const firstDayOfMonth = (y, m) => new Date(y, m, 1).getDay();
+  const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+  const firstDayOfMonth = (y: number, m: number) => new Date(y, m, 1).getDay();
 
   const renderDays = () => {
     const totalDays = daysInMonth(currentMonth.getFullYear(), currentMonth.getMonth());

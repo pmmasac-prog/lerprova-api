@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CreditCard, Printer, Search, School, User, Download, FileText, CheckCircle } from 'lucide-react';
+import { CreditCard, Printer, Search, Download, FileText, CheckCircle } from 'lucide-react';
 import { StudentCard } from '../components/StudentCard';
-import { api } from '../services/api';
 
 interface Student {
   id: number;
@@ -15,7 +14,6 @@ export const StudentCardsPage: React.FC = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [loading, setLoading] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
