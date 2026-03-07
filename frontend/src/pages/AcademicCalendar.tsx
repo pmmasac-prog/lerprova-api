@@ -23,33 +23,33 @@ interface Event {
 const PERIODS: Period[] = [
   {
     id: 'p1',
-    name: '1º Bimestre',
-    startDate: '2026-01-15',
-    endDate: '2026-04-15',
+    name: '1º Período',
+    startDate: '2026-02-09',
+    endDate: '2026-04-24',
     schoolDays: 50,
     workloadHours: 300
   },
   {
     id: 'p2',
-    name: '2º Bimestre',
-    startDate: '2026-04-16',
-    endDate: '2026-07-15',
+    name: '2º Período',
+    startDate: '2026-04-27',
+    endDate: '2026-07-31',
     schoolDays: 50,
-    workloadHours: 300
+    workloadHours: 294
   },
   {
     id: 'p3',
-    name: '3º Bimestre',
-    startDate: '2026-07-16',
-    endDate: '2026-09-15',
+    name: '3º Período',
+    startDate: '2026-08-03',
+    endDate: '2026-10-13',
     schoolDays: 50,
     workloadHours: 300
   },
   {
     id: 'p4',
-    name: '4º Bimestre',
-    startDate: '2026-09-16',
-    endDate: '2026-12-15',
+    name: '4º Período',
+    startDate: '2026-10-14',
+    endDate: '2026-12-30',
     schoolDays: 51,
     workloadHours: 306
   }
@@ -61,9 +61,11 @@ const EVENT_TYPES: Record<string, { label: string; emoji: string; color: string;
   'meeting': { label: 'Reunião', emoji: '👥', color: '#8b5cf6', bgColor: '#4c1d95' },
   'administrative': { label: 'Administrativo', emoji: '⚙️', color: '#ec4899', bgColor: '#831843' },
   'vacation': { label: 'Férias', emoji: '✈️', color: '#06b6d4', bgColor: '#164e63' },
-  'assessment': { label: 'Avaliação', emoji: '📝', color: '#3b82f6', bgColor: '#1e3a8a' },
+  'assessment': { label: 'SEAMA - Diagnóstica', emoji: '🧪', color: '#f97316', bgColor: '#7c2d12' },
+  'assessment_other': { label: 'Avaliação', emoji: '📝', color: '#3b82f6', bgColor: '#1e3a8a' },
+  'pending_test': { label: 'Testes de Pendência', emoji: '⏳', color: '#a78bfa', bgColor: '#4c1d95' },
   'term_milestone': { label: 'Marco Acadêmico', emoji: '🎯', color: '#10b981', bgColor: '#064e3b' },
-  'commemorative': { label: 'Comemorativo', emoji: '🎉', color: '#f97316', bgColor: '#7c2d12' },
+  'commemorative': { label: 'Comemorativo', emoji: '🎉', color: '#8b5cf6', bgColor: '#4c1d95' },
   'make_up_class': { label: 'Reposição', emoji: '🔄', color: '#6366f1', bgColor: '#312e81' }
 };
 
