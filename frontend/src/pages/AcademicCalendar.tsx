@@ -1,152 +1,369 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Pin, Clock, Bookmark } from 'lucide-react';
+import { Calendar, Plus, Trash2, X, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../services/api';
 
-interface EventData {
-  id: number;
-  title: string;
-  date: string;
-  type: 'holiday' | 'exam' | 'administrative' | 'activity';
-  description: string;
+interface Period {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  schoolDays: number;
+  workloadHours: number;
 }
 
+interface Event {
+  id: number;
+  title: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  description?: string;
+}
+
+const PERIODS: Period[] = [
+  {
+    id: 'p1',
+    name: '1º Bimestre',
+    startDate: '2026-01-15',
+    endDate: '2026-04-15',
+    schoolDays: 50,
+    workloadHours: 300
+  },
+  {
+    id: 'p2',
+    name: '2º Bimestre',
+    startDate: '2026-04-16',
+    endDate: '2026-07-15',
+    schoolDays: 50,
+    workloadHours: 300
+  },
+  {
+    id: 'p3',
+    name: '3º Bimestre',
+    startDate: '2026-07-16',
+    endDate: '2026-09-15',
+    schoolDays: 50,
+    workloadHours: 300
+  },
+  {
+    id: 'p4',
+    name: '4º Bimestre',
+    startDate: '2026-09-16',
+    endDate: '2026-12-15',
+    schoolDays: 51,
+    workloadHours: 306
+  }
+];
+
+const EVENT_TYPES: Record<string, { label: string; emoji: string; color: string; bgColor: string }> = {
+  'holiday': { label: 'Feriado', emoji: '🏖️', color: '#ef4444', bgColor: '#7f1d1d' },
+  'planning': { label: 'Planejamento', emoji: '📋', color: '#f59e0b', bgColor: '#78350f' },
+  'meeting': { label: 'Reunião', emoji: '👥', color: '#8b5cf6', bgColor: '#4c1d95' },
+  'administrative': { label: 'Administrativo', emoji: '⚙️', color: '#ec4899', bgColor: '#831843' },
+  'vacation': { label: 'Férias', emoji: '✈️', color: '#06b6d4', bgColor: '#164e63' },
+  'assessment': { label: 'Avaliação', emoji: '📝', color: '#3b82f6', bgColor: '#1e3a8a' },
+  'term_milestone': { label: 'Marco Acadêmico', emoji: '🎯', color: '#10b981', bgColor: '#064e3b' },
+  'commemorative': { label: 'Comemorativo', emoji: '🎉', color: '#f97316', bgColor: '#7c2d12' },
+  'make_up_class': { label: 'Reposição', emoji: '🔄', color: '#6366f1', bgColor: '#312e81' }
+};
+
 export const AcademicCalendar: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1)); // Janeiro de 2026
-  const [calendarEvents, setCalendarEvents] = useState<EventData[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState<string>('');
+  const [visiblePeriods, setVisiblePeriods] = useState<Set<string>>(new Set(PERIODS.map(p => p.id)));
+  const [expandedPeriod, setExpandedPeriod] = useState<string>('p1');
 
   useEffect(() => {
     api.getMasterCalendar()
       .then(data => {
-        if (data && data.events) setCalendarEvents(data.events);
+        if (data && data.events) {
+          setEvents(data.events);
+        }
       })
       .catch(err => console.error("Erro ao carregar calendário:", err))
       .finally(() => setLoading(false));
   }, []);
 
-  const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
-  const firstDayOfMonth = (y: number, m: number) => new Date(y, m, 1).getDay();
-
-  const renderDays = () => {
-    const totalDays = daysInMonth(currentMonth.getFullYear(), currentMonth.getMonth());
-    const firstDay = firstDayOfMonth(currentMonth.getFullYear(), currentMonth.getMonth());
-    const days = [];
-
-    // Preenchendo com dias vazios para começar o mês no dia da semana correto
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} style={{ height: '80px', borderBottom: '1px solid #1e293b' }}></div>);
-    }
-
-    for (let d = 1; d <= totalDays; d++) {
-      const dateStr = `2026-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const hasEvents = calendarEvents.filter(e => e.date === dateStr);
-
-      days.push(
-        <div key={d} style={{ height: '80px', borderBottom: '1px solid #1e293b', borderRight: '1px solid #1e293b', padding: '10px', position: 'relative' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#94a3b8' }}>{d}</span>
-          <div style={{ marginTop: '5px' }}>
-            {hasEvents.map(e => (
-              <div
-                key={e.id}
-                style={{
-                  fontSize: '0.6rem',
-                  padding: '2px 5px',
-                  borderRadius: '4px',
-                  background: e.type === 'holiday' ? '#ef4444' : e.type === 'administrative' ? 'var(--admin-gold)' : '#3b82f6',
-                  color: '#fff',
-                  marginBottom: '2px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-                title={e.description}
-              >
-                {e.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    return days;
+  const getEventsByPeriod = (periodId: string) => {
+    const period = PERIODS.find(p => p.id === periodId);
+    if (!period) return [];
+    
+    return events.filter(e => {
+      const eStart = new Date(e.startDate);
+      const eEnd = new Date(e.endDate);
+      const pStart = new Date(period.startDate);
+      const pEnd = new Date(period.endDate);
+      return eStart <= pEnd && eEnd >= pStart;
+    }).filter(e => !filterType || e.type === filterType);
   };
+
+  const handleDeleteEvent = (id: number) => {
+    setEvents(events.filter(e => e.id !== id));
+  };
+
+  const togglePeriodVisibility = (periodId: string) => {
+    const newVisiblePeriods = new Set(visiblePeriods);
+    if (newVisiblePeriods.has(periodId)) {
+      newVisiblePeriods.delete(periodId);
+    } else {
+      newVisiblePeriods.add(periodId);
+    }
+    setVisiblePeriods(newVisiblePeriods);
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-container">
+        <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
+          <Calendar size={40} style={{ marginBottom: '20px', opacity: 0.5 }} />
+          <p>Carregando calendário acadêmico...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-container">
-      {loading ? (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados...</div>
-      ) : null}
       <header className="admin-header">
         <div>
-          <h1 className="admin-title">Calendário Acadêmico 2026</h1>
-          <p className="admin-subtitle">Organização de datas, feriados e períodos avaliativos.</p>
+          <h1 className="admin-title" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <Calendar size={28} color="var(--admin-gold)" />
+            Calendário Acadêmico 2026
+          </h1>
+          <p className="admin-subtitle">Planejamento completo do ano letivo com eventos, períodos e marcos importantes.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-secondary" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Pin size={18} /> Fixar Datas
-          </button>
-          <button className="btn-emerald" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Bookmark size={18} /> Novo Evento
-          </button>
-        </div>
+        <button className="btn-emerald" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <Plus size={18} /> Novo Evento
+        </button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', marginTop: '20px' }}>
-        <div className="admin-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 className="admin-card-title">
-              {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase()}
-            </h3>
-            <div style={{ display: 'flex', gap: '5px' }}>
-              <button
-                className="btn-icon"
-                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                className="btn-icon"
-                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
+      {/* FILTROS */}
+      <div className="admin-card" style={{ marginTop: '20px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <label style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold' }}>Filtrar por tipo:</label>
+          
+          <button
+            onClick={() => setFilterType('')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: !filterType ? '2px solid #3b82f6' : '1px solid #374151',
+              background: !filterType ? '#1e40af' : '#0f172a',
+              color: '#f3f4f6',
+              cursor: 'pointer',
+              fontSize: '0.85rem'
+            }}
+          >
+            Todos
+          </button>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', marginBottom: '10px' }}>
-            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-              <span key={d} style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 'bold' }}>{d}</span>
-            ))}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderTop: '1px solid #1e293b', borderLeft: '1px solid #1e293b' }}>
-            {renderDays()}
-          </div>
+          {Object.entries(EVENT_TYPES).map(([key, { label, emoji, color }]) => (
+            <button
+              key={key}
+              onClick={() => setFilterType(key)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: filterType === key ? `2px solid ${color}` : '1px solid #374151',
+                background: filterType === key ? '#1e293b' : '#0f172a',
+                color: filterType === key ? color : '#94a3b8',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                fontWeight: filterType === key ? 'bold' : 'normal'
+              }}
+            >
+              {emoji} {label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div className="admin-card">
-          <h3 className="admin-card-title" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Clock size={18} color="var(--admin-gold)" /> Próximas Datas
-          </h3>
-          <div style={{ marginTop: '15px' }}>
-            {calendarEvents.map(e => (
-              <div key={e.id} style={{ paddingBottom: '15px', borderBottom: '1px solid #1e293b', marginBottom: '15px' }}>
-                <p style={{ color: '#60a5fa', fontSize: '0.75rem', fontWeight: 'bold' }}>{new Date(e.date).toLocaleDateString()}</p>
-                <p style={{ color: '#f3f4f6', fontSize: '0.9rem', fontWeight: '600' }}>{e.title}</p>
-                <p style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{e.description}</p>
+      {/* BIMESTRES - CARDS EXPANSÍVEIS */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginTop: '20px' }}>
+        {PERIODS.map(period => {
+          const periodEvents = getEventsByPeriod(period.id);
+          const isVisible = visiblePeriods.has(period.id);
+          const isExpanded = expandedPeriod === period.id;
+
+          const today = new Date();
+          const periodStart = new Date(period.startDate);
+          const periodEnd = new Date(period.endDate);
+          const isCurrent = today >= periodStart && today <= periodEnd;
+
+          return (
+            <div 
+              key={period.id}
+              className="admin-card"
+              style={{
+                borderLeft: `4px solid ${isCurrent ? 'var(--admin-emerald)' : 'var(--admin-gold)'}`,
+                background: isCurrent ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 1) 100%)' : undefined,
+                boxShadow: isCurrent ? '0 0 20px rgba(16, 185, 129, 0.15)' : undefined
+              }}
+            >
+              {/* HEADER DO BIMESTRE */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <h3 className="admin-card-title" style={{ margin: 0, fontSize: '1.1rem', color: isCurrent ? '#10b981' : 'var(--admin-gold)' }}>
+                      {period.name}
+                    </h3>
+                    {isCurrent && <span style={{ background: '#10b981', color: '#0f172a', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>ATUAL</span>}
+                  </div>
+                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '5px 0 0 0' }}>
+                    {new Date(period.startDate).toLocaleDateString('pt-BR')} →{' '}
+                    {new Date(period.endDate).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => togglePeriodVisibility(period.id)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8'
+                  }}
+                >
+                  {isVisible ? <Eye size={20} /> : <EyeOff size={20} />}
+                </button>
               </div>
-            ))}
-          </div>
 
-          <div style={{ marginTop: '20px', padding: '15px', background: '#1e293b', borderRadius: '12px' }}>
-            <h4 style={{ color: '#ca8a04', fontSize: '0.85rem', marginBottom: '10px' }}>Bimestres 2026</h4>
-            <ul style={{ color: '#94a3b8', fontSize: '0.8rem', paddingLeft: '15px', lineHeight: '1.8' }}>
-              <li><b>1º Bim</b>: 15 Jan - 15 Abr</li>
-              <li><b>2º Bim</b>: 16 Abr - 15 Jul</li>
-              <li><b>3º Bim</b>: 16 Jul - 15 Set</li>
-              <li><b>4º Bim</b>: 16 Set - 15 Dez</li>
-            </ul>
+              {/* STATS DO BIMESTRE */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '12px', background: '#0f172a', borderRadius: '8px', marginTop: '12px', marginBottom: '12px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Dias Letivos</p>
+                  <p style={{ color: '#10b981', fontSize: '1.2rem', fontWeight: 'bold' }}>{period.schoolDays}</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Horas Aula</p>
+                  <p style={{ color: '#3b82f6', fontSize: '1.2rem', fontWeight: 'bold' }}>{period.workloadHours}h</p>
+                </div>
+              </div>
+
+              {/* BOTÃO EXPANDIR/RETRAIR */}
+              <button
+                onClick={() => setExpandedPeriod(isExpanded ? '' : period.id)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: 'transparent',
+                  border: '1px solid #374151',
+                  color: '#94a3b8',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  marginBottom: '12px'
+                }}
+              >
+                {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                {periodEvents.length} eventos
+              </button>
+
+              {/* EVENTOS DO BIMESTRE */}
+              {isVisible && isExpanded ? (
+                <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                  {periodEvents.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#4b5563' }}>
+                      <p style={{ fontSize: '0.9rem' }}>Nenhum evento neste período</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {periodEvents.map(event => {
+                        const eventType = EVENT_TYPES[event.type as keyof typeof EVENT_TYPES] || { label: 'Outro', emoji: '📌', color: '#94a3b8', bgColor: '#1e293b' };
+                        return (
+                          <div
+                            key={event.id}
+                            style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              background: eventType.bgColor,
+                              border: `1px solid ${eventType.color}`,
+                              position: 'relative'
+                            }}
+                            className="event-card"
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                              <div style={{ flex: 1 }}>
+                                <p style={{ color: eventType.color, fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 3px 0' }}>
+                                  {eventType.emoji} {eventType.label}
+                                </p>
+                                <p style={{ color: '#f3f4f6', fontSize: '0.9rem', fontWeight: '600', margin: 0 }}>
+                                  {event.title}
+                                </p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '3px 0 0 0' }}>
+                                  {new Date(event.startDate).toLocaleDateString('pt-BR')}
+                                  {event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString('pt-BR')}`}
+                                </p>
+                                {event.description && (
+                                  <p style={{ color: '#cbd5e1', fontSize: '0.8rem', margin: '5px 0 0 0', fontStyle: 'italic' }}>
+                                    {event.description}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleDeleteEvent(event.id)}
+                                style={{
+                                  padding: '4px 8px',
+                                  background: 'transparent',
+                                  border: '1px solid #ef4444',
+                                  color: '#ef4444',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '0.75rem'
+                                }}
+                              >
+                                <Trash2 size={14} /> Deletar
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* RESUMO GERAL */}
+      <div className="admin-card" style={{ marginTop: '20px', background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)', border: '1px solid var(--admin-emerald)' }}>
+        <h3 className="admin-card-title" style={{ color: 'var(--admin-gold)', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          📊 Resumo do Ano Letivo 2026
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginTop: '15px' }}>
+          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid #10b981' }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Total de Dias Letivos</p>
+            <p style={{ color: '#10b981', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>
+              {PERIODS.reduce((sum, p) => sum + p.schoolDays, 0)}
+            </p>
+          </div>
+          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px solid #3b82f6' }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Total de Horas Aula</p>
+            <p style={{ color: '#3b82f6', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>
+              {PERIODS.reduce((sum, p) => sum + p.workloadHours, 0)}h
+            </p>
+          </div>
+          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '8px', border: '1px solid #a855f7' }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Total de Eventos</p>
+            <p style={{ color: '#a855f7', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>
+              {events.length}
+            </p>
+          </div>
+          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(251, 146, 60, 0.1)', borderRadius: '8px', border: '1px solid #fb923c' }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Bimestres</p>
+            <p style={{ color: '#fb923c', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>
+              4
+            </p>
           </div>
         </div>
       </div>
