@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ShieldAlert, LogOut, Settings, Award, School, Calendar, Contact } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldAlert, LogOut, Settings, Award, School, Calendar, Contact, FileText } from 'lucide-react';
 import '../pages/Admin.css';
 
 export const AdminSidebar: React.FC = () => {
@@ -50,6 +50,10 @@ export const AdminSidebar: React.FC = () => {
                 <NavLink to="/admin/carteirinhas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
                     <Contact size={18} />
                     <span>Carteirinhas</span>
+                </NavLink>
+                <NavLink to="/admin/relatorios-frequencia" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
+                    <FileText size={18} />
+                    <span>Relatórios Frequência</span>
                 </NavLink>
 
                 <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Sistema</div>

@@ -20,7 +20,7 @@ import models
 import users_db
 from database import engine, SessionLocal
 from migrations import run_migrations
-from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications, alunos_portal, calendar
+from routers import admin, planejamento, auth, turmas, alunos, gabaritos, resultados, frequencia, provas, reports, curriculo, dashboard, notifications, alunos_portal, calendar, reports_admin
 
 # Inicializar Banco de Dados
 models.Base.metadata.create_all(bind=engine) # Criar tabelas iniciais
@@ -60,6 +60,7 @@ app.include_router(curriculo.router)
 app.include_router(dashboard.router)
 app.include_router(notifications.router)
 app.include_router(calendar.router)
+app.include_router(reports_admin.router)
 
 @app.get("/health")
 async def health_check():

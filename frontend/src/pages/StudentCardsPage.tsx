@@ -535,7 +535,6 @@ export const StudentCardsPage: React.FC = () => {
                                         schoolName={selectedStudent.unidade}
                                         className={selectedStudent.turma}
                                         academicYear="2026"
-                                        photoUrl=""
                                     />
                                 </div>
 
@@ -585,7 +584,6 @@ export const StudentCardsPage: React.FC = () => {
                         schoolName={student.unidade}
                         className={student.turma}
                         academicYear="2026"
-                        photoUrl=""
                     />
                 ))}
             </div>

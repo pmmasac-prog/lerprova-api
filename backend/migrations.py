@@ -143,6 +143,47 @@ def run_migrations(engine):
                 conn.execute(text(f"UPDATE alunos SET hashed_password = '{default_hash}' WHERE hashed_password IS NULL"))
                 logger.info("Senha padrão '123456' definida para alunos existentes.")
             
+            # Novas colunas para gestão de frequência e responsáveis
+            if "data_nascimento" not in columns_alunos:
+                logger.info("Adicionando coluna 'data_nascimento' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN data_nascimento VARCHAR NULL"))
+            
+            if "nome_responsavel" not in columns_alunos:
+                logger.info("Adicionando coluna 'nome_responsavel' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN nome_responsavel VARCHAR NULL"))
+            
+            if "telefone_responsavel" not in columns_alunos:
+                logger.info("Adicionando coluna 'telefone_responsavel' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN telefone_responsavel VARCHAR NULL"))
+            
+            if "email_responsavel" not in columns_alunos:
+                logger.info("Adicionando coluna 'email_responsavel' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN email_responsavel VARCHAR NULL"))
+            
+            if "situacao_matricula" not in columns_alunos:
+                logger.info("Adicionando coluna 'situacao_matricula' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN situacao_matricula VARCHAR DEFAULT 'ativo'"))
+
+            # Migrações para a tabela FREQUENCIA
+            if inspector.has_table("frequencia"):
+                columns_frequencia = [c["name"] for c in inspector.get_columns("frequencia")]
+                
+                if "justificativa" not in columns_frequencia:
+                    logger.info("Adicionando coluna 'justificativa' em 'frequencia'...")
+                    conn.execute(text("ALTER TABLE frequencia ADD COLUMN justificativa VARCHAR NULL"))
+                
+                if "falta_justificada" not in columns_frequencia:
+                    logger.info("Adicionando coluna 'falta_justificada' em 'frequencia'...")
+                    conn.execute(text("ALTER TABLE frequencia ADD COLUMN falta_justificada BOOLEAN DEFAULT FALSE"))
+                
+                if "observacao" not in columns_frequencia:
+                    logger.info("Adicionando coluna 'observacao' em 'frequencia'...")
+                    conn.execute(text("ALTER TABLE frequencia ADD COLUMN observacao TEXT NULL"))
+                
+                if "hora_entrada" not in columns_frequencia:
+                    logger.info("Adicionando coluna 'hora_entrada' em 'frequencia'...")
+                    conn.execute(text("ALTER TABLE frequencia ADD COLUMN hora_entrada VARCHAR NULL"))
+            
     except Exception as e:
         logger.error(f"FALHA CRÍTICA NA MIGRAÇÃO: {e}")
         return False

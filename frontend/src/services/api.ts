@@ -38,6 +38,22 @@ const request = async (url: string, options: RequestInit = {}) => {
 };
 
 export const api = {
+    // Método genérico para requisições customizadas
+    async request(endpoint: string, options: RequestInit = {}) {
+        const defaultOptions: RequestInit = {
+            headers: getAuthHeaders()
+        };
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...(options.headers || {})
+            }
+        };
+        return request(`${API_URL}${endpoint}`, mergedOptions);
+    },
+
     // Autenticação
     async login(email: string, password: string) {
         return request(`${API_URL}/auth/login`, {

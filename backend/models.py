@@ -74,10 +74,19 @@ class Aluno(Base):
     qr_token = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=True) # Default set in migration
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Campos para gestão de frequência e responsáveis
+    data_nascimento = Column(String, nullable=True)  # YYYY-MM-DD
+    nome_responsavel = Column(String, nullable=True)
+    telefone_responsavel = Column(String, nullable=True)
+    email_responsavel = Column(String, nullable=True)
+    situacao_matricula = Column(String, default="ativo")  # ativo, infrequente, em_risco, abandono_presumido, evadido, transferido
 
     # Relacionamentos
     turmas = relationship("Turma", secondary="aluno_turma", back_populates="alunos")
     resultados = relationship("Resultado", back_populates="aluno", cascade="all, delete-orphan")
+    alertas = relationship("AlertaFrequencia", back_populates="aluno", cascade="all, delete-orphan")
+    acompanhamentos = relationship("AcompanhamentoAluno", back_populates="aluno", cascade="all, delete-orphan")
 
 class Gabarito(Base):
     __tablename__ = "gabaritos"
@@ -133,6 +142,10 @@ class Frequencia(Base):
     aluno_id = Column(Integer, ForeignKey("alunos.id", ondelete="CASCADE"))
     data = Column(String) # YYYY-MM-DD
     presente = Column(Boolean, default=True)
+    justificativa = Column(String, nullable=True)  # Motivo da falta se justificada
+    falta_justificada = Column(Boolean, default=False)
+    observacao = Column(Text, nullable=True)
+    hora_entrada = Column(String, nullable=True)  # HH:MM
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relacionamentos
@@ -286,3 +299,93 @@ class Event(Base):
     end_date = Column(String)
     is_school_day = Column(Boolean, default=False)
     description = Column(Text, nullable=True)
+
+
+# ============== MODELOS PARA GESTÃO DE FREQUÊNCIA E EVASÃO ==============
+
+class DiaLetivo(Base):
+    """Define os dias letivos do calendário escolar"""
+    __tablename__ = "dias_letivos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    data = Column(String, index=True)  # YYYY-MM-DD
+    academic_year_id = Column(String, ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=True)
+    is_school_day = Column(Boolean, default=True)  # True = dia letivo
+    motivo_nao_letivo = Column(String, nullable=True)  # feriado, recesso, etc.
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class AlertaFrequencia(Base):
+    """Alertas gerados automaticamente pelo sistema de monitoramento"""
+    __tablename__ = "alertas_frequencia"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    aluno_id = Column(Integer, ForeignKey("alunos.id", ondelete="CASCADE"))
+    tipo_alerta = Column(String)  # faltas_consecutivas, baixa_frequencia, queda_frequencia, abandono_presumido
+    nivel_risco = Column(String, default="atencao")  # atencao, alerta, risco, critico
+    motivo = Column(Text)  # Descrição do motivo do alerta
+    data_geracao = Column(DateTime, default=datetime.utcnow)
+    data_resolucao = Column(DateTime, nullable=True)
+    status = Column(String, default="aberto")  # aberto, em_acompanhamento, resolvido, arquivado
+    faltas_consecutivas = Column(Integer, default=0)
+    frequencia_percentual = Column(Float, nullable=True)
+    ultima_presenca = Column(String, nullable=True)  # YYYY-MM-DD
+    dias_sem_entrada = Column(Integer, default=0)
+    acao_recomendada = Column(String, nullable=True)
+    responsavel_alerta = Column(String, nullable=True)  # Quem deve tratar
+    observacoes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relacionamentos
+    aluno = relationship("Aluno", back_populates="alertas")
+
+
+class AcompanhamentoAluno(Base):
+    """Registro de ações tomadas para acompanhamento de alunos em risco"""
+    __tablename__ = "acompanhamento_aluno"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    aluno_id = Column(Integer, ForeignKey("alunos.id", ondelete="CASCADE"))
+    alerta_id = Column(Integer, ForeignKey("alertas_frequencia.id", ondelete="SET NULL"), nullable=True)
+    tipo_acao = Column(String)  # contato_telefonico, visita, encaminhamento, reuniao, aviso_responsavel
+    data_acao = Column(DateTime, default=datetime.utcnow)
+    responsavel_acao = Column(String)  # Nome de quem realizou a ação
+    resultado = Column(String, nullable=True)  # sucesso, sem_retorno, pendente, reagendado
+    observacao = Column(Text, nullable=True)
+    data_retorno_previsto = Column(String, nullable=True)  # YYYY-MM-DD
+    aluno_retornou = Column(Boolean, default=False)
+    data_retorno_aluno = Column(String, nullable=True)  # YYYY-MM-DD quando o aluno voltou
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relacionamentos
+    aluno = relationship("Aluno", back_populates="acompanhamentos")
+
+
+class ConfiguracaoFrequencia(Base):
+    """Configurações customizáveis para alertas e classificações"""
+    __tablename__ = "configuracao_frequencia"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    school_id = Column(String, ForeignKey("schools.id", ondelete="CASCADE"), nullable=True)
+    
+    # Faixas de classificação de frequência (%)
+    faixa_regular = Column(Float, default=90.0)  # >= 90% é regular
+    faixa_atencao = Column(Float, default=85.0)  # >= 85% é atenção
+    faixa_risco = Column(Float, default=75.0)    # >= 75% é risco
+    # Abaixo de 75% é crítico
+    
+    # Gatilhos de faltas consecutivas
+    faltas_atencao = Column(Integer, default=2)
+    faltas_alerta = Column(Integer, default=3)
+    faltas_critico = Column(Integer, default=5)
+    faltas_abandono = Column(Integer, default=7)
+    
+    # Frequência mínima obrigatória (LDB)
+    frequencia_minima_ldb = Column(Float, default=75.0)
+    
+    # Configurações de notificação
+    notificar_responsavel_menor = Column(Boolean, default=True)
+    dias_para_notificar = Column(Integer, default=3)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
