@@ -103,6 +103,21 @@ interface DashboardData {
     periodo: { inicio: string; fim: string };
 }
 
+interface AlunoCentroAcoes {
+    aluno_id: number;
+    aluno_nome: string;
+    aluno_codigo: string;
+    turma: string;
+    frequencia_atual: number;
+    faltas_consecutivas: number;
+    status_consolidado: string;
+    grau_urgencia: number;
+    motivos: string[];
+    responsavel: string | null;
+    telefone: string | null;
+    idade: number | null;
+}
+
 interface TurmaGerencial {
     turma_id: number;
     turma_nome: string;
@@ -140,7 +155,7 @@ const formatarTelefone = (telefone: string | null | undefined): string | null =>
 const gerarMensagemWhatsApp = (tipo: TipoMensagem, dados: DadosWhatsApp): string => {
     const saudacao = "Prezado(a) responsável,";
     const escola = "Secretaria Escolar";
-    
+
     switch (tipo) {
         case 'infrequencia':
             return `${saudacao}
@@ -204,38 +219,38 @@ ${escola}`;
 const gerarLinkWhatsApp = (telefone: string | null | undefined, tipo: TipoMensagem, dados: DadosWhatsApp): string | null => {
     const telFormatado = formatarTelefone(telefone);
     if (!telFormatado) return null;
-    
+
     const mensagem = encodeURIComponent(gerarMensagemWhatsApp(tipo, dados));
     return `https://wa.me/${telFormatado}?text=${mensagem}`;
 };
 
 // ==================== COMPONENTES AUXILIARES ====================
 
-const WhatsAppButton: React.FC<{ telefone: string | null | undefined; tipo: TipoMensagem; dados: DadosWhatsApp }> = 
+const WhatsAppButton: React.FC<{ telefone: string | null | undefined; tipo: TipoMensagem; dados: DadosWhatsApp }> =
     ({ telefone, tipo, dados }) => {
-    const link = gerarLinkWhatsApp(telefone, tipo, dados);
-    
-    if (!link) {
+        const link = gerarLinkWhatsApp(telefone, tipo, dados);
+
+        if (!link) {
+            return (
+                <span className="whatsapp-btn disabled" title="Telefone não cadastrado">
+                    <MessageCircle size={16} />
+                </span>
+            );
+        }
+
         return (
-            <span className="whatsapp-btn disabled" title="Telefone não cadastrado">
+            <a
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="whatsapp-btn"
+                title="Enviar mensagem WhatsApp"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <MessageCircle size={16} />
-            </span>
+            </a>
         );
-    }
-    
-    return (
-        <a 
-            href={link} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="whatsapp-btn"
-            title="Enviar mensagem WhatsApp"
-            onClick={(e) => e.stopPropagation()}
-        >
-            <MessageCircle size={16} />
-        </a>
-    );
-};
+    };
 
 const StatusBadge: React.FC<{ status: string; tipo?: 'risco' | 'contato' | 'classificacao' }> = ({ status, tipo = 'risco' }) => {
     const configs: Record<string, Record<string, { bg: string; text: string; label: string }>> = {
@@ -261,9 +276,9 @@ const StatusBadge: React.FC<{ status: string; tipo?: 'risco' | 'contato' | 'clas
             critico: { bg: '#7f1d1d', text: '#fca5a5', label: 'Crítico' },
         }
     };
-    
+
     const config = configs[tipo]?.[status] || { bg: '#374151', text: '#9ca3af', label: status };
-    
+
     return (
         <span style={{
             background: config.bg,
@@ -280,22 +295,22 @@ const StatusBadge: React.FC<{ status: string; tipo?: 'risco' | 'contato' | 'clas
     );
 };
 
-const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; color: string; subtext?: string }> = 
+const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; color: string; subtext?: string }> =
     ({ label, value, icon, color, subtext }) => (
-    <div className="stat-card" style={{ borderColor: color }}>
-        <div className="stat-icon" style={{ color }}>{icon}</div>
-        <div className="stat-content">
-            <span className="stat-value">{value}</span>
-            <span className="stat-label">{label}</span>
-            {subtext && <span className="stat-subtext">{subtext}</span>}
+        <div className="stat-card" style={{ borderColor: color }}>
+            <div className="stat-icon" style={{ color }}>{icon}</div>
+            <div className="stat-content">
+                <span className="stat-value">{value}</span>
+                <span className="stat-label">{label}</span>
+                {subtext && <span className="stat-subtext">{subtext}</span>}
+            </div>
         </div>
-    </div>
-);
+    );
 
 const ProgressBar: React.FC<{ value: number; max?: number; color?: string }> = ({ value, max = 100, color }) => {
     const pct = Math.min((value / max) * 100, 100);
     const barColor = color || (pct >= 90 ? '#22c55e' : pct >= 85 ? '#eab308' : pct >= 75 ? '#f97316' : '#ef4444');
-    
+
     return (
         <div className="progress-bar-container">
             <div className="progress-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
@@ -310,7 +325,7 @@ export const RelatoriosAdmin: React.FC = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState<string | null>(null);
-    
+
     // Data states
     const [dashboard, setDashboard] = useState<DashboardData | null>(null);
     const [infrequencia, setInfrequencia] = useState<{ alunos: AlunoInfrequencia[]; resumo: any } | null>(null);
@@ -318,7 +333,8 @@ export const RelatoriosAdmin: React.FC = () => {
     const [alunosRisco, setAlunosRisco] = useState<AlunoRisco[]>([]);
     const [menoresComunicacao, setMenoresComunicacao] = useState<MenorComunicacao[]>([]);
     const [turmasGerencial, setTurmasGerencial] = useState<TurmaGerencial[]>([]);
-    
+    const [centroAcoes, setCentroAcoes] = useState<AlunoCentroAcoes[]>([]);
+
     // Filters
     const [periodo, setPeriodo] = useState({
         inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -326,12 +342,13 @@ export const RelatoriosAdmin: React.FC = () => {
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [filterNivel, setFilterNivel] = useState<string>('');
-    
+    const [filtroAcoesSecundario, setFiltroAcoesSecundario] = useState<string>('');
+
     // Expanded sections
     const [expandedAluno, setExpandedAluno] = useState<number | null>(null);
 
     // Modal de detalhes do aluno
-    const [selectedAlunoModal, setSelectedAlunoModal] = useState<{id: number; nome: string; codigo: string; turma: string} | null>(null);
+    const [selectedAlunoModal, setSelectedAlunoModal] = useState<{ id: number; nome: string; codigo: string; turma: string } | null>(null);
     const [alunoDetalhes, setAlunoDetalhes] = useState<any>(null);
     const [historicoFrequencia, setHistoricoFrequencia] = useState<any>(null);
     const [editandoAluno, setEditandoAluno] = useState(false);
@@ -345,6 +362,7 @@ export const RelatoriosAdmin: React.FC = () => {
 
     const tabs = [
         { id: 'dashboard', label: 'Painel', icon: BarChart3 },
+        { id: 'centro_acoes', label: 'Centro de Ações', icon: AlertCircle },
         { id: 'infrequencia', label: 'Infrequência', icon: Calendar },
         { id: 'consecutivas', label: 'Faltas Consecutivas', icon: AlertTriangle },
         { id: 'risco', label: 'Risco de Evasão', icon: TrendingDown },
@@ -441,13 +459,26 @@ export const RelatoriosAdmin: React.FC = () => {
         }
     }, [periodo, showToast]);
 
+    const loadCentroAcoes = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await api.getCentroAcoes(periodo.inicio, periodo.fim);
+            setCentroAcoes(data.alunos_alertas || []);
+        } catch (err) {
+            console.error('Erro ao carregar centro de ações:', err);
+            showToast('Erro ao carregar centro de ações');
+        } finally {
+            setLoading(false);
+        }
+    }, [periodo, showToast]);
+
     // ==================== MODAL DE DETALHES DO ALUNO ====================
 
-    const abrirModalAluno = async (aluno: {id: number; nome: string; codigo: string; turma: string}) => {
+    const abrirModalAluno = async (aluno: { id: number; nome: string; codigo: string; turma: string }) => {
         setSelectedAlunoModal(aluno);
         setEditandoAluno(false);
         setLoadingModal(true);
-        
+
         try {
             // Carregar dados do aluno
             const dadosAluno = await api.request(`/alunos/${aluno.id}`);
@@ -457,7 +488,7 @@ export const RelatoriosAdmin: React.FC = () => {
                 telefone_responsavel: dadosAluno.telefone_responsavel || '',
                 email_responsavel: dadosAluno.email_responsavel || ''
             });
-            
+
             // Carregar histórico de frequência
             const historico = await api.request(`/admin/reports/aluno/${aluno.id}/historico-frequencia`);
             setHistoricoFrequencia(historico);
@@ -478,7 +509,7 @@ export const RelatoriosAdmin: React.FC = () => {
 
     const salvarEdicaoAluno = async () => {
         if (!selectedAlunoModal) return;
-        
+
         try {
             setLoadingModal(true);
             await api.request(`/alunos/${selectedAlunoModal.id}`, {
@@ -487,7 +518,7 @@ export const RelatoriosAdmin: React.FC = () => {
             });
             showToast('Dados do aluno atualizados!');
             setEditandoAluno(false);
-            
+
             // Recarregar dados
             const dadosAluno = await api.request(`/alunos/${selectedAlunoModal.id}`);
             setAlunoDetalhes(dadosAluno);
@@ -515,12 +546,13 @@ export const RelatoriosAdmin: React.FC = () => {
 
     useEffect(() => {
         if (activeTab === 'dashboard') loadDashboard();
+        else if (activeTab === 'centro_acoes') loadCentroAcoes();
         else if (activeTab === 'infrequencia') loadInfrequencia();
         else if (activeTab === 'consecutivas') loadFaltasConsecutivas();
         else if (activeTab === 'risco') loadRiscoEvasao();
         else if (activeTab === 'menores') loadMenoresComunicacao();
         else if (activeTab === 'gerencial') loadGerencial();
-    }, [activeTab, loadDashboard, loadInfrequencia, loadFaltasConsecutivas, loadRiscoEvasao, loadMenoresComunicacao, loadGerencial]);
+    }, [activeTab, loadDashboard, loadCentroAcoes, loadInfrequencia, loadFaltasConsecutivas, loadRiscoEvasao, loadMenoresComunicacao, loadGerencial]);
 
     // ==================== RENDER FUNCTIONS ====================
 
@@ -686,7 +718,7 @@ export const RelatoriosAdmin: React.FC = () => {
                             {filteredAlunos.map(aluno => (
                                 <tr key={aluno.aluno_id} className={`row-${aluno.classificacao}`}>
                                     <td>
-                                        <div className="aluno-cell" 
+                                        <div className="aluno-cell"
                                             onClick={() => abrirModalAluno({
                                                 id: aluno.aluno_id,
                                                 nome: aluno.aluno_nome,
@@ -716,9 +748,9 @@ export const RelatoriosAdmin: React.FC = () => {
                                     <td>{aluno.ultima_presenca || '-'}</td>
                                     <td><StatusBadge status={aluno.classificacao} tipo="classificacao" /></td>
                                     <td>
-                                        <WhatsAppButton 
-                                            telefone={aluno.telefone} 
-                                            tipo="infrequencia" 
+                                        <WhatsAppButton
+                                            telefone={aluno.telefone}
+                                            tipo="infrequencia"
                                             dados={{
                                                 aluno_nome: aluno.aluno_nome,
                                                 turma: aluno.turma,
@@ -818,9 +850,9 @@ export const RelatoriosAdmin: React.FC = () => {
                             <div className="card-footer">
                                 <StatusBadge status={aluno.nivel} tipo="risco" />
                                 <StatusBadge status={aluno.status_contato.toLowerCase().replace(' ', '_')} tipo="contato" />
-                                <WhatsAppButton 
-                                    telefone={aluno.telefone} 
-                                    tipo="faltas_consecutivas" 
+                                <WhatsAppButton
+                                    telefone={aluno.telefone}
+                                    tipo="faltas_consecutivas"
                                     dados={{
                                         aluno_nome: aluno.aluno_nome,
                                         turma: aluno.turma,
@@ -876,7 +908,7 @@ export const RelatoriosAdmin: React.FC = () => {
                 <div className="risk-list">
                     {filtered.map(aluno => (
                         <div key={aluno.aluno_id} className={`risk-card nivel-${aluno.nivel_risco}`}>
-                            <div 
+                            <div
                                 className="risk-header"
                                 onClick={() => setExpandedAluno(expandedAluno === aluno.aluno_id ? null : aluno.aluno_id)}
                             >
@@ -897,7 +929,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                     {expandedAluno === aluno.aluno_id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                 </div>
                             </div>
-                            
+
                             {expandedAluno === aluno.aluno_id && (
                                 <div className="risk-details">
                                     <div className="details-grid">
@@ -924,26 +956,26 @@ export const RelatoriosAdmin: React.FC = () => {
                                             <span>{aluno.ultima_presenca || 'Sem registro'}</span>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="motivos-list">
                                         <label>Motivos do Alerta:</label>
                                         <ul>
                                             {aluno.motivos.map((m, i) => <li key={i}>{m}</li>)}
                                         </ul>
                                     </div>
-                                    
+
                                     <div className="acao-recomendada">
                                         <AlertTriangle size={16} />
                                         <span>{aluno.acao_recomendada}</span>
                                     </div>
-                                    
+
                                     {(aluno.responsavel || aluno.telefone) && (
                                         <div className="contato-info">
                                             {aluno.responsavel && <span><Users size={14} /> {aluno.responsavel}</span>}
                                             {aluno.telefone && <span><Phone size={14} /> {aluno.telefone}</span>}
-                                            <WhatsAppButton 
-                                                telefone={aluno.telefone} 
-                                                tipo="risco_evasao" 
+                                            <WhatsAppButton
+                                                telefone={aluno.telefone}
+                                                tipo="risco_evasao"
                                                 dados={{
                                                     aluno_nome: aluno.aluno_nome,
                                                     turma: aluno.turma,
@@ -952,7 +984,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                                     motivo: aluno.motivo_principal
                                                 }}
                                             />
-                                            <button 
+                                            <button
                                                 onClick={() => abrirModalAluno({
                                                     id: aluno.aluno_id,
                                                     nome: aluno.aluno_nome,
@@ -973,7 +1005,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                     {!aluno.responsavel && !aluno.telefone && (
                                         <div className="contato-info sem-contato">
                                             <span className="empty">Contato do responsável não cadastrado</span>
-                                            <button 
+                                            <button
                                                 onClick={() => abrirModalAluno({
                                                     id: aluno.aluno_id,
                                                     nome: aluno.aluno_nome,
@@ -1073,9 +1105,9 @@ export const RelatoriosAdmin: React.FC = () => {
                                     <td>{aluno.data_ultimo_aviso || '-'}</td>
                                     <td><StatusBadge status={aluno.situacao} tipo="contato" /></td>
                                     <td>
-                                        <WhatsAppButton 
-                                            telefone={aluno.contato} 
-                                            tipo="menor_comunicacao" 
+                                        <WhatsAppButton
+                                            telefone={aluno.contato}
+                                            tipo="menor_comunicacao"
                                             dados={{
                                                 aluno_nome: aluno.aluno_nome,
                                                 turma: aluno.turma,
@@ -1140,6 +1172,145 @@ export const RelatoriosAdmin: React.FC = () => {
         );
     };
 
+    const renderCentroAcoes = () => {
+        const filtered = centroAcoes
+            .filter(a => !searchTerm || a.aluno_nome.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter(a => {
+                if (!filtroAcoesSecundario) return true;
+                if (filtroAcoesSecundario === 'critico') return a.grau_urgencia >= 3;
+                if (filtroAcoesSecundario === 'consecutivas') return a.faltas_consecutivas >= 3;
+                if (filtroAcoesSecundario === 'conselho') return a.grau_urgencia === 4;
+                return true;
+            });
+
+        return (
+            <div className="report-section">
+                {/* Header/Filters Otimizados */}
+                <div className="filters-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', background: 'var(--admin-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--admin-border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', minWidth: '250px' }}>
+                        <Search size={18} color="var(--admin-text-muted)" />
+                        <input
+                            type="text"
+                            placeholder="Buscar aluno na central..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', background: 'transparent', border: 'none', color: '#f1f5f9', outline: 'none' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button className={`btn-filter ${filtroAcoesSecundario === '' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('')} style={{ background: filtroAcoesSecundario === '' ? 'var(--admin-emerald)' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
+                            Todos os Alertas
+                        </button>
+                        <button className={`btn-filter ${filtroAcoesSecundario === 'critico' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('critico')} style={{ background: filtroAcoesSecundario === 'critico' ? '#ef4444' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
+                            🔥 Risco Crítico
+                        </button>
+                        <button className={`btn-filter ${filtroAcoesSecundario === 'consecutivas' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('consecutivas')} style={{ background: filtroAcoesSecundario === 'consecutivas' ? '#f97316' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
+                            ⚠️ 3+ Faltas
+                        </button>
+                        <button className={`btn-filter ${filtroAcoesSecundario === 'conselho' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('conselho')} style={{ background: filtroAcoesSecundario === 'conselho' ? '#7f1d1d' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
+                            ⚖️ Conselho Tutelar
+                        </button>
+                    </div>
+
+                    <div className="filter-group" style={{ marginLeft: 'auto', gap: '8px' }}>
+                        <input type="date" value={periodo.inicio} onChange={e => setPeriodo(p => ({ ...p, inicio: e.target.value }))} style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', color: '#fff', padding: '4px 8px', borderRadius: '6px' }} />
+                        <span style={{ color: 'var(--admin-text-muted)' }}>até</span>
+                        <input type="date" value={periodo.fim} onChange={e => setPeriodo(p => ({ ...p, fim: e.target.value }))} style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', color: '#fff', padding: '4px 8px', borderRadius: '6px' }} />
+                        <button onClick={loadCentroAcoes} style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', color: '#fff', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Filter size={14} /> Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                {/* Table Unificada */}
+                <div className="report-table-container" style={{ marginTop: '20px' }}>
+                    <table className="report-table">
+                        <thead>
+                            <tr>
+                                <th>Aluno(a) em Alerta</th>
+                                <th>Turma</th>
+                                <th>Freq Atual (%)</th>
+                                <th>Status Consolidado</th>
+                                <th>Motivos Principais</th>
+                                <th>Ação Direta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filtered.map(aluno => (
+                                <tr key={`ca-${aluno.aluno_id}`} style={{ borderLeft: `4px solid ${aluno.grau_urgencia >= 3 ? '#ef4444' : aluno.grau_urgencia === 2 ? '#f97316' : '#eab308'}` }}>
+                                    <td>
+                                        <div className="aluno-cell" onClick={() => abrirModalAluno({ id: aluno.aluno_id, nome: aluno.aluno_nome, codigo: aluno.aluno_codigo, turma: aluno.turma })} style={{ cursor: 'pointer' }}>
+                                            <span className="aluno-nome" style={{ color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                {aluno.grau_urgencia === 4 && <AlertTriangle size={14} color="#ef4444" />}
+                                                {aluno.aluno_nome}
+                                            </span>
+                                            <span className="aluno-codigo" style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>{aluno.aluno_codigo}</span>
+                                        </div>
+                                    </td>
+                                    <td style={{ color: '#cbd5e1' }}>{aluno.turma}</td>
+                                    <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ flex: 1, height: '6px', background: 'var(--admin-bg)', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${aluno.frequencia_atual}%`, height: '100%', background: aluno.frequencia_atual < 75 ? '#ef4444' : aluno.frequencia_atual < 85 ? '#f97316' : '#22c55e' }} />
+                                            </div>
+                                            <span style={{ fontSize: '12px', fontWeight: 600, color: aluno.frequencia_atual < 75 ? '#fca5a5' : '#e2e8f0', minWidth: '40px' }}>
+                                                {aluno.frequencia_atual}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span style={{
+                                            padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
+                                            background: aluno.grau_urgencia === 4 ? '#7f1d1d' : aluno.grau_urgencia === 3 ? 'rgba(239,68,68,0.2)' : 'rgba(249,115,22,0.2)',
+                                            color: aluno.grau_urgencia === 4 ? '#fca5a5' : aluno.grau_urgencia === 3 ? '#ef4444' : '#f97316',
+                                            border: `1px solid ${aluno.grau_urgencia === 4 ? '#ef4444' : 'transparent'}`
+                                        }}>
+                                            {aluno.status_consolidado}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            {aluno.motivos.map((m, idx) => (
+                                                <span key={idx} style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--admin-text-muted)' }} /> {m}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {aluno.telefone ? (
+                                            <a
+                                                href={`https://wa.me/55${aluno.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Aviso LERPROVA: O aluno ${aluno.aluno_nome} (${aluno.turma}) está com os seguintes alertas no sistema: ${aluno.motivos.join(', ')}. Por favor comparecer à escola.`)}`}
+                                                target="_blank" rel="noopener noreferrer"
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#059669', color: '#fff', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '12px', fontWeight: 600, transition: '0.2s' }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <MessageCircle size={14} /> Contatar Via WhatsApp
+                                            </a>
+                                        ) : (
+                                            <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', fontStyle: 'italic' }}>
+                                                Sem telefone
+                                            </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {filtered.length === 0 && !loading && (
+                        <div className="empty-state success" style={{ padding: '40px', textAlign: 'center' }}>
+                            <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '16px' }} />
+                            <h3 style={{ color: '#fff', marginBottom: '8px' }}>Nenhum Aluno em Alerta!</h3>
+                            <p style={{ color: 'var(--admin-text-muted)' }}>Excelente! A tabela centralizada não encontrou pendências nas categorias filtradas.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     // ==================== MAIN RENDER ====================
 
     return (
@@ -1182,8 +1353,9 @@ export const RelatoriosAdmin: React.FC = () => {
             {/* Content */}
             <main className="report-content">
                 {loading && <div className="loading-overlay"><RefreshCw size={32} className="spinning" /></div>}
-                
+
                 {activeTab === 'dashboard' && renderDashboard()}
+                {activeTab === 'centro_acoes' && renderCentroAcoes()}
                 {activeTab === 'infrequencia' && renderInfrequencia()}
                 {activeTab === 'consecutivas' && renderFaltasConsecutivas()}
                 {activeTab === 'risco' && renderRiscoEvasao()}
@@ -1204,12 +1376,12 @@ export const RelatoriosAdmin: React.FC = () => {
                         border: '1px solid var(--admin-border)'
                     }}>
                         {/* Header */}
-                        <div style={{ 
+                        <div style={{
                             padding: '20px', borderBottom: '1px solid var(--admin-border)',
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ 
+                                <div style={{
                                     width: '48px', height: '48px', borderRadius: '50%',
                                     background: 'var(--admin-emerald)', display: 'flex',
                                     alignItems: 'center', justifyContent: 'center', color: '#fff'
@@ -1239,7 +1411,7 @@ export const RelatoriosAdmin: React.FC = () => {
                         ) : (
                             <div style={{ padding: '20px' }}>
                                 {/* Contato do Responsável */}
-                                <div style={{ 
+                                <div style={{
                                     background: 'var(--admin-bg)', padding: '16px', borderRadius: '12px',
                                     marginBottom: '20px', border: '1px solid var(--admin-border)'
                                 }}>
@@ -1351,7 +1523,7 @@ export const RelatoriosAdmin: React.FC = () => {
 
                                 {/* Histórico de Frequência */}
                                 {historicoFrequencia && (
-                                    <div style={{ 
+                                    <div style={{
                                         background: 'var(--admin-bg)', padding: '16px', borderRadius: '12px',
                                         border: '1px solid var(--admin-border)'
                                     }}>

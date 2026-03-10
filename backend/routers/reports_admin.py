@@ -1645,3 +1645,120 @@ async def historico_frequencia_aluno(
         "datas_ausente": datas_ausente,
         "datas_justificada": datas_justificada
     }
+
+
+# ==================== 8. CENTRO DE AÇÕES (UNIFICADO) ====================
+
+@router.post("/centro-acoes")
+async def relatorio_centro_acoes(
+    request: PeriodoRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    NOVO: Painel Consolidado do Centro de Ações.
+    Apresenta uma lista única e inteligente de alertas cruzando Faltas, Risco e Questões Disciplinares/Conselho Tutelar.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
+    
+    dias_com_frequencia = get_dias_com_frequencia(db, request.data_inicio, request.data_fim)
+    
+    if not dias_com_frequencia:
+        return {"alunos_alertas": [], "total": 0, "mensagem": "Nenhum registro de frequência encontrado no período"}
+    
+    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
+    if request.turma_id:
+        query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == request.turma_id)
+        
+    # Filtrar apenas alunos ATIVOS, INFREQUENTES OU EM RISCO (excluir transferidos/evadidos daqui)
+    alunos = query.filter(
+        models.Aluno.situacao_matricula.in_(["ativo", "infrequente", "em_risco"])
+    ).all()
+    
+    aluno_ids = [a.id for a in alunos]
+    
+    # BATCH: Frequências
+    frequencias_batch = carregar_frequencias_batch(db, dias_com_frequencia, aluno_ids)
+    primeiras_freq_batch = carregar_primeiras_frequencias_batch(db, aluno_ids)
+    
+    resultado = []
+    
+    for aluno in alunos:
+        primeira_freq = primeiras_freq_batch.get(aluno.id)
+        if not primeira_freq: continue
+            
+        dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
+        if not dias_validos: continue
+            
+        total_dias = len(dias_validos)
+        freqs_aluno = frequencias_batch.get(aluno.id, [])
+        freqs_periodo = [f for f in freqs_aluno if f.data in dias_validos]
+        
+        presencas = len([f for f in freqs_periodo if f.presente])
+        freq_atual = (presencas / total_dias * 100) if total_dias > 0 else 100
+        
+        info_consec = calcular_faltas_consecutivas_batch(freqs_aluno, sorted(dias_validos, reverse=True))
+        consecutivas = info_consec["consecutivas"]
+        
+        idade = calcular_idade(aluno.data_nascimento)
+        
+        # Lógica Unificada de Alertas
+        alertas = []
+        status_consolidado = "Estável"
+        grau_urgencia = 0 # 0 (Estavel) a 3 (Critico)
+        
+        if consecutivas >= 5:
+            alertas.append(f"{consecutivas} faltas seguidas")
+            status_consolidado = "Risco Crítico"
+            grau_urgencia = 3
+        elif consecutivas >= 3:
+            alertas.append(f"{consecutivas} faltas seguidas")
+            if grau_urgencia < 2:
+                status_consolidado = "Alerta"
+                grau_urgencia = 2
+                
+        if freq_atual < 75:
+            alertas.append("LDB: Frequência Crítica (<75%)")
+            status_consolidado = "Risco Crítico"
+            grau_urgencia = 3
+        elif freq_atual < 85:
+            alertas.append("LDB: Frequência em Risco (<85%)")
+            if grau_urgencia < 2:
+                status_consolidado = "Alerta"
+                grau_urgencia = 2
+                
+        # Conselho tutelar trigger: Menor de idade + Faltas Criticas sem justificativa
+        if idade is not None and idade < 18 and (consecutivas >= 5 or freq_atual < 75):
+            alertas.append("Notificar Conselho Tutelar")
+            status_consolidado = "Urgente: Conselho Tutelar"
+            grau_urgencia = 4
+        
+        if not alertas:
+            continue # Só retorna quem tem alerta real
+            
+        turma_nomes = [t.nome for t in aluno.turmas]
+        
+        resultado.append({
+            "aluno_id": aluno.id,
+            "aluno_nome": aluno.nome,
+            "aluno_codigo": aluno.codigo,
+            "turma": turma_nomes[0] if turma_nomes else "N/A",
+            "frequencia_atual": round(freq_atual, 1),
+            "faltas_consecutivas": consecutivas,
+            "status_consolidado": status_consolidado,
+            "grau_urgencia": grau_urgencia,
+            "motivos": alertas,
+            "responsavel": aluno.nome_responsavel,
+            "telefone": aluno.telefone_responsavel,
+            "idade": idade
+        })
+        
+    # Ordenar por maior grau de urgência e depois menor frequência
+    resultado.sort(key=lambda x: (-x["grau_urgencia"], x["frequencia_atual"]))
+    
+    return {
+        "alunos_alertas": resultado,
+        "total": len(resultado),
+        "periodo": {"inicio": request.data_inicio, "fim": request.data_fim}
+    }

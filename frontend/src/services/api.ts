@@ -616,7 +616,7 @@ export const api = {
             let url = `${API_URL}/notifications?skip=${skip}&limit=${limit}`;
             if (type) url += `&type=${type}`;
             if (isRead !== undefined) url += `&is_read=${isRead}`;
-            
+
             return request(url, {
                 headers: getAuthHeaders()
             });
@@ -634,13 +634,25 @@ export const api = {
         }
     },
 
-    // --- RELATÓRIOS (1 endpoint) ---
+    // --- RELATÓRIOS (2 endpoints) ---
     async generateTurmaReport(turmaId: number, format: string = 'json', includePeriod?: string) {
         let url = `${API_URL}/relatorios/${turmaId}?format=${format}`;
         if (includePeriod) url += `&period=${includePeriod}`;
-        
+
         return request(url, {
             headers: getAuthHeaders()
+        });
+    },
+
+    async getCentroAcoes(dataInicio: string, dataFim: string, turmaId?: number) {
+        return request(`${API_URL}/admin/reports/centro-acoes`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+                turma_id: turmaId
+            })
         });
     },
 

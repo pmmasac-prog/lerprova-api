@@ -649,3 +649,13 @@ async def system_overview(admin_user=Depends(verify_admin), db: Session = Depend
         "media_notas": round(avg_nota, 1) if avg_nota else 0,
         "pct_presenca": pct_presenca,
     }
+
+# ENDPOINT ADMINISTRATIVO: Remove todos os alunos sem turma (órfãos)
+@router.delete("/alunos/orfaos", tags=["admin"])
+async def remover_alunos_orfaos(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    alunos_sem_turma = db.query(models.Aluno).filter(~models.Aluno.turmas.any()).all()
+    total = len(alunos_sem_turma)
+    for aluno in alunos_sem_turma:
+        db.delete(aluno)
+    db.commit()
+    return {"message": f"{total} alunos sem turma removidos."}
