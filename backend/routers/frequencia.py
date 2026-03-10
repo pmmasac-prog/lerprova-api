@@ -195,25 +195,47 @@ async def scan_qr_attendance(data: dict, user: users_db.User = Depends(get_curre
                     presente=True
                 )
                 db.add(nova_freq)
-                turmas_atingidas.append(t.nome)
+                turmas_atingidas.append({"turma": t.nome, "novo": True})
             else:
                 if not existente.presente:
                     existente.presente = True
-                    turmas_atingidas.append(t.nome)
+                    turmas_atingidas.append({"turma": t.nome, "novo": True})
+                else:
+                    # Já tinha presença
+                    turmas_atingidas.append({"turma": t.nome, "novo": False})
 
     db.commit()
     
+    turmas_novas = [t["turma"] for t in turmas_atingidas if t["novo"]]
+    turmas_ja_presente = [t["turma"] for t in turmas_atingidas if not t["novo"]]
+    
     if not turmas_atingidas:
         return {
-            "message": f"Aluno {aluno.nome} identificado, mas não há aulas registradas para ele hoje com você.",
+            "message": f"⚠️ {aluno.nome} identificado, mas sem aulas hoje.",
             "success": True,
+            "status": "no_class",
+            "count": 0,
+            "aluno": aluno.nome
+        }
+    
+    if not turmas_novas and turmas_ja_presente:
+        # Todas as turmas já tinham presença
+        return {
+            "message": f"✓ {aluno.nome} já está presente em: {', '.join(turmas_ja_presente)}",
+            "success": True,
+            "status": "already_present",
             "count": 0,
             "aluno": aluno.nome
         }
 
-    return {
-        "message": f"Presença registrada para {aluno.nome} em: {', '.join(turmas_atingidas)}",
-        "success": True, 
-        "count": len(turmas_atingidas),
-        "aluno": aluno.nome
-    }
+    if turmas_novas:
+        msg = f"✓ Presença registrada para {aluno.nome} em: {', '.join(turmas_novas)}"
+        if turmas_ja_presente:
+            msg += f" (já presente em: {', '.join(turmas_ja_presente)})"
+        return {
+            "message": msg,
+            "success": True, 
+            "status": "registered",
+            "count": len(turmas_novas),
+            "aluno": aluno.nome
+        }
