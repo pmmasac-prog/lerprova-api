@@ -378,6 +378,8 @@ async def relatorio_infrequencia(
             "dias_presentes": dias_presentes,
             "dias_ausentes": dias_ausentes,
             "frequencia_percentual": round(frequencia_pct, 2),
+            "responsavel": aluno.nome_responsavel,
+            "telefone": aluno.telefone_responsavel,
             "faltas_justificadas": faltas_justificadas,
             "faltas_nao_justificadas": faltas_nao_justificadas,
             "faltas_consecutivas": info_consecutivas["consecutivas"],

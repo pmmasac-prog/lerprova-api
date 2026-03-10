@@ -879,6 +879,73 @@
     }
 }
 
+/* ==================== WHATSAPP BUTTON ==================== */
+.whatsapp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #25d366;
+    color: #fff;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.whatsapp-btn:hover {
+    background: #128c7e;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4);
+}
+
+.whatsapp-btn.disabled {
+    background: #374151;
+    color: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.whatsapp-btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* WhatsApp em cards */
+.card-footer .whatsapp-btn,
+.contato-info .whatsapp-btn {
+    margin-left: auto;
+}
+
+.contato-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 0;
+    border-top: 1px solid #1e293b;
+    margin-top: 12px;
+}
+
+.contato-info.sem-contato {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.contato-info span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.contato-info .empty {
+    color: #6b7280;
+    font-style: italic;
+}
+
 @media (max-width: 768px) {
     .stats-row {
         grid-template-columns: 1fr 1fr;

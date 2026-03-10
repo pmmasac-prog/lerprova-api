@@ -3,7 +3,7 @@ import {
     BarChart3, AlertTriangle, Users, Phone, ClipboardList,
     TrendingDown, Calendar, Filter, RefreshCw,
     CheckCircle, XCircle, Clock, AlertCircle, FileText, Search,
-    ChevronDown, ChevronUp, Percent, Activity
+    ChevronDown, ChevronUp, Percent, Activity, MessageCircle
 } from 'lucide-react';
 import { api } from '../services/api';
 import './RelatoriosAdmin.css';
@@ -26,6 +26,8 @@ interface AlunoInfrequencia {
     status_risco: string;
     classificacao: string;
     situacao_matricula: string;
+    responsavel: string | null;
+    telefone: string | null;
 }
 
 interface AlunoFaltasConsecutivas {
@@ -107,7 +109,129 @@ interface TurmaGerencial {
     alunos_criticos: number;
 }
 
+// ==================== FUNÇÕES UTILITÁRIAS ====================
+
+type TipoMensagem = 'infrequencia' | 'faltas_consecutivas' | 'risco_evasao' | 'menor_comunicacao';
+
+interface DadosWhatsApp {
+    aluno_nome: string;
+    turma?: string;
+    frequencia?: number;
+    faltas_consecutivas?: number;
+    dias_sem_entrada?: number;
+    motivo?: string;
+}
+
+const formatarTelefone = (telefone: string | null | undefined): string | null => {
+    if (!telefone) return null;
+    // Remove tudo que não é número
+    const numeros = telefone.replace(/\D/g, '');
+    // Se não começar com 55 (Brasil), adiciona
+    if (!numeros.startsWith('55') && numeros.length >= 10) {
+        return '55' + numeros;
+    }
+    return numeros.length >= 12 ? numeros : null;
+};
+
+const gerarMensagemWhatsApp = (tipo: TipoMensagem, dados: DadosWhatsApp): string => {
+    const saudacao = "Prezado(a) responsável,";
+    const escola = "Secretaria Escolar";
+    
+    switch (tipo) {
+        case 'infrequencia':
+            return `${saudacao}
+
+Informamos que o(a) aluno(a) *${dados.aluno_nome}*, da turma *${dados.turma}*, apresenta frequência de *${dados.frequencia?.toFixed(1)}%* no período atual.
+
+A frequência mínima exigida é de 75%. Solicitamos comparecer à escola para tratarmos sobre a situação escolar do(a) estudante.
+
+Atenciosamente,
+${escola}`;
+
+        case 'faltas_consecutivas':
+            return `${saudacao}
+
+Comunicamos que o(a) aluno(a) *${dados.aluno_nome}*, da turma *${dados.turma}*, está com *${dados.faltas_consecutivas} faltas consecutivas* (${dados.dias_sem_entrada} dias sem comparecer à escola).
+
+Solicitamos entrar em contato com a escola urgentemente para justificar as ausências e evitar prejuízos pedagógicos.
+
+Atenciosamente,
+${escola}`;
+
+        case 'risco_evasao':
+            return `${saudacao}
+
+O(A) aluno(a) *${dados.aluno_nome}*, da turma *${dados.turma}*, está em *RISCO DE EVASÃO ESCOLAR*.
+
+Motivo principal: ${dados.motivo || 'Baixa frequência'}
+Frequência atual: ${dados.frequencia?.toFixed(1)}%
+${dados.faltas_consecutivas ? `Faltas consecutivas: ${dados.faltas_consecutivas}` : ''}
+
+Solicitamos comparecer URGENTEMENTE à escola para tratarmos da situação e evitar o abandono escolar, o que pode ter consequências legais.
+
+Atenciosamente,
+${escola}`;
+
+        case 'menor_comunicacao':
+            return `${saudacao}
+
+COMUNICAÇÃO OBRIGATÓRIA - Conselho Tutelar
+
+O(A) aluno(a) *${dados.aluno_nome}*, da turma *${dados.turma}*, apresenta situação que requer comunicação ao Conselho Tutelar conforme legislação vigente.
+
+Motivo: ${dados.motivo}
+Frequência: ${dados.frequencia?.toFixed(1)}%
+
+Solicitamos comparecer à escola com URGÊNCIA para regularizar a situação antes do encaminhamento oficial.
+
+Atenciosamente,
+${escola}`;
+
+        default:
+            return `${saudacao}
+
+Solicitamos entrar em contato com a escola para tratar de assunto referente ao(à) aluno(a) *${dados.aluno_nome}*.
+
+Atenciosamente,
+${escola}`;
+    }
+};
+
+const gerarLinkWhatsApp = (telefone: string | null | undefined, tipo: TipoMensagem, dados: DadosWhatsApp): string | null => {
+    const telFormatado = formatarTelefone(telefone);
+    if (!telFormatado) return null;
+    
+    const mensagem = encodeURIComponent(gerarMensagemWhatsApp(tipo, dados));
+    return `https://wa.me/${telFormatado}?text=${mensagem}`;
+};
+
 // ==================== COMPONENTES AUXILIARES ====================
+
+const WhatsAppButton: React.FC<{ telefone: string | null | undefined; tipo: TipoMensagem; dados: DadosWhatsApp }> = 
+    ({ telefone, tipo, dados }) => {
+    const link = gerarLinkWhatsApp(telefone, tipo, dados);
+    
+    if (!link) {
+        return (
+            <span className="whatsapp-btn disabled" title="Telefone não cadastrado">
+                <MessageCircle size={16} />
+            </span>
+        );
+    }
+    
+    return (
+        <a 
+            href={link} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="whatsapp-btn"
+            title="Enviar mensagem WhatsApp"
+            onClick={(e) => e.stopPropagation()}
+        >
+            <MessageCircle size={16} />
+        </a>
+    );
+};
 
 const StatusBadge: React.FC<{ status: string; tipo?: 'risco' | 'contato' | 'classificacao' }> = ({ status, tipo = 'risco' }) => {
     const configs: Record<string, Record<string, { bg: string; text: string; label: string }>> = {
@@ -485,6 +609,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                 <th>Consecutivas</th>
                                 <th>Última Presença</th>
                                 <th>Status</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -511,6 +636,17 @@ export const RelatoriosAdmin: React.FC = () => {
                                     </td>
                                     <td>{aluno.ultima_presenca || '-'}</td>
                                     <td><StatusBadge status={aluno.classificacao} tipo="classificacao" /></td>
+                                    <td>
+                                        <WhatsAppButton 
+                                            telefone={aluno.telefone} 
+                                            tipo="infrequencia" 
+                                            dados={{
+                                                aluno_nome: aluno.aluno_nome,
+                                                turma: aluno.turma,
+                                                frequencia: aluno.frequencia_percentual
+                                            }}
+                                        />
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -594,6 +730,16 @@ export const RelatoriosAdmin: React.FC = () => {
                             <div className="card-footer">
                                 <StatusBadge status={aluno.nivel} tipo="risco" />
                                 <StatusBadge status={aluno.status_contato.toLowerCase().replace(' ', '_')} tipo="contato" />
+                                <WhatsAppButton 
+                                    telefone={aluno.telefone} 
+                                    tipo="faltas_consecutivas" 
+                                    dados={{
+                                        aluno_nome: aluno.aluno_nome,
+                                        turma: aluno.turma,
+                                        faltas_consecutivas: aluno.faltas_consecutivas,
+                                        dias_sem_entrada: aluno.dias_sem_entrada
+                                    }}
+                                />
                             </div>
                         </div>
                     ))}
@@ -707,6 +853,22 @@ export const RelatoriosAdmin: React.FC = () => {
                                         <div className="contato-info">
                                             {aluno.responsavel && <span><Users size={14} /> {aluno.responsavel}</span>}
                                             {aluno.telefone && <span><Phone size={14} /> {aluno.telefone}</span>}
+                                            <WhatsAppButton 
+                                                telefone={aluno.telefone} 
+                                                tipo="risco_evasao" 
+                                                dados={{
+                                                    aluno_nome: aluno.aluno_nome,
+                                                    turma: aluno.turma,
+                                                    frequencia: aluno.frequencia_atual,
+                                                    faltas_consecutivas: aluno.faltas_consecutivas,
+                                                    motivo: aluno.motivo_principal
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                    {!aluno.responsavel && !aluno.telefone && (
+                                        <div className="contato-info sem-contato">
+                                            <span className="empty">Contato do responsável não cadastrado</span>
                                         </div>
                                     )}
                                 </div>
@@ -756,6 +918,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                 <th>Motivo</th>
                                 <th>Último Aviso</th>
                                 <th>Situação</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -781,6 +944,18 @@ export const RelatoriosAdmin: React.FC = () => {
                                     <td className="motivo">{aluno.motivo_alerta}</td>
                                     <td>{aluno.data_ultimo_aviso || '-'}</td>
                                     <td><StatusBadge status={aluno.situacao} tipo="contato" /></td>
+                                    <td>
+                                        <WhatsAppButton 
+                                            telefone={aluno.contato} 
+                                            tipo="menor_comunicacao" 
+                                            dados={{
+                                                aluno_nome: aluno.aluno_nome,
+                                                turma: aluno.turma,
+                                                frequencia: aluno.frequencia_percentual,
+                                                motivo: aluno.motivo_alerta
+                                            }}
+                                        />
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
