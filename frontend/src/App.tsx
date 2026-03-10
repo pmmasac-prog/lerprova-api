@@ -18,6 +18,7 @@ import { SchoolManagement } from './pages/SchoolManagement';
 import { AcademicCalendar } from './pages/AcademicCalendar';
 import { StudentCardsPage } from './pages/StudentCardsPage';
 import { RelatoriosAdmin } from './pages/RelatoriosAdmin';
+import { ChamadaNFC } from './pages/ChamadaNFC';
 import { BillingScreen } from './screens/BillingScreen';
 import { GenerateReportScreen } from './screens/GenerateReportScreen';
 import { BatchSyncComponent } from './components/BatchSyncComponent';
@@ -87,6 +88,7 @@ function App() {
         <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
         <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
         <Route path="/admin/sincronizacao" element={<PrivateRoute><AdminLayout><BatchSyncComponent /></AdminLayout></PrivateRoute>} />
+        <Route path="/admin/chamada-nfc" element={<PrivateRoute><ChamadaNFC /></PrivateRoute>} />
 
         {/* Nova Feature: Billing/Assinatura */}
         <Route path="/configuracoes/faturamento" element={<PrivateRoute><BillingScreen /></PrivateRoute>} />

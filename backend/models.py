@@ -72,6 +72,7 @@ class Aluno(Base):
     codigo = Column(String, index=True) # Matrícula ou código único
     # turma_id REMOVIDO — usar apenas M2M (aluno_turma)
     qr_token = Column(String, unique=True, index=True)
+    nfc_id = Column(String, unique=True, nullable=True, index=True)  # ID do cartão NFC
     hashed_password = Column(String, nullable=True) # Default set in migration
     created_at = Column(DateTime, default=datetime.utcnow)
     

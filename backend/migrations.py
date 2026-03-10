@@ -164,6 +164,15 @@ def run_migrations(engine):
                 logger.info("Adicionando coluna 'situacao_matricula' em 'alunos'...")
                 conn.execute(text("ALTER TABLE alunos ADD COLUMN situacao_matricula VARCHAR DEFAULT 'ativo'"))
 
+            if "nfc_id" not in columns_alunos:
+                logger.info("Adicionando coluna 'nfc_id' em 'alunos'...")
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN nfc_id VARCHAR NULL"))
+                # Criar índice único (se não existir)
+                try:
+                    conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_alunos_nfc_id ON alunos(nfc_id)"))
+                except:
+                    pass  # Índice já existe ou DB não suporta IF NOT EXISTS
+
             # Migrações para a tabela FREQUENCIA
             if inspector.has_table("frequencia"):
                 columns_frequencia = [c["name"] for c in inspector.get_columns("frequencia")]

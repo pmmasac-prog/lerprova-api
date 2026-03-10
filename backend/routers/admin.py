@@ -429,6 +429,193 @@ async def import_master_data(payload: List[RoomImport], admin_user = Depends(ver
     }
 
 
+# =====================================================
+# ENDPOINTS NFC PARA FREQUÊNCIA GLOBAL
+# =====================================================
+
+class NFCRegisterRequest(BaseModel):
+    nfc_id: str
+
+class NFCFrequenciaRequest(BaseModel):
+    nfc_id: str
+    turma_id: Optional[int] = None  # Se None, registra para todas as turmas do aluno
+
+@router.get("/alunos/nfc/{nfc_id}")
+async def get_aluno_by_nfc(nfc_id: str, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Busca aluno pelo ID do cartão NFC"""
+    aluno = db.query(models.Aluno).filter(models.Aluno.nfc_id == nfc_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Cartão NFC não vinculado a nenhum aluno")
+    
+    turmas = [{"id": t.id, "nome": t.nome} for t in aluno.turmas]
+    
+    return {
+        "id": aluno.id,
+        "nome": aluno.nome,
+        "codigo": aluno.codigo,
+        "nfc_id": aluno.nfc_id,
+        "turmas": turmas
+    }
+
+@router.post("/alunos/{aluno_id}/nfc")
+async def register_nfc_to_aluno(aluno_id: int, data: NFCRegisterRequest, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Vincula um cartão NFC a um aluno"""
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    
+    # Verifica se NFC já está vinculado a outro aluno
+    existing = db.query(models.Aluno).filter(models.Aluno.nfc_id == data.nfc_id, models.Aluno.id != aluno_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Este cartão NFC já está vinculado ao aluno: {existing.nome}")
+    
+    aluno.nfc_id = data.nfc_id
+    db.commit()
+    
+    return {
+        "message": "Cartão NFC vinculado com sucesso",
+        "aluno_id": aluno.id,
+        "aluno_nome": aluno.nome,
+        "nfc_id": aluno.nfc_id
+    }
+
+@router.delete("/alunos/{aluno_id}/nfc")
+async def remove_nfc_from_aluno(aluno_id: int, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Remove vínculo de cartão NFC de um aluno"""
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    
+    aluno.nfc_id = None
+    db.commit()
+    
+    return {"message": "Vínculo NFC removido com sucesso"}
+
+@router.post("/frequencia/nfc")
+async def register_frequencia_nfc(data: NFCFrequenciaRequest, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Registra presença de aluno via leitura NFC"""
+    from datetime import datetime
+    
+    # Busca aluno pelo NFC
+    aluno = db.query(models.Aluno).filter(models.Aluno.nfc_id == data.nfc_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Cartão NFC não reconhecido")
+    
+    hoje = datetime.now().strftime("%Y-%m-%d")
+    hora_atual = datetime.now().strftime("%H:%M")
+    
+    registros_criados = 0
+    turmas_registradas = []
+    
+    # Se turma_id específico, registra só nela; senão, registra em todas as turmas do aluno
+    turmas_alvo = [db.query(models.Turma).get(data.turma_id)] if data.turma_id else aluno.turmas
+    
+    for turma in turmas_alvo:
+        if not turma:
+            continue
+            
+        # Verifica se já tem registro hoje nessa turma
+        existing = db.query(models.Frequencia).filter(
+            models.Frequencia.aluno_id == aluno.id,
+            models.Frequencia.turma_id == turma.id,
+            models.Frequencia.data == hoje
+        ).first()
+        
+        if existing:
+            # Já registrado, atualiza hora se não estava presente
+            if not existing.presente:
+                existing.presente = True
+                existing.hora_entrada = hora_atual
+                existing.observacao = "Presença registrada via NFC"
+                turmas_registradas.append({"turma": turma.nome, "status": "atualizado"})
+                registros_criados += 1
+            else:
+                turmas_registradas.append({"turma": turma.nome, "status": "já_registrado", "hora": existing.hora_entrada})
+        else:
+            # Cria novo registro
+            freq = models.Frequencia(
+                turma_id=turma.id,
+                aluno_id=aluno.id,
+                data=hoje,
+                presente=True,
+                hora_entrada=hora_atual,
+                observacao="Presença registrada via NFC"
+            )
+            db.add(freq)
+            registros_criados += 1
+            turmas_registradas.append({"turma": turma.nome, "status": "registrado", "hora": hora_atual})
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "aluno": {
+            "id": aluno.id,
+            "nome": aluno.nome,
+            "codigo": aluno.codigo
+        },
+        "data": hoje,
+        "hora": hora_atual,
+        "registros": registros_criados,
+        "turmas": turmas_registradas
+    }
+
+@router.get("/frequencia/nfc/hoje")
+async def get_frequencia_nfc_hoje(turma_id: Optional[int] = None, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Lista todas as presenças registradas via NFC hoje"""
+    from datetime import datetime
+    
+    hoje = datetime.now().strftime("%Y-%m-%d")
+    
+    query = db.query(models.Frequencia).filter(
+        models.Frequencia.data == hoje,
+        models.Frequencia.observacao.like("%NFC%")
+    )
+    
+    if turma_id:
+        query = query.filter(models.Frequencia.turma_id == turma_id)
+    
+    registros = query.options(
+        joinedload(models.Frequencia.aluno),
+        joinedload(models.Frequencia.turma)
+    ).order_by(models.Frequencia.hora_entrada.desc()).all()
+    
+    return [
+        {
+            "id": r.id,
+            "aluno_id": r.aluno_id,
+            "aluno_nome": r.aluno.nome if r.aluno else "N/A",
+            "aluno_codigo": r.aluno.codigo if r.aluno else "N/A",
+            "turma_id": r.turma_id,
+            "turma_nome": r.turma.nome if r.turma else "N/A",
+            "hora_entrada": r.hora_entrada,
+            "data": r.data
+        }
+        for r in registros
+    ]
+
+@router.get("/alunos/search")
+async def search_alunos(q: str, admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Busca alunos por nome ou código"""
+    if len(q) < 2:
+        return []
+    
+    alunos = db.query(models.Aluno).filter(
+        (models.Aluno.nome.ilike(f"%{q}%")) | 
+        (models.Aluno.codigo.ilike(f"%{q}%"))
+    ).limit(20).all()
+    
+    return [
+        {
+            "id": a.id,
+            "nome": a.nome,
+            "codigo": a.codigo,
+            "nfc_id": a.nfc_id
+        }
+        for a in alunos
+    ]
+
+
 @router.get("/system-overview")
 async def system_overview(admin_user=Depends(verify_admin), db: Session = Depends(get_db)):
     """Visão geral do sistema para o painel admin"""
