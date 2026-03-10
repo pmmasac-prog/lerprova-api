@@ -137,9 +137,9 @@ export const StudentCardsPage: React.FC = () => {
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
-                format: [85.6, 54]
+                format: [128.4, 81]
             });
-            pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
+            pdf.addImage(imgData, 'PNG', 0, 0, 128.4, 81);
             pdf.save(`Carteirinha_${target.codigo}_${target.nome.replace(/\s+/g, '_')}.pdf`);
             showToast(`PDF gerado: ${target.nome}`);
         } catch (err) {
@@ -164,7 +164,7 @@ export const StudentCardsPage: React.FC = () => {
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
-                format: [85.6, 54]
+                format: [128.4, 81]
             });
 
             for (let i = 0; i < targets.length; i++) {
@@ -179,8 +179,8 @@ export const StudentCardsPage: React.FC = () => {
                 });
                 const imgData = canvas.toDataURL('image/png');
 
-                if (i > 0) pdf.addPage([85.6, 54], 'landscape');
-                pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
+                if (i > 0) pdf.addPage([128.4, 81], 'landscape');
+                pdf.addImage(imgData, 'PNG', 0, 0, 128.4, 81);
             }
 
             pdf.save(`Carteirinhas_Lote_${targets.length}_alunos.pdf`);

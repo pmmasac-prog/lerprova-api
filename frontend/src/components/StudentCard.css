@@ -6,7 +6,7 @@
 }
 
 .student-card {
-    width: 480px;
+    width: 500px;
     aspect-ratio: 85.6 / 54; /* ISO/IEC 7810 ID-1 */
     background: #ffffff;
     border-radius: 10px;
@@ -57,11 +57,11 @@
 
 /* --- Body --- */
 .card-body {
-    padding: 10px 14px;
+    padding: 12px 16px;
     display: grid;
-    grid-template-columns: 1fr 140px;
-    gap: 12px;
-    align-items: start;
+    grid-template-columns: 1fr 120px;
+    gap: 14px;
+    align-items: center;
     flex: 1;
     min-height: 0;
 }
@@ -112,7 +112,7 @@
 
 /* QR */
 .card-qr {
-    width: 130px;
+    width: 110px;
     background: #f8fafc;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
@@ -120,8 +120,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 8px;
-    gap: 4px;
+    padding: 6px;
+    gap: 3px;
     align-self: center;
 }
 
@@ -219,7 +219,7 @@
     }
 
     .print-area .student-card {
-        width: 95mm;
+        width: 100mm;
         aspect-ratio: 85.6 / 54;
         border-radius: 6px;
         box-shadow: none;
@@ -235,17 +235,17 @@
     }
 
     /* Reduce internal sizes for print */
-    .print-area .card-header { padding: 4px 8px; }
-    .print-area .header-text h3 { font-size: 8px; }
-    .print-area .header-text span { font-size: 6px; }
-    .print-area .card-body { padding: 6px 8px; gap: 6px; grid-template-columns: 1fr 52px; }
-    .print-area .student-name { font-size: 9px !important; }
-    .print-area .info-item label { font-size: 5px; }
-    .print-area .info-item p { font-size: 8px; }
-    .print-area .card-qr { width: 52px; padding: 3px; }
-    .print-area .card-qr svg { width: 38px !important; height: 38px !important; }
-    .print-area .qr-label { font-size: 5px; }
-    .print-area .card-footer { padding: 3px 8px; }
-    .print-area .card-footer span { font-size: 6px; }
+    .print-area .card-header { padding: 5px 10px; }
+    .print-area .header-text h3 { font-size: 9px; }
+    .print-area .header-text span { font-size: 7px; }
+    .print-area .card-body { padding: 8px 10px; gap: 8px; grid-template-columns: 1fr 72px; }
+    .print-area .student-name { font-size: 10px !important; }
+    .print-area .info-item label { font-size: 6px; }
+    .print-area .info-item p { font-size: 9px; }
+    .print-area .card-qr { width: 68px; padding: 4px; }
+    .print-area .card-qr svg { width: 56px !important; height: 56px !important; }
+    .print-area .qr-label { font-size: 6px; }
+    .print-area .card-footer { padding: 4px 10px; }
+    .print-area .card-footer span { font-size: 7px; }
     .print-area .card-accent-bar { height: 3px; }
 }
