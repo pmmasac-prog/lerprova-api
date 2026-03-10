@@ -56,7 +56,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                     {/* QR */}
                     <div className="card-qr">
                         <QRCode 
-                            value={`lerprova:${studentCode}`} 
+                            value={`ALUNO_${studentCode}`} 
                             size={80} 
                             bgColor="#ffffff" 
                             fgColor="#1e3a8a" 

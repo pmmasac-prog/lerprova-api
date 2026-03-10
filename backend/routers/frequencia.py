@@ -120,7 +120,37 @@ async def scan_qr_attendance(data: dict, user: users_db.User = Depends(get_curre
     if not qr_token:
         raise HTTPException(status_code=400, detail="Token QR não fornecido")
 
+    # Normaliza o token para diferentes formatos
+    normalized_token = qr_token.strip().upper()
+    
+    # Tenta buscar pelo token exato primeiro
     aluno = db.query(models.Aluno).filter(models.Aluno.qr_token == qr_token).first()
+    
+    # Se não encontrou, tenta formatos alternativos
+    if not aluno:
+        # Tenta com o token normalizado
+        aluno = db.query(models.Aluno).filter(models.Aluno.qr_token == normalized_token).first()
+    
+    if not aluno:
+        # Se começa com LERPROVA:, extrai o código
+        if normalized_token.startswith('LERPROVA:'):
+            codigo = normalized_token.replace('LERPROVA:', '')
+            aluno = db.query(models.Aluno).filter(models.Aluno.codigo == codigo).first()
+            if not aluno:
+                aluno = db.query(models.Aluno).filter(models.Aluno.qr_token == f'ALUNO_{codigo}').first()
+    
+    if not aluno:
+        # Se começa com ALUNO_, extrai e busca pelo código
+        if normalized_token.startswith('ALUNO_'):
+            codigo = normalized_token.replace('ALUNO_', '')
+            aluno = db.query(models.Aluno).filter(models.Aluno.codigo == codigo).first()
+    
+    if not aluno:
+        # Última tentativa: busca diretamente pelo código (se for apenas o código)
+        aluno = db.query(models.Aluno).filter(models.Aluno.codigo == qr_token).first()
+        if not aluno:
+            aluno = db.query(models.Aluno).filter(models.Aluno.codigo == normalized_token).first()
+    
     if not aluno:
         raise HTTPException(status_code=404, detail="Aluno não encontrado com este QR Code")
 
