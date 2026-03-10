@@ -44,7 +44,8 @@ export const NotificationCenter: React.FC<{ onClose?: () => void }> = ({ onClose
             setLoading(true);
             const isRead = filter === 'unread' ? false : undefined;
             const data = await api.notifications.getAll(0, 50, typeFilter, isRead);
-            setNotifications(data.notifications || []);
+            // Aceita tanto array direto quanto objeto { notifications: [...] }
+            setNotifications(Array.isArray(data) ? data : (data.notifications || []));
             setUnreadCount(data.unread || 0);
             setError(null);
         } catch (err: any) {
