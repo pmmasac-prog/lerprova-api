@@ -32,6 +32,23 @@ async def get_turmas(user: users_db.User = Depends(get_current_user), db: Sessio
     ]
 
 
+@router.get("/master")
+async def get_master_turmas(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Lista as turmas da base central (criadas por admins)."""
+    # Busca usuários que são admin
+    admin_ids = [u.id for u in db.query(users_db.User.id).filter(users_db.User.role == "admin").all()]
+    
+    master_turmas = db.query(models.Turma).filter(models.Turma.user_id.in_(admin_ids)).all()
+    
+    return [
+        {
+            "id": t.id,
+            "nome": t.nome,
+            "created_at": t.created_at.isoformat() if t.created_at else None
+        } for t in master_turmas
+    ]
+
+
 @router.get("/{turma_id}")
 async def get_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
     turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
@@ -119,22 +136,6 @@ async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_
         db.rollback()
         logger.error(f"Erro ao excluir turma {turma_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao excluir turma: {str(e)}")
-
-@router.get("/master")
-async def get_master_turmas(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Lista as turmas da base central (criadas por admins)."""
-    # Busca usuários que são admin
-    admin_ids = [u.id for u in db.query(users_db.User.id).filter(users_db.User.role == "admin").all()]
-    
-    master_turmas = db.query(models.Turma).filter(models.Turma.user_id.in_(admin_ids)).all()
-    
-    return [
-        {
-            "id": t.id,
-            "nome": t.nome,
-            "created_at": t.created_at.isoformat() if t.created_at else None
-        } for t in master_turmas
-    ]
 
 class IncorporateRequest(BaseModel):
     master_turma_id: int
