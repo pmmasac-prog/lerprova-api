@@ -21,14 +21,14 @@
 }
 
 /* Faixa superior */
-.card-accent-bar {
+.student-card .card-accent-bar {
     height: 4px;
     background: linear-gradient(90deg, #1e40af, #2563eb, #1e40af);
     flex-shrink: 0;
 }
 
 /* --- Header --- */
-.card-header {
+.student-card .card-header {
     padding: 8px 14px;
     display: flex;
     align-items: center;
@@ -38,7 +38,7 @@
     flex-shrink: 0;
 }
 
-.header-text h3 {
+.student-card .student-card .header-text h3 {
     font-size: 11px;
     font-weight: 800;
     margin: 0;
@@ -48,7 +48,7 @@
     color: #1e3a8a;
 }
 
-.header-text span {
+.student-card .header-text span {
     font-size: 8px;
     font-weight: 600;
     color: #64748b;
@@ -56,7 +56,7 @@
 }
 
 /* --- Body --- */
-.card-body {
+.student-card .card-body {
     padding: 10px 14px;
     display: grid;
     grid-template-columns: 1fr 100px;
@@ -67,14 +67,14 @@
 }
 
 /* Info */
-.card-info {
+.student-card .card-info {
     display: flex;
     flex-direction: column;
     gap: 6px;
     overflow: hidden;
 }
 
-.info-item label {
+.student-card .info-item label {
     display: block;
     font-size: 7px;
     font-weight: 700;
@@ -84,7 +84,7 @@
     text-transform: uppercase;
 }
 
-.info-item p {
+.student-card .info-item p {
     font-size: 11px;
     font-weight: 700;
     margin: 0;
@@ -92,7 +92,7 @@
     color: #1e293b;
 }
 
-.student-name {
+.student-card .student-card .student-name {
     font-size: 13px !important;
     font-weight: 800 !important;
     line-height: 1.2;
@@ -104,14 +104,14 @@
     color: #0f172a !important;
 }
 
-.info-row {
+.student-card .info-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
 
 /* QR */
-.card-qr {
+.student-card .card-qr {
     width: 95px;
     background: #f8fafc;
     border-radius: 8px;
@@ -125,7 +125,7 @@
     align-self: center;
 }
 
-.qr-label {
+.student-card .qr-label {
     font-size: 6px;
     color: #1e3a8a;
     font-weight: 800;
@@ -133,7 +133,7 @@
 }
 
 /* --- Footer --- */
-.card-footer {
+.student-card .card-footer {
     padding: 6px 14px;
     background: #f1f5f9;
     border-top: 1px solid #e2e8f0;
@@ -143,14 +143,14 @@
     flex-shrink: 0;
 }
 
-.card-footer span {
+.student-card .card-footer span {
     font-size: 8px;
     font-weight: 700;
     color: #64748b;
     letter-spacing: 0.5px;
 }
 
-.footer-deco {
+.student-card .footer-deco {
     width: 40px;
     height: 3px;
     background: linear-gradient(90deg, #1e40af, #2563eb);
