@@ -3,7 +3,8 @@ import {
     BarChart3, AlertTriangle, Users, Phone, ClipboardList,
     TrendingDown, Calendar, Filter, RefreshCw,
     CheckCircle, XCircle, Clock, AlertCircle, FileText, Search,
-    ChevronDown, ChevronUp, Percent, Activity, MessageCircle
+    ChevronDown, ChevronUp, Percent, Activity, MessageCircle,
+    User, Edit3, Save, X
 } from 'lucide-react';
 import { api } from '../services/api';
 import './RelatoriosAdmin.css';
@@ -329,6 +330,14 @@ export const RelatoriosAdmin: React.FC = () => {
     // Expanded sections
     const [expandedAluno, setExpandedAluno] = useState<number | null>(null);
 
+    // Modal de detalhes do aluno
+    const [selectedAlunoModal, setSelectedAlunoModal] = useState<{id: number; nome: string; codigo: string; turma: string} | null>(null);
+    const [alunoDetalhes, setAlunoDetalhes] = useState<any>(null);
+    const [historicoFrequencia, setHistoricoFrequencia] = useState<any>(null);
+    const [editandoAluno, setEditandoAluno] = useState(false);
+    const [editAlunoData, setEditAlunoData] = useState({ nome_responsavel: '', telefone_responsavel: '', email_responsavel: '' });
+    const [loadingModal, setLoadingModal] = useState(false);
+
     const showToast = useCallback((msg: string) => {
         setToast(msg);
         setTimeout(() => setToast(null), 3000);
@@ -431,6 +440,64 @@ export const RelatoriosAdmin: React.FC = () => {
             setLoading(false);
         }
     }, [periodo, showToast]);
+
+    // ==================== MODAL DE DETALHES DO ALUNO ====================
+
+    const abrirModalAluno = async (aluno: {id: number; nome: string; codigo: string; turma: string}) => {
+        setSelectedAlunoModal(aluno);
+        setEditandoAluno(false);
+        setLoadingModal(true);
+        
+        try {
+            // Carregar dados do aluno
+            const dadosAluno = await api.request(`/alunos/${aluno.id}`);
+            setAlunoDetalhes(dadosAluno);
+            setEditAlunoData({
+                nome_responsavel: dadosAluno.nome_responsavel || '',
+                telefone_responsavel: dadosAluno.telefone_responsavel || '',
+                email_responsavel: dadosAluno.email_responsavel || ''
+            });
+            
+            // Carregar histórico de frequência
+            const historico = await api.request(`/admin/reports/aluno/${aluno.id}/historico-frequencia`);
+            setHistoricoFrequencia(historico);
+        } catch (err) {
+            console.error('Erro ao carregar detalhes:', err);
+            showToast('Erro ao carregar detalhes do aluno');
+        } finally {
+            setLoadingModal(false);
+        }
+    };
+
+    const fecharModalAluno = () => {
+        setSelectedAlunoModal(null);
+        setAlunoDetalhes(null);
+        setHistoricoFrequencia(null);
+        setEditandoAluno(false);
+    };
+
+    const salvarEdicaoAluno = async () => {
+        if (!selectedAlunoModal) return;
+        
+        try {
+            setLoadingModal(true);
+            await api.request(`/alunos/${selectedAlunoModal.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(editAlunoData)
+            });
+            showToast('Dados do aluno atualizados!');
+            setEditandoAluno(false);
+            
+            // Recarregar dados
+            const dadosAluno = await api.request(`/alunos/${selectedAlunoModal.id}`);
+            setAlunoDetalhes(dadosAluno);
+        } catch (err) {
+            console.error('Erro ao salvar:', err);
+            showToast('Erro ao salvar alterações');
+        } finally {
+            setLoadingModal(false);
+        }
+    };
 
     const gerarAlertas = async () => {
         try {
@@ -619,8 +686,17 @@ export const RelatoriosAdmin: React.FC = () => {
                             {filteredAlunos.map(aluno => (
                                 <tr key={aluno.aluno_id} className={`row-${aluno.classificacao}`}>
                                     <td>
-                                        <div className="aluno-cell">
-                                            <span className="aluno-nome">{aluno.aluno_nome}</span>
+                                        <div className="aluno-cell" 
+                                            onClick={() => abrirModalAluno({
+                                                id: aluno.aluno_id,
+                                                nome: aluno.aluno_nome,
+                                                codigo: aluno.aluno_codigo,
+                                                turma: aluno.turma
+                                            })}
+                                            style={{ cursor: 'pointer' }}
+                                            title="Clique para ver detalhes e editar contato"
+                                        >
+                                            <span className="aluno-nome" style={{ color: 'var(--admin-emerald)' }}>{aluno.aluno_nome}</span>
                                             <span className="aluno-codigo">{aluno.aluno_codigo}</span>
                                         </div>
                                     </td>
@@ -699,8 +775,17 @@ export const RelatoriosAdmin: React.FC = () => {
                     {filtered.map(aluno => (
                         <div key={aluno.aluno_id} className={`consecutive-card nivel-${aluno.nivel}`}>
                             <div className="card-header">
-                                <div className="aluno-info">
-                                    <h4>{aluno.aluno_nome}</h4>
+                                <div className="aluno-info"
+                                    onClick={() => abrirModalAluno({
+                                        id: aluno.aluno_id,
+                                        nome: aluno.aluno_nome,
+                                        codigo: aluno.aluno_codigo,
+                                        turma: aluno.turma
+                                    })}
+                                    style={{ cursor: 'pointer' }}
+                                    title="Clique para ver detalhes e editar contato"
+                                >
+                                    <h4 style={{ color: 'var(--admin-emerald)' }}>{aluno.aluno_nome}</h4>
                                     <span className="turma">{aluno.turma}</span>
                                 </div>
                                 <div className="faltas-badge">
@@ -867,11 +952,42 @@ export const RelatoriosAdmin: React.FC = () => {
                                                     motivo: aluno.motivo_principal
                                                 }}
                                             />
+                                            <button 
+                                                onClick={() => abrirModalAluno({
+                                                    id: aluno.aluno_id,
+                                                    nome: aluno.aluno_nome,
+                                                    codigo: aluno.aluno_codigo,
+                                                    turma: aluno.turma
+                                                })}
+                                                className="btn-ver-detalhes"
+                                                style={{
+                                                    background: 'var(--admin-emerald)', border: 'none', color: '#fff',
+                                                    padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                                                    fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px'
+                                                }}
+                                            >
+                                                <User size={14} /> Ver Histórico
+                                            </button>
                                         </div>
                                     )}
                                     {!aluno.responsavel && !aluno.telefone && (
                                         <div className="contato-info sem-contato">
                                             <span className="empty">Contato do responsável não cadastrado</span>
+                                            <button 
+                                                onClick={() => abrirModalAluno({
+                                                    id: aluno.aluno_id,
+                                                    nome: aluno.aluno_nome,
+                                                    codigo: aluno.aluno_codigo,
+                                                    turma: aluno.turma
+                                                })}
+                                                style={{
+                                                    background: 'var(--admin-emerald)', border: 'none', color: '#fff',
+                                                    padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                                                    fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px'
+                                                }}
+                                            >
+                                                <Edit3 size={14} /> Cadastrar Contato
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -928,8 +1044,17 @@ export const RelatoriosAdmin: React.FC = () => {
                             {filtered.map(aluno => (
                                 <tr key={aluno.aluno_id}>
                                     <td>
-                                        <div className="aluno-cell">
-                                            <span className="aluno-nome">{aluno.aluno_nome}</span>
+                                        <div className="aluno-cell"
+                                            onClick={() => abrirModalAluno({
+                                                id: aluno.aluno_id,
+                                                nome: aluno.aluno_nome,
+                                                codigo: aluno.aluno_codigo,
+                                                turma: aluno.turma
+                                            })}
+                                            style={{ cursor: 'pointer' }}
+                                            title="Clique para ver detalhes e editar contato"
+                                        >
+                                            <span className="aluno-nome" style={{ color: 'var(--admin-emerald)' }}>{aluno.aluno_nome}</span>
                                             <span className="aluno-codigo">{aluno.aluno_codigo}</span>
                                         </div>
                                     </td>
@@ -1065,6 +1190,284 @@ export const RelatoriosAdmin: React.FC = () => {
                 {activeTab === 'menores' && renderMenoresComunicacao()}
                 {activeTab === 'gerencial' && renderGerencial()}
             </main>
+
+            {/* Modal de Detalhes do Aluno */}
+            {selectedAlunoModal && (
+                <div className="modal-overlay" onClick={fecharModalAluno} style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center',
+                    alignItems: 'center', zIndex: 1000
+                }}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{
+                        background: 'var(--admin-card)', borderRadius: '16px', width: '90%',
+                        maxWidth: '700px', maxHeight: '85vh', overflow: 'auto',
+                        border: '1px solid var(--admin-border)'
+                    }}>
+                        {/* Header */}
+                        <div style={{ 
+                            padding: '20px', borderBottom: '1px solid var(--admin-border)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ 
+                                    width: '48px', height: '48px', borderRadius: '50%',
+                                    background: 'var(--admin-emerald)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', color: '#fff'
+                                }}>
+                                    <User size={24} />
+                                </div>
+                                <div>
+                                    <h2 style={{ margin: 0, fontSize: '18px', color: '#f1f5f9' }}>{selectedAlunoModal.nome}</h2>
+                                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                        {selectedAlunoModal.codigo} · {selectedAlunoModal.turma}
+                                    </span>
+                                </div>
+                            </div>
+                            <button onClick={fecharModalAluno} style={{
+                                background: 'none', border: 'none', color: '#94a3b8',
+                                cursor: 'pointer', padding: '8px'
+                            }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {loadingModal ? (
+                            <div style={{ padding: '40px', textAlign: 'center' }}>
+                                <RefreshCw size={32} className="spinning" color="var(--admin-emerald)" />
+                                <p style={{ color: '#94a3b8', marginTop: '10px' }}>Carregando...</p>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '20px' }}>
+                                {/* Contato do Responsável */}
+                                <div style={{ 
+                                    background: 'var(--admin-bg)', padding: '16px', borderRadius: '12px',
+                                    marginBottom: '20px', border: '1px solid var(--admin-border)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '14px', color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Phone size={16} /> Contato do Responsável
+                                        </h3>
+                                        {!editandoAluno ? (
+                                            <button onClick={() => setEditandoAluno(true)} style={{
+                                                background: 'var(--admin-emerald)', border: 'none', color: '#fff',
+                                                padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
+                                            }}>
+                                                <Edit3 size={14} /> Editar
+                                            </button>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button onClick={() => setEditandoAluno(false)} style={{
+                                                    background: 'var(--admin-border)', border: 'none', color: '#94a3b8',
+                                                    padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px'
+                                                }}>
+                                                    Cancelar
+                                                </button>
+                                                <button onClick={salvarEdicaoAluno} style={{
+                                                    background: '#10b981', border: 'none', color: '#fff',
+                                                    padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
+                                                }}>
+                                                    <Save size={14} /> Salvar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {!editandoAluno ? (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome</label>
+                                                <span style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                    {alunoDetalhes?.nome_responsavel || <em style={{ color: '#64748b' }}>Não informado</em>}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Telefone</label>
+                                                <span style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                    {alunoDetalhes?.telefone_responsavel ? (
+                                                        <a href={`https://wa.me/55${alunoDetalhes.telefone_responsavel.replace(/\D/g, '')}`}
+                                                            target="_blank" rel="noopener noreferrer"
+                                                            style={{ color: '#10b981', textDecoration: 'none' }}>
+                                                            {alunoDetalhes.telefone_responsavel}
+                                                        </a>
+                                                    ) : <em style={{ color: '#64748b' }}>Não informado</em>}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>E-mail</label>
+                                                <span style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                    {alunoDetalhes?.email_responsavel || <em style={{ color: '#64748b' }}>Não informado</em>}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome do Responsável</label>
+                                                <input
+                                                    type="text"
+                                                    value={editAlunoData.nome_responsavel}
+                                                    onChange={e => setEditAlunoData(d => ({ ...d, nome_responsavel: e.target.value }))}
+                                                    placeholder="Nome do responsável"
+                                                    style={{
+                                                        width: '100%', padding: '8px 12px', borderRadius: '8px',
+                                                        border: '1px solid var(--admin-border)', background: 'var(--admin-card)',
+                                                        color: '#f1f5f9', fontSize: '13px'
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Telefone (WhatsApp)</label>
+                                                <input
+                                                    type="tel"
+                                                    value={editAlunoData.telefone_responsavel}
+                                                    onChange={e => setEditAlunoData(d => ({ ...d, telefone_responsavel: e.target.value }))}
+                                                    placeholder="11999998888"
+                                                    style={{
+                                                        width: '100%', padding: '8px 12px', borderRadius: '8px',
+                                                        border: '1px solid var(--admin-border)', background: 'var(--admin-card)',
+                                                        color: '#f1f5f9', fontSize: '13px'
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>E-mail</label>
+                                                <input
+                                                    type="email"
+                                                    value={editAlunoData.email_responsavel}
+                                                    onChange={e => setEditAlunoData(d => ({ ...d, email_responsavel: e.target.value }))}
+                                                    placeholder="email@exemplo.com"
+                                                    style={{
+                                                        width: '100%', padding: '8px 12px', borderRadius: '8px',
+                                                        border: '1px solid var(--admin-border)', background: 'var(--admin-card)',
+                                                        color: '#f1f5f9', fontSize: '13px'
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Histórico de Frequência */}
+                                {historicoFrequencia && (
+                                    <div style={{ 
+                                        background: 'var(--admin-bg)', padding: '16px', borderRadius: '12px',
+                                        border: '1px solid var(--admin-border)'
+                                    }}>
+                                        <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Calendar size={16} /> Histórico de Frequência
+                                        </h3>
+
+                                        {/* Estatísticas */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                                            <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
+                                                    {historicoFrequencia.estatisticas?.frequencia_percentual || 0}%
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Frequência</div>
+                                            </div>
+                                            <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>
+                                                    {historicoFrequencia.estatisticas?.presencas || 0}
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Presenças</div>
+                                            </div>
+                                            <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>
+                                                    {historicoFrequencia.estatisticas?.ausencias || 0}
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Faltas</div>
+                                            </div>
+                                            <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
+                                                    {historicoFrequencia.estatisticas?.justificadas || 0}
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Justificadas</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Datas de Presença */}
+                                        {historicoFrequencia.datas_presente?.length > 0 && (
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <h4 style={{ fontSize: '12px', color: '#22c55e', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <CheckCircle size={14} /> Presenças ({historicoFrequencia.datas_presente.length})
+                                                </h4>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                    {historicoFrequencia.datas_presente.slice(0, 20).map((p: any, i: number) => (
+                                                        <span key={i} style={{
+                                                            padding: '4px 8px', borderRadius: '6px',
+                                                            background: 'rgba(34, 197, 94, 0.1)',
+                                                            border: '1px solid rgba(34, 197, 94, 0.3)',
+                                                            color: '#22c55e', fontSize: '11px'
+                                                        }}>
+                                                            {new Date(p.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                        </span>
+                                                    ))}
+                                                    {historicoFrequencia.datas_presente.length > 20 && (
+                                                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                            +{historicoFrequencia.datas_presente.length - 20} mais
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Datas de Ausência */}
+                                        {historicoFrequencia.datas_ausente?.length > 0 && (
+                                            <div style={{ marginBottom: '16px' }}>
+                                                <h4 style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <XCircle size={14} /> Faltas ({historicoFrequencia.datas_ausente.length})
+                                                </h4>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                    {historicoFrequencia.datas_ausente.map((f: any, i: number) => (
+                                                        <span key={i} style={{
+                                                            padding: '4px 8px', borderRadius: '6px',
+                                                            background: 'rgba(239, 68, 68, 0.1)',
+                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                            color: '#ef4444', fontSize: '11px'
+                                                        }}>
+                                                            {new Date(f.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Datas Justificadas */}
+                                        {historicoFrequencia.datas_justificada?.length > 0 && (
+                                            <div>
+                                                <h4 style={{ fontSize: '12px', color: '#f59e0b', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <AlertCircle size={14} /> Justificadas ({historicoFrequencia.datas_justificada.length})
+                                                </h4>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                    {historicoFrequencia.datas_justificada.map((j: any, i: number) => (
+                                                        <span key={i} style={{
+                                                            padding: '4px 8px', borderRadius: '6px',
+                                                            background: 'rgba(245, 158, 11, 0.1)',
+                                                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                            color: '#f59e0b', fontSize: '11px'
+                                                        }}>
+                                                            {new Date(j.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {(!historicoFrequencia.datas_presente?.length && !historicoFrequencia.datas_ausente?.length) && (
+                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                                                <Calendar size={32} />
+                                                <p style={{ margin: '10px 0 0' }}>Nenhum registro de frequência ainda</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
