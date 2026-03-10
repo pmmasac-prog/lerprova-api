@@ -221,13 +221,62 @@ def calcular_score_risco(frequencia_pct: float, faltas_consecutivas: int,
 def extrair_turno(turma_nome: str) -> str:
     """Extrai o turno do nome da turma"""
     if not turma_nome:
-        return "Matutino"
+        return "Não definido"
     lower = turma_nome.lower()
     if "noite" in lower or "noturno" in lower:
         return "Noturno"
     if "tarde" in lower or "vespertino" in lower:
         return "Vespertino"
-    return "Matutino"
+    if "manhã" in lower or "manha" in lower or "matutino" in lower:
+        return "Matutino"
+    if "integral" in lower:
+        return "Integral"
+    return "Não definido"
+
+
+def get_turno_aluno(aluno) -> str:
+    """Busca o turno do aluno a partir de suas turmas"""
+    if not aluno.turmas:
+        return "Não definido"
+    
+    # Verificar cada turma do aluno
+    turnos = set()
+    for turma in aluno.turmas:
+        turno = extrair_turno(turma.nome)
+        if turno != "Não definido":
+            turnos.add(turno)
+    
+    # Se tiver múltiplos turnos diferentes, indicar "Integral" ou listar
+    if len(turnos) == 0:
+        return "Não definido"
+    elif len(turnos) == 1:
+        return list(turnos)[0]
+    elif "Matutino" in turnos and "Vespertino" in turnos:
+        return "Integral"
+    else:
+        return "/".join(turnos)
+
+
+def get_primeira_frequencia(db: Session, aluno_id: int = None) -> str:
+    """Retorna a data da primeira frequência registrada"""
+    query = db.query(func.min(models.Frequencia.data))
+    if aluno_id:
+        query = query.filter(models.Frequencia.aluno_id == aluno_id)
+    
+    primeira_data = query.scalar()
+    return primeira_data
+
+
+def get_dias_com_frequencia(db: Session, data_inicio: str, data_fim: str) -> List[str]:
+    """Retorna lista de datas onde houve registro de frequência (dias que efetivamente tiveram aula)"""
+    dias_registrados = db.query(
+        func.distinct(models.Frequencia.data)
+    ).filter(
+        models.Frequencia.data >= data_inicio,
+        models.Frequencia.data <= data_fim
+    ).all()
+    
+    return sorted([d[0] for d in dias_registrados if d[0]])
 
 
 def calcular_idade(data_nascimento: str) -> int:
@@ -312,15 +361,24 @@ async def relatorio_infrequencia(
     Campos: aluno, turma, turno, total dias letivos, dias presentes, dias ausentes,
     frequência percentual, faltas justificadas, faltas não justificadas,
     faltas consecutivas, última presença, status de risco
+    
+    IMPORTANTE: Conta apenas dias que efetivamente tiveram registro de frequência,
+    a partir da primeira frequência registrada do aluno.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    dias_letivos = get_dias_letivos(db, request.data_inicio, request.data_fim)
-    total_dias_letivos = len(dias_letivos)
+    # Buscar dias que efetivamente tiveram registro de frequência no período
+    dias_com_frequencia = get_dias_com_frequencia(db, request.data_inicio, request.data_fim)
     
-    if total_dias_letivos == 0:
-        return {"alunos": [], "total_dias_letivos": 0, "periodo": {"inicio": request.data_inicio, "fim": request.data_fim}}
+    if not dias_com_frequencia:
+        return {
+            "alunos": [], 
+            "total_dias_letivos": 0, 
+            "dias_com_frequencia": 0,
+            "periodo": {"inicio": request.data_inicio, "fim": request.data_fim},
+            "mensagem": "Nenhum registro de frequência encontrado no período"
+        }
     
     # Buscar alunos
     query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
@@ -332,17 +390,33 @@ async def relatorio_infrequencia(
     resultado = []
     
     for aluno in alunos:
+        # Buscar turno da turma do aluno
+        turno = get_turno_aluno(aluno)
         turma_nomes = [t.nome for t in aluno.turmas]
-        turma_str = turma_nomes[0] if turma_nomes else ""
-        turno = extrair_turno(turma_str)
+        turma_str = ", ".join(turma_nomes) if turma_nomes else "Sem turma"
         
         if request.turno and turno != request.turno:
             continue
         
-        # Buscar frequência do aluno no período
+        # Buscar primeira frequência do aluno
+        primeira_freq = get_primeira_frequencia(db, aluno.id)
+        
+        if not primeira_freq:
+            # Aluno sem nenhuma frequência registrada
+            continue
+        
+        # Filtrar dias com frequência a partir da primeira frequência do aluno
+        dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
+        
+        if not dias_validos:
+            continue
+        
+        total_dias_letivos = len(dias_validos)
+        
+        # Buscar frequência do aluno nos dias válidos
         frequencias = db.query(models.Frequencia).filter(
             models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos)
+            models.Frequencia.data.in_(dias_validos)
         ).all()
         
         dias_presentes = len([f for f in frequencias if f.presente])
@@ -352,8 +426,8 @@ async def relatorio_infrequencia(
         
         frequencia_pct = (dias_presentes / total_dias_letivos * 100) if total_dias_letivos > 0 else 0
         
-        # Calcular faltas consecutivas
-        info_consecutivas = calcular_faltas_consecutivas(db, aluno.id, dias_letivos)
+        # Calcular faltas consecutivas usando dias válidos do aluno
+        info_consecutivas = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
         
         # Calcular status de risco
         risco = calcular_score_risco(frequencia_pct, info_consecutivas["consecutivas"])
@@ -384,6 +458,7 @@ async def relatorio_infrequencia(
             "faltas_nao_justificadas": faltas_nao_justificadas,
             "faltas_consecutivas": info_consecutivas["consecutivas"],
             "ultima_presenca": info_consecutivas["ultima_presenca"],
+            "primeira_frequencia": primeira_freq,
             "status_risco": risco["nivel"],
             "classificacao": classificacao,
             "situacao_matricula": aluno.situacao_matricula or "ativo"
@@ -394,7 +469,7 @@ async def relatorio_infrequencia(
     
     return {
         "alunos": resultado,
-        "total_dias_letivos": total_dias_letivos,
+        "dias_aula_registrados": len(dias_com_frequencia),
         "periodo": {"inicio": request.data_inicio, "fim": request.data_fim},
         "total_alunos": len(resultado),
         "resumo": {
@@ -424,10 +499,13 @@ async def relatorio_faltas_consecutivas(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    # Período: últimos 30 dias úteis
+    # Período: últimos 45 dias - buscar dias que tiveram registro de frequência
     hoje = datetime.now().strftime("%Y-%m-%d")
     inicio = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")
-    dias_letivos = get_dias_letivos(db, inicio, hoje)
+    dias_com_frequencia = get_dias_com_frequencia(db, inicio, hoje)
+    
+    if not dias_com_frequencia:
+        return {"alunos": [], "total": 0, "mensagem": "Nenhum registro de frequência encontrado"}
     
     query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
     
@@ -438,10 +516,20 @@ async def relatorio_faltas_consecutivas(
     resultado = []
     
     for aluno in alunos:
-        info = calcular_faltas_consecutivas(db, aluno.id, dias_letivos)
+        # Filtrar dias a partir da primeira frequência do aluno
+        primeira_freq = get_primeira_frequencia(db, aluno.id)
+        if not primeira_freq:
+            continue
+        
+        dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
+        if not dias_validos:
+            continue
+        
+        info = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
         
         if info["consecutivas"] >= minimo:
             turma_nomes = [t.nome for t in aluno.turmas]
+            turno = get_turno_aluno(aluno)
             
             # Determinar nível de alerta
             if info["consecutivas"] >= 7:
@@ -475,7 +563,8 @@ async def relatorio_faltas_consecutivas(
                 "aluno_id": aluno.id,
                 "aluno_nome": aluno.nome,
                 "aluno_codigo": aluno.codigo,
-                "turma": turma_nomes[0] if turma_nomes else "",
+                "turma": turma_nomes[0] if turma_nomes else "Sem turma",
+                "turno": turno,
                 "faltas_consecutivas": info["consecutivas"],
                 "ultima_presenca": info["ultima_presenca"],
                 "dias_sem_entrada": info["dias_sem_entrada"],
@@ -520,15 +609,18 @@ async def relatorio_risco_evasao(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    dias_letivos = get_dias_letivos(db, request.data_inicio, request.data_fim)
-    total_dias = len(dias_letivos)
+    # Buscar dias que efetivamente tiveram registro de frequência
+    dias_com_frequencia = get_dias_com_frequencia(db, request.data_inicio, request.data_fim)
+    
+    if not dias_com_frequencia:
+        return {"alunos_em_risco": [], "total": 0, "mensagem": "Nenhum registro de frequência encontrado"}
     
     # Período anterior para comparação (mesma duração, antes do início)
     duracao = (datetime.strptime(request.data_fim, "%Y-%m-%d") - 
                datetime.strptime(request.data_inicio, "%Y-%m-%d")).days
     periodo_ant_fim = (datetime.strptime(request.data_inicio, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
     periodo_ant_inicio = (datetime.strptime(request.data_inicio, "%Y-%m-%d") - timedelta(days=duracao+1)).strftime("%Y-%m-%d")
-    dias_letivos_ant = get_dias_letivos(db, periodo_ant_inicio, periodo_ant_fim)
+    dias_freq_anterior = get_dias_com_frequencia(db, periodo_ant_inicio, periodo_ant_fim)
     
     query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
     
@@ -542,10 +634,22 @@ async def relatorio_risco_evasao(
     resultado = []
     
     for aluno in alunos:
+        # Buscar primeira frequência do aluno
+        primeira_freq = get_primeira_frequencia(db, aluno.id)
+        if not primeira_freq:
+            continue
+        
+        # Filtrar dias válidos para este aluno
+        dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
+        if not dias_validos:
+            continue
+        
+        total_dias = len(dias_validos)
+        
         # Frequência atual
         presencas = db.query(models.Frequencia).filter(
             models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos),
+            models.Frequencia.data.in_(dias_validos),
             models.Frequencia.presente == True
         ).count()
         
@@ -553,21 +657,23 @@ async def relatorio_risco_evasao(
         
         # Frequência anterior
         freq_anterior = None
-        if dias_letivos_ant:
-            presencas_ant = db.query(models.Frequencia).filter(
-                models.Frequencia.aluno_id == aluno.id,
-                models.Frequencia.data.in_(dias_letivos_ant),
-                models.Frequencia.presente == True
-            ).count()
-            freq_anterior = (presencas_ant / len(dias_letivos_ant) * 100) if dias_letivos_ant else None
+        if dias_freq_anterior:
+            dias_ant_validos = [d for d in dias_freq_anterior if d >= primeira_freq]
+            if dias_ant_validos:
+                presencas_ant = db.query(models.Frequencia).filter(
+                    models.Frequencia.aluno_id == aluno.id,
+                    models.Frequencia.data.in_(dias_ant_validos),
+                    models.Frequencia.presente == True
+                ).count()
+                freq_anterior = (presencas_ant / len(dias_ant_validos) * 100) if dias_ant_validos else None
         
         # Faltas consecutivas
-        info_consec = calcular_faltas_consecutivas(db, aluno.id, dias_letivos)
+        info_consec = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
         
         # Faltas alternadas (faltas que não são consecutivas)
         todas_faltas = db.query(models.Frequencia).filter(
             models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos),
+            models.Frequencia.data.in_(dias_validos),
             models.Frequencia.presente == False
         ).count()
         faltas_alternadas = max(0, todas_faltas - info_consec["consecutivas"])
@@ -583,13 +689,14 @@ async def relatorio_risco_evasao(
         # Incluir apenas alunos com risco médio ou maior
         if risco["nivel"] in ["medio", "alto", "critico"]:
             turma_nomes = [t.nome for t in aluno.turmas]
+            turno = get_turno_aluno(aluno)
             
             resultado.append({
                 "aluno_id": aluno.id,
                 "aluno_nome": aluno.nome,
                 "aluno_codigo": aluno.codigo,
-                "turma": turma_nomes[0] if turma_nomes else "",
-                "turno": extrair_turno(turma_nomes[0] if turma_nomes else ""),
+                "turma": turma_nomes[0] if turma_nomes else "Sem turma",
+                "turno": turno,
                 "score_risco": risco["score"],
                 "nivel_risco": risco["nivel"],
                 "motivo_principal": risco["motivo_principal"],
@@ -600,6 +707,7 @@ async def relatorio_risco_evasao(
                 "faltas_consecutivas": info_consec["consecutivas"],
                 "ultima_presenca": info_consec["ultima_presenca"],
                 "dias_sem_entrada": info_consec["dias_sem_entrada"],
+                "dias_aula": total_dias,
                 "responsavel": aluno.nome_responsavel,
                 "telefone": aluno.telefone_responsavel
             })

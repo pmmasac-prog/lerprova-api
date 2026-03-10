@@ -23,6 +23,7 @@ interface AlunoInfrequencia {
     faltas_nao_justificadas: number;
     faltas_consecutivas: number;
     ultima_presenca: string | null;
+    primeira_frequencia: string | null;
     status_risco: string;
     classificacao: string;
     situacao_matricula: string;
@@ -35,6 +36,7 @@ interface AlunoFaltasConsecutivas {
     aluno_nome: string;
     aluno_codigo: string;
     turma: string;
+    turno: string;
     faltas_consecutivas: number;
     ultima_presenca: string | null;
     dias_sem_entrada: number;
@@ -61,6 +63,7 @@ interface AlunoRisco {
     faltas_consecutivas: number;
     ultima_presenca: string | null;
     dias_sem_entrada: number;
+    dias_aula: number;
     responsavel: string | null;
     telefone: string | null;
 }
