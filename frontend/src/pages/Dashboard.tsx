@@ -323,7 +323,6 @@ export const Dashboard: React.FC = () => {
             {showQrScanner && (
                 <QRScanner
                     onClose={() => setShowQrScanner(false)}
-                    onSuccess={() => loadDashboard()}
                 />
             )}
         </div>
