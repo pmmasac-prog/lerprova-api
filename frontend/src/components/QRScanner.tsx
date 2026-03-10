@@ -141,7 +141,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                 { facingMode: "environment" },
                 {
                     fps: 15,
-                    qrbox: { width: 280, height: 280 },
+                    qrbox: { width: 350, height: 350 },
                     aspectRatio: 1.0,
                     disableFlip: false
                 },
@@ -171,7 +171,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
             backdropFilter: 'blur(8px)'
         }}>
             <div className="modal-content" style={{ 
-                maxWidth: '500px', 
+                maxWidth: '600px', 
                 width: '95%',
                 background: 'linear-gradient(180deg, #0f1117 0%, #0a0d12 100%)',
                 border: '1px solid rgba(16, 185, 129, 0.2)',
@@ -245,7 +245,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                             borderRadius: '16px', 
                             overflow: 'hidden',
                             background: '#000',
-                            minHeight: '300px'
+                            minHeight: '400px'
                         }}
                     />
                 )}
