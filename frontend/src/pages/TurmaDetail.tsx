@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Trash2, User, Users, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3, UserMinus, BookOpen } from 'lucide-react';
+import { ArrowLeft, Calendar, Trash2, User, Users, BarChart3, ClipboardCheck, X, ChevronRight, FileUp, Edit3, UserMinus, BookOpen, Phone, Save, Mail } from 'lucide-react';
 import { api } from '../services/api';
 import { EditResultadoModal } from './Relatorios/components/EditResultadoModal';
 import './TurmaDetail.css';
@@ -17,6 +17,9 @@ interface Aluno {
     codigo: string;
     turma_id: number;
     qr_token: string;
+    nome_responsavel?: string;
+    telefone_responsavel?: string;
+    email_responsavel?: string;
 }
 
 export const TurmaDetail: React.FC = () => {
@@ -34,7 +37,7 @@ export const TurmaDetail: React.FC = () => {
     const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [frequenciaState, setFrequenciaState] = useState<{ [key: number]: boolean }>({});
-    const [activeTab, setActiveTab] = useState<'desempenho' | 'frequencia' | 'cartao'>('desempenho');
+    const [activeTab, setActiveTab] = useState<'desempenho' | 'frequencia' | 'cartao' | 'dados'>('desempenho');
     const [selectedAlunoStats, setSelectedAlunoStats] = useState({ media: '0.0', provas: 0, presenca: '0%' });
     const [alunoResultados, setAlunoResultados] = useState<any[]>([]);
     const [alunoFreqHistory, setAlunoFreqHistory] = useState<any[]>([]);
@@ -43,6 +46,8 @@ export const TurmaDetail: React.FC = () => {
     const [selectedResultadoForCard, setSelectedResultadoForCard] = useState<any | null>(null);
     const [editingResultado, setEditingResultado] = useState<any | null>(null);
     const [editingGabarito, setEditingGabarito] = useState<any | null>(null);
+    const [editingAluno, setEditingAluno] = useState(false);
+    const [editAlunoData, setEditAlunoData] = useState({ nome: '', codigo: '', nome_responsavel: '', telefone_responsavel: '', email_responsavel: '' });
 
     useEffect(() => {
         loadData();
@@ -85,10 +90,23 @@ export const TurmaDetail: React.FC = () => {
         setActiveTab('desempenho');
         setEditingResultado(null);
         setEditingGabarito(null);
+        setEditingAluno(false);
 
         const turmaId = parseInt(id || '0');
 
         try {
+            // 0. Carregar dados completos do aluno (incluindo responsável)
+            const alunoCompleto = await api.getAluno(aluno.id);
+            setEditAlunoData({
+                nome: alunoCompleto.nome || '',
+                codigo: alunoCompleto.codigo || '',
+                nome_responsavel: alunoCompleto.nome_responsavel || '',
+                telefone_responsavel: alunoCompleto.telefone_responsavel || '',
+                email_responsavel: alunoCompleto.email_responsavel || ''
+            });
+            // Atualizar selectedAluno com dados completos
+            setSelectedAluno({ ...aluno, ...alunoCompleto });
+
             // 1. Carregar resultados do aluno apenas NESTA turma
             const resultadosDoAluno = await api.getResultadosAlunoTurma(turmaId, aluno.id);
             setAlunoResultados(resultadosDoAluno);
@@ -114,6 +132,21 @@ export const TurmaDetail: React.FC = () => {
 
         } catch (error) {
             console.error('Erro ao carregar stats do aluno para esta turma', error);
+        }
+    };
+
+    const handleSaveAlunoEdit = async () => {
+        if (!selectedAluno) return;
+        try {
+            await api.updateAluno(selectedAluno.id, editAlunoData);
+            setEditingAluno(false);
+            // Atualizar lista de alunos
+            loadData();
+            // Atualizar selectedAluno
+            setSelectedAluno({ ...selectedAluno, ...editAlunoData });
+        } catch (error) {
+            console.error('Erro ao salvar edição:', error);
+            alert('Erro ao salvar alterações');
         }
     };
 
@@ -572,6 +605,13 @@ export const TurmaDetail: React.FC = () => {
                                 <ClipboardCheck size={18} />
                                 <span>Cartão Resposta</span>
                             </button>
+                            <button
+                                className={`tab ${activeTab === 'dados' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('dados')}
+                            >
+                                <User size={18} />
+                                <span>Dados/Responsável</span>
+                            </button>
                         </div>
 
                         {/* Tab Content */}
@@ -762,6 +802,192 @@ export const TurmaDetail: React.FC = () => {
                                             <p>Nenhum cartão disponível</p>
                                         </div>
                                     )}
+                                </div>
+                            )}
+
+                            {activeTab === 'dados' && (
+                                <div className="dados-content" style={{ padding: '10px 0' }}>
+                                    <div style={{ 
+                                        background: '#0f1117', 
+                                        borderRadius: '16px', 
+                                        border: '1px solid #1e293b',
+                                        padding: '20px'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                            <h3 style={{ fontSize: '14px', color: '#f1f5f9', margin: 0 }}>Dados do Aluno e Responsável</h3>
+                                            {!editingAluno ? (
+                                                <button 
+                                                    onClick={() => setEditingAluno(true)}
+                                                    style={{ 
+                                                        background: '#3b82f6', 
+                                                        border: 'none', 
+                                                        color: 'white', 
+                                                        padding: '8px 16px', 
+                                                        borderRadius: '8px', 
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px',
+                                                        fontSize: '12px'
+                                                    }}
+                                                >
+                                                    <Edit3 size={14} /> Editar
+                                                </button>
+                                            ) : (
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button 
+                                                        onClick={() => setEditingAluno(false)}
+                                                        style={{ 
+                                                            background: '#1e293b', 
+                                                            border: '1px solid #334155', 
+                                                            color: '#94a3b8', 
+                                                            padding: '8px 16px', 
+                                                            borderRadius: '8px', 
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button 
+                                                        onClick={handleSaveAlunoEdit}
+                                                        style={{ 
+                                                            background: '#10b981', 
+                                                            border: 'none', 
+                                                            color: 'white', 
+                                                            padding: '8px 16px', 
+                                                            borderRadius: '8px', 
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        <Save size={14} /> Salvar
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {!editingAluno ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Nome do Aluno</div>
+                                                        <div style={{ fontSize: '14px', color: '#f1f5f9' }}>{selectedAluno.nome}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Matrícula</div>
+                                                        <div style={{ fontSize: '14px', color: '#f1f5f9' }}>{selectedAluno.codigo}</div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '16px' }}>
+                                                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px', fontWeight: 600 }}>Contato do Responsável</div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Nome</div>
+                                                            <div style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                                {editAlunoData.nome_responsavel || <span style={{ color: '#64748b' }}>Não informado</span>}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>
+                                                                <Phone size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                                                                Telefone
+                                                            </div>
+                                                            <div style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                                {editAlunoData.telefone_responsavel ? (
+                                                                    <a 
+                                                                        href={`https://wa.me/55${editAlunoData.telefone_responsavel.replace(/\D/g, '')}`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        style={{ color: '#10b981', textDecoration: 'none' }}
+                                                                    >
+                                                                        {editAlunoData.telefone_responsavel}
+                                                                    </a>
+                                                                ) : <span style={{ color: '#64748b' }}>Não informado</span>}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>
+                                                                <Mail size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                                                                E-mail
+                                                            </div>
+                                                            <div style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                                {editAlunoData.email_responsavel || <span style={{ color: '#64748b' }}>Não informado</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                    <div>
+                                                        <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome do Aluno</label>
+                                                        <input 
+                                                            type="text"
+                                                            value={editAlunoData.nome}
+                                                            onChange={(e) => setEditAlunoData({ ...editAlunoData, nome: e.target.value })}
+                                                            className="form-input"
+                                                            style={{ width: '100%' }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Matrícula</label>
+                                                        <input 
+                                                            type="text"
+                                                            value={editAlunoData.codigo}
+                                                            onChange={(e) => setEditAlunoData({ ...editAlunoData, codigo: e.target.value })}
+                                                            className="form-input"
+                                                            style={{ width: '100%' }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '16px' }}>
+                                                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px', fontWeight: 600 }}>Contato do Responsável</div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome do Responsável</label>
+                                                            <input 
+                                                                type="text"
+                                                                value={editAlunoData.nome_responsavel}
+                                                                onChange={(e) => setEditAlunoData({ ...editAlunoData, nome_responsavel: e.target.value })}
+                                                                className="form-input"
+                                                                placeholder="Nome do responsável"
+                                                                style={{ width: '100%' }}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Telefone (WhatsApp)</label>
+                                                            <input 
+                                                                type="tel"
+                                                                value={editAlunoData.telefone_responsavel}
+                                                                onChange={(e) => setEditAlunoData({ ...editAlunoData, telefone_responsavel: e.target.value })}
+                                                                className="form-input"
+                                                                placeholder="11999998888"
+                                                                style={{ width: '100%' }}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>E-mail</label>
+                                                            <input 
+                                                                type="email"
+                                                                value={editAlunoData.email_responsavel}
+                                                                onChange={(e) => setEditAlunoData({ ...editAlunoData, email_responsavel: e.target.value })}
+                                                                className="form-input"
+                                                                placeholder="email@exemplo.com"
+                                                                style={{ width: '100%' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>

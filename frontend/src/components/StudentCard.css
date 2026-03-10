@@ -59,7 +59,7 @@
 .card-body {
     padding: 10px 14px;
     display: grid;
-    grid-template-columns: 1fr 72px;
+    grid-template-columns: 1fr 96px;
     gap: 12px;
     align-items: start;
     flex: 1;
@@ -112,7 +112,7 @@
 
 /* QR */
 .card-qr {
-    width: 72px;
+    width: 96px;
     background: #f8fafc;
     border-radius: 8px;
     border: 1px solid #e2e8f0;

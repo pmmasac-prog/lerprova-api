@@ -1250,104 +1250,137 @@ async def gerar_alertas_automaticos(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    # Buscar configurações
-    config = db.query(models.ConfiguracaoFrequencia).first()
-    if not config:
-        config = models.ConfiguracaoFrequencia()
-    
-    # Período: últimos 30 dias
-    hoje = datetime.now().strftime("%Y-%m-%d")
-    inicio = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")
-    dias_letivos = get_dias_letivos(db, inicio, hoje)
-    total_dias = len(dias_letivos)
-    
-    alunos = db.query(models.Aluno).filter(
-        models.Aluno.situacao_matricula.in_(["ativo", "infrequente", "em_risco"])
-    ).all()
-    
-    alertas_criados = 0
-    
-    for aluno in alunos:
-        # Verificar se já existe alerta aberto recente
-        alerta_existente = db.query(models.AlertaFrequencia).filter(
-            models.AlertaFrequencia.aluno_id == aluno.id,
-            models.AlertaFrequencia.status == "aberto",
-            models.AlertaFrequencia.data_geracao >= datetime.now() - timedelta(days=7)
-        ).first()
+    try:
+        # Buscar configurações ou usar padrão
+        config = db.query(models.ConfiguracaoFrequencia).first()
         
-        if alerta_existente:
-            continue
+        # Valores padrão se não existir configuração
+        faixa_risco = config.faixa_risco if config else 75.0
+        faixa_atencao = config.faixa_atencao if config else 85.0
+        faltas_abandono = config.faltas_abandono if config else 7
+        faltas_critico = config.faltas_critico if config else 5
+        faltas_alerta = config.faltas_alerta if config else 3
         
-        info = calcular_faltas_consecutivas(db, aluno.id, dias_letivos)
+        # Período: últimos 45 dias - buscar dias com frequência
+        hoje = datetime.now().strftime("%Y-%m-%d")
+        inicio = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")
+        dias_com_frequencia = get_dias_com_frequencia(db, inicio, hoje)
         
-        # Calcular frequência
-        presencas = db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos),
-            models.Frequencia.presente == True
-        ).count()
+        if not dias_com_frequencia:
+            return {"message": "Nenhum dia com frequência registrada", "total_alertas": 0}
         
-        freq_pct = (presencas / total_dias * 100) if total_dias > 0 else 100
+        total_dias = len(dias_com_frequencia)
         
-        # Verificar gatilhos
-        tipo_alerta = None
-        nivel_risco = None
-        motivo = None
-        acao = None
-        
-        if info["consecutivas"] >= config.faltas_abandono:
-            tipo_alerta = "abandono_presumido"
-            nivel_risco = "critico"
-            motivo = f"{info['consecutivas']} faltas consecutivas - possível abandono"
-            acao = "Busca ativa urgente"
-        elif info["consecutivas"] >= config.faltas_critico:
-            tipo_alerta = "faltas_consecutivas"
-            nivel_risco = "critico"
-            motivo = f"{info['consecutivas']} faltas consecutivas"
-            acao = "Contato imediato com responsável"
-        elif info["consecutivas"] >= config.faltas_alerta:
-            tipo_alerta = "faltas_consecutivas"
-            nivel_risco = "alerta"
-            motivo = f"{info['consecutivas']} faltas consecutivas"
-            acao = "Notificar coordenação"
-        elif freq_pct < config.faixa_risco:
-            tipo_alerta = "baixa_frequencia"
-            nivel_risco = "risco"
-            motivo = f"Frequência em {freq_pct:.1f}%"
-            acao = "Monitorar e contatar"
-        elif freq_pct < config.faixa_atencao:
-            tipo_alerta = "baixa_frequencia"
-            nivel_risco = "atencao"
-            motivo = f"Frequência em {freq_pct:.1f}%"
-            acao = "Acompanhar"
-        
-        if tipo_alerta:
-            novo_alerta = models.AlertaFrequencia(
-                aluno_id=aluno.id,
-                tipo_alerta=tipo_alerta,
-                nivel_risco=nivel_risco,
-                motivo=motivo,
-                faltas_consecutivas=info["consecutivas"],
-                frequencia_percentual=freq_pct,
-                ultima_presenca=info["ultima_presenca"],
-                dias_sem_entrada=info["dias_sem_entrada"],
-                acao_recomendada=acao
+        alunos = db.query(models.Aluno).filter(
+            or_(
+                models.Aluno.situacao_matricula.in_(["ativo", "infrequente", "em_risco"]),
+                models.Aluno.situacao_matricula == None
             )
-            db.add(novo_alerta)
-            alertas_criados += 1
-            
-            # Atualizar situação do aluno
-            if nivel_risco == "critico":
-                aluno.situacao_matricula = "em_risco"
-            elif nivel_risco in ["risco", "alerta"]:
-                aluno.situacao_matricula = "infrequente"
-    
-    db.commit()
-    
-    return {
-        "message": f"{alertas_criados} alertas gerados",
-        "total_alertas": alertas_criados
-    }
+        ).all()
+        
+        alertas_criados = 0
+        
+        for aluno in alunos:
+            try:
+                # Verificar se já existe alerta aberto recente
+                alerta_existente = db.query(models.AlertaFrequencia).filter(
+                    models.AlertaFrequencia.aluno_id == aluno.id,
+                    models.AlertaFrequencia.status == "aberto",
+                    models.AlertaFrequencia.data_geracao >= datetime.now() - timedelta(days=7)
+                ).first()
+                
+                if alerta_existente:
+                    continue
+                
+                # Buscar primeira frequência do aluno
+                primeira_freq = get_primeira_frequencia(db, aluno.id)
+                if not primeira_freq:
+                    continue
+                
+                # Filtrar dias válidos para este aluno
+                dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
+                if not dias_validos:
+                    continue
+                
+                info = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
+                
+                # Calcular frequência
+                presencas = db.query(models.Frequencia).filter(
+                    models.Frequencia.aluno_id == aluno.id,
+                    models.Frequencia.data.in_(dias_validos),
+                    models.Frequencia.presente == True
+                ).count()
+                
+                freq_pct = (presencas / len(dias_validos) * 100) if dias_validos else 100
+                
+                # Verificar gatilhos
+                tipo_alerta = None
+                nivel_risco = None
+                motivo = None
+                acao = None
+                
+                if info["consecutivas"] >= faltas_abandono:
+                    tipo_alerta = "abandono_presumido"
+                    nivel_risco = "critico"
+                    motivo = f"{info['consecutivas']} faltas consecutivas - possível abandono"
+                    acao = "Busca ativa urgente"
+                elif info["consecutivas"] >= faltas_critico:
+                    tipo_alerta = "faltas_consecutivas"
+                    nivel_risco = "critico"
+                    motivo = f"{info['consecutivas']} faltas consecutivas"
+                    acao = "Contato imediato com responsável"
+                elif info["consecutivas"] >= faltas_alerta:
+                    tipo_alerta = "faltas_consecutivas"
+                    nivel_risco = "alerta"
+                    motivo = f"{info['consecutivas']} faltas consecutivas"
+                    acao = "Notificar coordenação"
+                elif freq_pct < faixa_risco:
+                    tipo_alerta = "baixa_frequencia"
+                    nivel_risco = "risco"
+                    motivo = f"Frequência em {freq_pct:.1f}%"
+                    acao = "Monitorar e contatar"
+                elif freq_pct < faixa_atencao:
+                    tipo_alerta = "baixa_frequencia"
+                    nivel_risco = "atencao"
+                    motivo = f"Frequência em {freq_pct:.1f}%"
+                    acao = "Acompanhar"
+                
+                if tipo_alerta:
+                    novo_alerta = models.AlertaFrequencia(
+                        aluno_id=aluno.id,
+                        tipo_alerta=tipo_alerta,
+                        nivel_risco=nivel_risco,
+                        motivo=motivo,
+                        faltas_consecutivas=info["consecutivas"],
+                        frequencia_percentual=freq_pct,
+                        ultima_presenca=info["ultima_presenca"],
+                        dias_sem_entrada=info["dias_sem_entrada"],
+                        acao_recomendada=acao
+                    )
+                    db.add(novo_alerta)
+                    alertas_criados += 1
+                    
+                    # Atualizar situação do aluno
+                    if nivel_risco == "critico":
+                        aluno.situacao_matricula = "em_risco"
+                    elif nivel_risco in ["risco", "alerta"]:
+                        aluno.situacao_matricula = "infrequente"
+                        
+            except Exception as e:
+                logger.error(f"Erro ao processar aluno {aluno.id}: {e}")
+                continue
+        
+        db.commit()
+        
+        return {
+            "message": f"{alertas_criados} alertas gerados",
+            "total_alertas": alertas_criados
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar alertas: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar alertas: {str(e)}")
 
 
 # ==================== DASHBOARD RESUMO ====================
@@ -1424,4 +1457,117 @@ async def dashboard_frequencia(
         },
         "pendencias_comunicacao": pendencias,
         "periodo": {"inicio": inicio_mes, "fim": hoje_str}
+    }
+
+
+# ==================== HISTÓRICO DETALHADO DE FREQUÊNCIA ====================
+
+@router.get("/aluno/{aluno_id}/historico-frequencia")
+async def historico_frequencia_aluno(
+    aluno_id: int,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Retorna histórico detalhado de frequência com datas de presença e ausência"""
+    if current_user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Acesso restrito")
+    
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    
+    # Período padrão: últimos 60 dias
+    if not data_fim:
+        data_fim = datetime.now().strftime("%Y-%m-%d")
+    if not data_inicio:
+        data_inicio = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
+    
+    # Buscar todas as frequências do aluno no período
+    frequencias = db.query(models.Frequencia).filter(
+        models.Frequencia.aluno_id == aluno_id,
+        models.Frequencia.data >= data_inicio,
+        models.Frequencia.data <= data_fim
+    ).order_by(models.Frequencia.data.desc()).all()
+    
+    datas_presente = []
+    datas_ausente = []
+    datas_justificada = []
+    
+    for freq in frequencias:
+        data_str = freq.data if isinstance(freq.data, str) else freq.data.strftime("%Y-%m-%d") if freq.data else None
+        if not data_str:
+            continue
+            
+        turma_nome = ""
+        disciplina_nome = ""
+        
+        # Tentar obter turma
+        if freq.turma_id:
+            turma = db.query(models.Turma).filter(models.Turma.id == freq.turma_id).first()
+            if turma:
+                turma_nome = turma.nome
+        
+        registro = {
+            "data": data_str,
+            "turma": turma_nome,
+            "disciplina": disciplina_nome,
+            "observacao": getattr(freq, 'observacao', '') or ""
+        }
+        
+        if freq.presente:
+            datas_presente.append(registro)
+        elif getattr(freq, 'justificada', False):
+            datas_justificada.append(registro)
+        else:
+            datas_ausente.append(registro)
+    
+    # Calcular estatísticas
+    total_registros = len(frequencias)
+    total_presencas = len(datas_presente)
+    total_ausencias = len(datas_ausente)
+    total_justificadas = len(datas_justificada)
+    
+    frequencia_percentual = (total_presencas / total_registros * 100) if total_registros > 0 else 0
+    
+    # Buscar turmas do aluno
+    turmas_aluno = db.query(models.TurmaAluno).filter(
+        models.TurmaAluno.aluno_id == aluno_id
+    ).all()
+    
+    turmas_info = []
+    for ta in turmas_aluno:
+        turma = db.query(models.Turma).filter(models.Turma.id == ta.turma_id).first()
+        if turma:
+            turmas_info.append({
+                "id": turma.id,
+                "nome": turma.nome,
+                "turno": turma.turno
+            })
+    
+    return {
+        "aluno": {
+            "id": aluno.id,
+            "nome": aluno.nome,
+            "matricula": aluno.matricula,
+            "nome_responsavel": getattr(aluno, 'nome_responsavel', None),
+            "telefone_responsavel": getattr(aluno, 'telefone_responsavel', None),
+            "email_responsavel": getattr(aluno, 'email_responsavel', None)
+        },
+        "turmas": turmas_info,
+        "periodo": {
+            "inicio": data_inicio,
+            "fim": data_fim
+        },
+        "estatisticas": {
+            "total_registros": total_registros,
+            "presencas": total_presencas,
+            "ausencias": total_ausencias,
+            "justificadas": total_justificadas,
+            "frequencia_percentual": round(frequencia_percentual, 1)
+        },
+        "datas_presente": datas_presente,
+        "datas_ausente": datas_ausente,
+        "datas_justificada": datas_justificada
     }

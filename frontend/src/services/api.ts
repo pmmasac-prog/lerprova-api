@@ -236,6 +236,20 @@ export const api = {
         });
     },
 
+    async updateAluno(id: number, data: any) {
+        return request(`${API_URL}/alunos/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+    },
+
+    async getAluno(id: number) {
+        return request(`${API_URL}/alunos/${id}`, {
+            headers: getAuthHeaders()
+        });
+    },
+
     async deleteAluno(id: number) {
         return request(`${API_URL}/alunos/${id}`, {
             method: 'DELETE',

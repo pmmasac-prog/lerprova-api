@@ -162,3 +162,78 @@ async def unlink_aluno_from_turma(turma_id: int, aluno_id: int, user: users_db.U
         return {"message": "Aluno removido da turma com sucesso"}
     
     return {"message": "Aluno não estava vinculado a esta turma"}
+
+
+@router.put("/alunos/{aluno_id}")
+async def update_aluno(aluno_id: int, data: dict, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Atualiza os dados de um aluno, incluindo contato do responsável"""
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    # Validar permissão
+    if user.role != "admin":
+        pertence = any(t.user_id == user.id for t in aluno.turmas)
+        if not pertence:
+            raise HTTPException(status_code=403, detail="Você só pode editar alunos das suas turmas")
+
+    # Atualizar campos se fornecidos
+    if "nome" in data and data["nome"]:
+        aluno.nome = data["nome"]
+    if "codigo" in data and data["codigo"]:
+        aluno.codigo = data["codigo"]
+    if "nome_responsavel" in data:
+        aluno.nome_responsavel = data["nome_responsavel"] or None
+    if "telefone_responsavel" in data:
+        aluno.telefone_responsavel = data["telefone_responsavel"] or None
+    if "email_responsavel" in data:
+        aluno.email_responsavel = data["email_responsavel"] or None
+    if "data_nascimento" in data:
+        aluno.data_nascimento = data["data_nascimento"] or None
+        
+    try:
+        db.commit()
+        db.refresh(aluno)
+    except Exception as e:
+        logger.error(f"Erro ao atualizar aluno: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar aluno: {str(e)}")
+
+    return {
+        "message": "Aluno atualizado com sucesso",
+        "aluno": {
+            "id": aluno.id,
+            "nome": aluno.nome,
+            "codigo": aluno.codigo,
+            "nome_responsavel": aluno.nome_responsavel,
+            "telefone_responsavel": aluno.telefone_responsavel,
+            "email_responsavel": aluno.email_responsavel,
+            "data_nascimento": aluno.data_nascimento
+        }
+    }
+
+
+@router.get("/alunos/{aluno_id}")
+async def get_aluno(aluno_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Retorna os dados completos de um aluno"""
+    aluno = db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    # Validar permissão
+    if user.role != "admin":
+        pertence = any(t.user_id == user.id for t in aluno.turmas)
+        if not pertence:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+
+    return {
+        "id": aluno.id,
+        "nome": aluno.nome,
+        "codigo": aluno.codigo,
+        "qr_token": aluno.qr_token,
+        "nome_responsavel": aluno.nome_responsavel,
+        "telefone_responsavel": aluno.telefone_responsavel,
+        "email_responsavel": aluno.email_responsavel,
+        "data_nascimento": aluno.data_nascimento,
+        "turmas": [{"id": t.id, "nome": t.nome} for t in aluno.turmas]
+    }
