@@ -1026,23 +1026,50 @@
     }
     
     /* Modal fullscreen */
-    .planejamento-modal-overlay {
+    .planejamento-modal-overlay,
+    .modal-overlay {
         padding: 0;
         align-items: flex-end;
     }
     
-    .planejamento-modal {
+    .planejamento-modal,
+    .modal-vincular {
         border-radius: 24px 24px 0 0;
-        max-height: 95vh;
-        padding: 20px;
+        max-height: calc(95vh - env(safe-area-inset-top, 0px));
+        max-height: calc(95dvh - env(safe-area-inset-top, 0px));
+        padding: 0;
         margin: 0;
-    }
-    
-    .modal-inner-actions {
+        display: flex;
         flex-direction: column;
+        overflow: hidden;
     }
     
-    .modal-inner-actions button {
+    .planejamento-modal .modal-vincular-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+    }
+    
+    .planejamento-modal .modal-vincular-fields,
+    .planejamento-modal .modal-vincular-desc {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modal-inner-actions,
+    .modal-vincular-actions {
+        flex-direction: column;
+        flex-shrink: 0;
+        padding: 16px 20px;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-inner-actions button,
+    .modal-vincular-actions button {
         width: 100%;
     }
 }

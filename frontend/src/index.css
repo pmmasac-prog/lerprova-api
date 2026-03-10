@@ -543,6 +543,9 @@ input[type="button"],
 }
 
 /* ===== MODAL RESPONSIVO GLOBAL ===== */
+/* Sistema de modal com estrutura: header fixo, body scrollable, actions fixas */
+
+.modal-overlay,
 .modal-overlay-responsive {
   position: fixed;
   inset: 0;
@@ -555,26 +558,125 @@ input[type="button"],
   padding: 16px;
   z-index: 1000;
   overflow-y: auto;
+  /* Safe area para iOS */
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
+.modal-content,
 .modal-content-responsive {
   background: linear-gradient(180deg, #0f1117 0%, #0a0d12 100%);
   border: 1px solid rgba(16, 185, 129, 0.15);
   border-radius: 20px;
-  padding: 24px;
   width: 100%;
   max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
   position: relative;
   animation: modalSlideUp 0.3s ease-out;
+  overflow: hidden;
+}
+
+/* Modal header - fixo */
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Modal body - scrollable */
+.modal-body,
+.modal-content > :not(.modal-header):not(.modal-actions):not(.modal-footer):not(.form-actions) {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  min-height: 0; /* necessário para scroll funcionar com flex */
+}
+
+/* Modal actions/footer - fixo no fundo */
+.modal-actions,
+.modal-footer,
+.form-actions {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.3);
+  /* Safe area para iOS */
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 @media (min-width: 768px) {
+  .modal-content,
   .modal-content-responsive {
-    padding: 32px;
+    padding: 0;
     border-radius: 28px;
     max-width: 600px;
+    max-height: calc(90vh - 40px);
+  }
+  
+  .modal-header {
+    padding: 24px 32px;
+  }
+  
+  .modal-body,
+  .modal-content > :not(.modal-header):not(.modal-actions):not(.modal-footer):not(.form-actions) {
+    padding: 24px 32px;
+  }
+  
+  .modal-actions,
+  .modal-footer,
+  .form-actions {
+    padding: 20px 32px;
+  }
+}
+
+/* Mobile: modal slide-up fullwidth */
+@media (max-width: 479px) {
+  .modal-overlay,
+  .modal-overlay-responsive {
+    padding: 0;
+    align-items: flex-end;
+  }
+  
+  .modal-content,
+  .modal-content-responsive {
+    max-width: 100%;
+    max-height: calc(95vh - env(safe-area-inset-top, 0px));
+    max-height: calc(95dvh - env(safe-area-inset-top, 0px));
+    border-radius: 24px 24px 0 0;
+    animation: modalSlideUpMobile 0.3s ease-out;
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .modal-body,
+  .modal-content > :not(.modal-header):not(.modal-actions):not(.modal-footer):not(.form-actions) {
+    padding: 16px 20px;
+  }
+  
+  .modal-actions,
+  .modal-footer,
+  .form-actions {
+    flex-direction: column;
+    padding: 16px 20px;
+  }
+  
+  .modal-actions button,
+  .modal-footer button,
+  .form-actions button {
+    width: 100%;
+    min-height: 48px;
   }
 }
 
@@ -586,6 +688,17 @@ input[type="button"],
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalSlideUpMobile {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -758,6 +871,143 @@ input[type="button"],
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(16, 185, 129, 0.5);
+}
+
+/* ===== CORREÇÕES DE SOBREPOSIÇÃO GLOBAL ===== */
+
+/* Evitar sobreposição de ícones e texto */
+.icon-text-row,
+.flex-row-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* Permite shrink */
+}
+
+.icon-text-row > svg,
+.flex-row-icon > svg,
+.icon-text-row > .icon,
+.flex-row-icon > .icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.icon-text-row > span,
+.icon-text-row > p,
+.flex-row-icon > span,
+.flex-row-icon > p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Texto com truncate automático */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Fix para botões que ficam muito pequenos */
+@media (max-width: 479px) {
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Stacks de botões em mobile */
+  .btn-group,
+  .button-group,
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .btn-group > *,
+  .button-group > *,
+  .action-buttons > * {
+    width: 100%;
+  }
+}
+
+/* Fix para headers que quebram no mobile */
+@media (max-width: 479px) {
+  .header,
+  .page-header,
+  .section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .header-title,
+  .page-title {
+    width: 100%;
+    text-align: center;
+    font-size: clamp(1rem, 5vw, 1.5rem);
+  }
+  
+  .header-actions,
+  .page-actions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Ensure SVG icons don't break layout */
+svg {
+  flex-shrink: 0;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Cards que precisam de espaço */
+@media (max-width: 479px) {
+  .card,
+  .card-responsive,
+  [class*="-card"] {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .card-content {
+    overflow: hidden;
+  }
+}
+
+/* Safe area bottom padding para elementos fixos */
+.fixed-bottom,
+.sticky-bottom {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Container seguro para evitar overflow */
+.safe-container {
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Fix scroll momentum para iOS */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* ===== SAFE AREA (NOTCH) ===== */

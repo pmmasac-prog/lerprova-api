@@ -905,28 +905,48 @@
     }
     
     /* Modal fullscreen */
-    .gabarito-modal-overlay {
+    .gabarito-modal-overlay,
+    .modal-overlay {
         padding: 0;
         align-items: flex-end;
     }
     
     .gabarito-modal {
         border-radius: 24px 24px 0 0;
-        max-height: 95vh;
-        padding: 20px;
+        max-height: calc(95vh - env(safe-area-inset-top, 0px));
+        max-height: calc(95dvh - env(safe-area-inset-top, 0px));
+        padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
     
-    .student-header-context {
+    .gabarito-modal .modal-header,
+    .gabarito-modal .student-header-context {
         padding: 14px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+    }
+    
+    .gabarito-modal .modal-inner,
+    .gabarito-modal .modal-body-p-0 {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     .modal-actions-footer {
         padding: 18px;
+        padding-bottom: max(18px, env(safe-area-inset-bottom));
+        flex-shrink: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.3);
     }
     
     .modal-actions-footer button {
         padding: 14px;
         font-size: 0.9rem;
+        width: 100%;
     }
 }

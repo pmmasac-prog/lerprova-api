@@ -1329,8 +1329,36 @@
     
     .studio-modal {
         border-radius: 24px 24px 0 0;
-        max-height: 95vh;
-        padding: 20px;
+        max-height: calc(95vh - env(safe-area-inset-top, 0px));
+        max-height: calc(95dvh - env(safe-area-inset-top, 0px));
+        padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .studio-modal > .modal-header,
+    .studio-modal > h3 {
+        padding: 16px 20px;
+        margin: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+    }
+    
+    .studio-modal > :not(.modal-header):not(h3):not(.modal-actions) {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .studio-modal > .modal-actions,
+    .studio-modal > button:last-child {
+        flex-shrink: 0;
+        padding: 16px 20px;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.3);
     }
 }
