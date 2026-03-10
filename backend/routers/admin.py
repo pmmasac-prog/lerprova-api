@@ -352,6 +352,10 @@ async def notify_professor(payload: dict, admin_user = Depends(verify_admin), db
 class StudentImport(BaseModel):
     nome: str
     codigo: str
+    nome_responsavel: Optional[str] = None
+    telefone_responsavel: Optional[str] = None
+    email_responsavel: Optional[str] = None
+    data_nascimento: Optional[str] = None
 
 class RoomImport(BaseModel):
     nome: str
@@ -388,11 +392,25 @@ async def import_master_data(payload: List[RoomImport], admin_user = Depends(ver
                 aluno = models.Aluno(
                     nome=stu.nome,
                     codigo=stu.codigo,
-                    qr_token=token
+                    qr_token=token,
+                    nome_responsavel=stu.nome_responsavel,
+                    telefone_responsavel=stu.telefone_responsavel,
+                    email_responsavel=stu.email_responsavel,
+                    data_nascimento=stu.data_nascimento
                 )
                 db.add(aluno)
                 db.flush()
                 created_students += 1
+            else:
+                # Atualiza dados do responsável se fornecidos
+                if stu.nome_responsavel:
+                    aluno.nome_responsavel = stu.nome_responsavel
+                if stu.telefone_responsavel:
+                    aluno.telefone_responsavel = stu.telefone_responsavel
+                if stu.email_responsavel:
+                    aluno.email_responsavel = stu.email_responsavel
+                if stu.data_nascimento:
+                    aluno.data_nascimento = stu.data_nascimento
             
             # 3. Vincula o aluno à turma
             # Usa a tabela associativa models.aluno_turma

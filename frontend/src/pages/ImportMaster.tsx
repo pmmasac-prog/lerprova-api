@@ -13,17 +13,54 @@ export const ImportMaster: React.FC = () => {
         const lines = csv.split('\n').filter(line => line.trim() !== '');
         const roomsMap: Record<string, any[]> = {};
 
-        lines.forEach(line => {
-            const parts = line.split(/[;,]/); // Suporta ponto e vírgula ou vírgula
-            if (parts.length >= 3) {
-                const roomName = parts[0].trim();
-                const studentName = parts[1].trim();
-                const studentCode = parts[2].trim();
+        // Verificar se há cabeçalho
+        const firstLine = lines[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const hasHeader = firstLine.includes('turma') || firstLine.includes('aluno') || firstLine.includes('nome');
+        const startIdx = hasHeader ? 1 : 0;
 
-                if (!roomsMap[roomName]) roomsMap[roomName] = [];
-                roomsMap[roomName].push({ nome: studentName, codigo: studentCode });
+        // Se tiver cabeçalho, identificar índices das colunas
+        let turmaIdx = 0, nomeIdx = 1, codigoIdx = 2, responsavelIdx = -1, telefoneIdx = -1, emailIdx = -1, nascimentoIdx = -1;
+        
+        if (hasHeader) {
+            const headers = lines[0].split(/[;,]/).map(h => h.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+            turmaIdx = headers.findIndex(h => h.includes('turma') || h.includes('sala'));
+            nomeIdx = headers.findIndex(h => h.includes('aluno') || h === 'nome');
+            codigoIdx = headers.findIndex(h => h.includes('matricula') || h.includes('codigo'));
+            responsavelIdx = headers.findIndex(h => h.includes('responsavel'));
+            telefoneIdx = headers.findIndex(h => h.includes('telefone') || h.includes('celular') || h.includes('whatsapp'));
+            emailIdx = headers.findIndex(h => h.includes('email'));
+            nascimentoIdx = headers.findIndex(h => h.includes('nascimento'));
+            
+            // Se não encontrar, usar posições padrão
+            if (turmaIdx === -1) turmaIdx = 0;
+            if (nomeIdx === -1) nomeIdx = 1;
+            if (codigoIdx === -1) codigoIdx = 2;
+        }
+
+        for (let i = startIdx; i < lines.length; i++) {
+            const parts = lines[i].split(/[;,]/); // Suporta ponto e vírgula ou vírgula
+            if (parts.length >= 3) {
+                const roomName = parts[turmaIdx]?.trim();
+                const studentName = parts[nomeIdx]?.trim();
+                const studentCode = parts[codigoIdx]?.trim();
+                const nomeResponsavel = responsavelIdx !== -1 ? parts[responsavelIdx]?.trim() : undefined;
+                const telefoneResponsavel = telefoneIdx !== -1 ? parts[telefoneIdx]?.trim() : undefined;
+                const emailResponsavel = emailIdx !== -1 ? parts[emailIdx]?.trim() : undefined;
+                const dataNascimento = nascimentoIdx !== -1 ? parts[nascimentoIdx]?.trim() : undefined;
+
+                if (roomName && studentName) {
+                    if (!roomsMap[roomName]) roomsMap[roomName] = [];
+                    roomsMap[roomName].push({ 
+                        nome: studentName, 
+                        codigo: studentCode,
+                        nome_responsavel: nomeResponsavel || null,
+                        telefone_responsavel: telefoneResponsavel || null,
+                        email_responsavel: emailResponsavel || null,
+                        data_nascimento: dataNascimento || null
+                    });
+                }
             }
-        });
+        }
 
         return Object.keys(roomsMap).map(name => ({
             nome: name,
@@ -107,7 +144,7 @@ export const ImportMaster: React.FC = () => {
                     <div style={{ flex: 1 }}>
                         <h3 className="admin-card-title">Inserir Conteúdo</h3>
                         <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '10px' }}>
-                            {mode === 'csv' && "Formato: Turma;Nome do Aluno;Matrícula"}
+                            {mode === 'csv' && "Formato: Turma;Nome do Aluno;Matrícula;Responsável;Telefone (últimos 2 opcionais)"}
                             {mode === 'json' && "Formato: [{ 'nome': 'Sala X', 'alunos': [...] }]"}
                             {mode === 'master' && "Formato: JSON Estrutural (Escolas, Anos Letivos, Períodos, Eventos)"}
                         </p>
@@ -124,7 +161,7 @@ export const ImportMaster: React.FC = () => {
                                 fontSize: '13px',
                                 resize: 'none'
                             }}
-                            placeholder={mode === 'csv' ? "Ex:\n7 A;Joao Silva;202401\n7 A;Maria Santos;202402" : "Cole o código JSON aqui..."}
+                            placeholder={mode === 'csv' ? "Ex:\n7 A;Joao Silva;202401;Maria Silva;11999998888\n7 A;Pedro Santos;202402;Ana Santos;11988887777" : "Cole o código JSON aqui..."}
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                         />
