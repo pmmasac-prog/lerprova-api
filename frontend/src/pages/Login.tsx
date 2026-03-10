@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Shield, ArrowRight, Loader2, Database, Settings, User as UserIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import './Login.css';
 
 export const Login: React.FC = () => {
     const [loginType, setLoginType] = useState<'professor' | 'student'>('professor');
@@ -51,110 +52,102 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#020617] font-sans p-4">
-            {/* BANNER DE CONFIRMAÇÃO VISUAL */}
-            <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-[10px] font-bold text-center py-1 z-[100]">
-                VERSÃO ATUALIZADA (COM SELETOR)
+        <div className="login-container">
+            {/* Version Banner */}
+            <div className="login-version-banner">
+                LERPROVA · SISTEMA EDUCACIONAL
             </div>
-            {/* Background Effects */}
-            <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-blue-600/20 rounded-full blur-[160px] animate-pulse pointer-events-none" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] bg-purple-600/20 rounded-full blur-[160px] animate-pulse pointer-events-none" />
 
-            <div className="relative z-10 w-full max-w-md">
-                {/* Logo Area */}
-                <div className="flex flex-col items-center mb-8">
-                    <div className="w-20 h-20 bg-[#0f172a] border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl mb-4">
-                        <Shield className="w-10 h-10 text-blue-400" />
-                    </div>
+            {/* Logo */}
+            <div className="login-logo">
+                <div className="login-logo-icon">
+                    <Shield />
                 </div>
+            </div>
 
-                {/* Login Card */}
-                <div className="bg-[#0f172a] border border-white/10 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
-
-                    {/* TIPO DE ACESSO - SELECTOR SUPER VISÍVEL */}
-                    <div className="mb-8">
-                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-[0.2em] mb-3 text-center">Tipo de Acesso</p>
-                        <div className="flex bg-black/40 p-1.5 rounded-2xl border border-white/10">
-                            <button
-                                type="button"
-                                onClick={() => { setLoginType('professor'); setError(''); }}
-                                className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl transition-all font-black text-xs ${loginType === 'professor' ? 'bg-blue-600 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'}`}
-                            >
-                                <Settings size={18} />
-                                PROFESSOR
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { setLoginType('student'); setError(''); }}
-                                className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl transition-all font-black text-xs ${loginType === 'student' ? 'bg-blue-600 text-white shadow-xl' : 'text-slate-500 hover:text-slate-300'}`}
-                            >
-                                <UserIcon size={18} />
-                                ALUNO
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="mb-8 text-center">
-                        <h2 className="text-2xl font-black text-white tracking-tight">
-                            {loginType === 'professor' ? 'Login Docente' : 'Login Aluno'}
-                        </h2>
-                    </div>
-
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-3">
-                            <Shield size={16} className="shrink-0" />
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-4">
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                    {loginType === 'professor' ?
-                                        <Mail className="w-5 h-5 text-slate-500" /> :
-                                        <Database className="w-5 h-5 text-slate-500" />
-                                    }
-                                </div>
-                                <input
-                                    type={loginType === 'professor' ? 'email' : 'text'}
-                                    value={loginType === 'professor' ? email : codigo}
-                                    onChange={(e) => loginType === 'professor' ? setEmail(e.target.value) : setCodigo(e.target.value)}
-                                    placeholder={loginType === 'professor' ? 'E-mail Institucional' : 'Código de Matrícula'}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-sm"
-                                    required
-                                />
-                            </div>
-
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                    <Lock className="w-5 h-5 text-slate-500" />
-                                </div>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Senha de Acesso"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono"
-                                    required
-                                />
-                            </div>
-                        </div>
-
+            {/* Login Card */}
+            <div className="login-card">
+                {/* Type Selector */}
+                <div className="login-type-selector">
+                    <span className="login-type-label">Tipo de Acesso</span>
+                    <div className="login-type-buttons">
                         <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-sm rounded-xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-3 mt-4"
+                            type="button"
+                            onClick={() => { setLoginType('professor'); setError(''); }}
+                            className={`login-type-btn ${loginType === 'professor' ? 'active' : ''}`}
                         >
-                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                <>
-                                    {loginType === 'student' ? 'ENTRAR NO PORTAL' : 'ENTRAR NO SISTEMA'}
-                                    <ArrowRight size={20} />
-                                </>
-                            )}
+                            <Settings />
+                            PROFESSOR
                         </button>
-                    </form>
+                        <button
+                            type="button"
+                            onClick={() => { setLoginType('student'); setError(''); }}
+                            className={`login-type-btn ${loginType === 'student' ? 'active' : ''}`}
+                        >
+                            <UserIcon />
+                            ALUNO
+                        </button>
+                    </div>
                 </div>
+
+                {/* Title */}
+                <div className="login-title">
+                    <h2>{loginType === 'professor' ? 'Login Docente' : 'Login Aluno'}</h2>
+                </div>
+
+                {/* Error */}
+                {error && (
+                    <div className="login-error">
+                        <Shield size={16} />
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="login-form">
+                    <div className="login-input-group">
+                        <div className="login-input-icon">
+                            {loginType === 'professor' ? <Mail size={20} /> : <Database size={20} />}
+                        </div>
+                        <input
+                            type={loginType === 'professor' ? 'email' : 'text'}
+                            value={loginType === 'professor' ? email : codigo}
+                            onChange={(e) => loginType === 'professor' ? setEmail(e.target.value) : setCodigo(e.target.value)}
+                            placeholder={loginType === 'professor' ? 'E-mail Institucional' : 'Código de Matrícula'}
+                            className="login-input"
+                            required
+                        />
+                    </div>
+
+                    <div className="login-input-group">
+                        <div className="login-input-icon">
+                            <Lock size={20} />
+                        </div>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Senha de Acesso"
+                            className="login-input"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="login-submit"
+                    >
+                        {isLoading ? (
+                            <Loader2 className="login-spinner" />
+                        ) : (
+                            <>
+                                {loginType === 'student' ? 'ENTRAR NO PORTAL' : 'ENTRAR NO SISTEMA'}
+                                <ArrowRight />
+                            </>
+                        )}
+                    </button>
+                </form>
             </div>
         </div>
     );
