@@ -156,53 +156,75 @@ async def scan_qr_attendance(data: dict, user: users_db.User = Depends(get_curre
 
     import datetime
     now = datetime.datetime.now()
-    today_index = now.weekday() # 0-6 (Mon-Sun) - dps comparamos com Turma.dias_semana (0-4)
     today_str = now.strftime("%Y-%m-%d")
 
-    # Turmas do professor que ocorrem hoje e contêm o aluno
+    # Turmas do professor onde o aluno está matriculado (SEM verificar dia da semana)
     minhas_turmas = db.query(models.Turma).filter(models.Turma.user_id == user.id).all()
     
     turmas_atingidas = []
     
     for t in minhas_turmas:
-        dias = []
-        if isinstance(t.dias_semana, list):
-            dias = t.dias_semana
-        elif isinstance(t.dias_semana, str):
-            try: dias = json.loads(t.dias_semana)
-            except: pass
-            
-        if today_index not in dias:
-            continue
-            
+        # Verifica se aluno está nesta turma
         is_in_turma = db.query(models.aluno_turma).filter(
             models.aluno_turma.c.aluno_id == aluno.id,
             models.aluno_turma.c.turma_id == t.id
         ).first()
         
-        if is_in_turma:
-            existente = db.query(models.Frequencia).filter(
-                models.Frequencia.turma_id == t.id,
-                models.Frequencia.aluno_id == aluno.id,
-                models.Frequencia.data == today_str
-            ).first()
+        if not is_in_turma:
+            continue
+        
+        # Verifica se já existe algum registro de frequência para esta turma hoje
+        registros_hoje = db.query(models.Frequencia).filter(
+            models.Frequencia.turma_id == t.id,
+            models.Frequencia.data == today_str
+        ).count()
+        
+        # Se é o primeiro scan do dia nesta turma, criar FALTA para todos os alunos
+        if registros_hoje == 0:
+            # Busca todos os alunos da turma
+            alunos_turma = db.query(models.aluno_turma).filter(
+                models.aluno_turma.c.turma_id == t.id
+            ).all()
             
-            if not existente:
-                nova_freq = models.Frequencia(
+            for at in alunos_turma:
+                # Cria registro de FALTA (presente=False) para cada aluno
+                freq_falta = models.Frequencia(
                     turma_id=t.id,
-                    aluno_id=aluno.id,
+                    aluno_id=at.aluno_id,
                     data=today_str,
-                    presente=True
+                    presente=False,
+                    observacao="Chamada QR iniciada"
                 )
-                db.add(nova_freq)
+                db.add(freq_falta)
+            
+            db.flush()  # Garante que os registros foram criados
+        
+        # Agora busca o registro do aluno escaneado
+        existente = db.query(models.Frequencia).filter(
+            models.Frequencia.turma_id == t.id,
+            models.Frequencia.aluno_id == aluno.id,
+            models.Frequencia.data == today_str
+        ).first()
+        
+        if existente:
+            if not existente.presente:
+                existente.presente = True
+                existente.observacao = "Presença via QR"
                 turmas_atingidas.append({"turma": t.nome, "novo": True})
             else:
-                if not existente.presente:
-                    existente.presente = True
-                    turmas_atingidas.append({"turma": t.nome, "novo": True})
-                else:
-                    # Já tinha presença
-                    turmas_atingidas.append({"turma": t.nome, "novo": False})
+                # Já estava presente
+                turmas_atingidas.append({"turma": t.nome, "novo": False})
+        else:
+            # Caso raro: criar registro (não deveria acontecer, mas por segurança)
+            nova_freq = models.Frequencia(
+                turma_id=t.id,
+                aluno_id=aluno.id,
+                data=today_str,
+                presente=True,
+                observacao="Presença via QR"
+            )
+            db.add(nova_freq)
+            turmas_atingidas.append({"turma": t.nome, "novo": True})
 
     db.commit()
     
@@ -211,7 +233,7 @@ async def scan_qr_attendance(data: dict, user: users_db.User = Depends(get_curre
     
     if not turmas_atingidas:
         return {
-            "message": f"⚠️ {aluno.nome} identificado, mas sem aulas hoje.",
+            "message": f"⚠️ {aluno.nome} não está matriculado em nenhuma turma sua.",
             "success": True,
             "status": "no_class",
             "count": 0,
