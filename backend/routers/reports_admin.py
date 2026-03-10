@@ -1531,26 +1531,20 @@ async def historico_frequencia_aluno(
     
     frequencia_percentual = (total_presencas / total_registros * 100) if total_registros > 0 else 0
     
-    # Buscar turmas do aluno
-    turmas_aluno = db.query(models.TurmaAluno).filter(
-        models.TurmaAluno.aluno_id == aluno_id
-    ).all()
-    
+    # Buscar turmas do aluno (via relacionamento direto)
     turmas_info = []
-    for ta in turmas_aluno:
-        turma = db.query(models.Turma).filter(models.Turma.id == ta.turma_id).first()
-        if turma:
-            turmas_info.append({
-                "id": turma.id,
-                "nome": turma.nome,
-                "turno": turma.turno
-            })
+    for turma in aluno.turmas:
+        turmas_info.append({
+            "id": turma.id,
+            "nome": turma.nome,
+            "turno": getattr(turma, 'turno', None)
+        })
     
     return {
         "aluno": {
             "id": aluno.id,
             "nome": aluno.nome,
-            "matricula": aluno.matricula,
+            "matricula": aluno.codigo,
             "nome_responsavel": getattr(aluno, 'nome_responsavel', None),
             "telefone_responsavel": getattr(aluno, 'telefone_responsavel', None),
             "email_responsavel": getattr(aluno, 'email_responsavel', None)
