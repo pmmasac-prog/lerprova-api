@@ -187,16 +187,18 @@ export const Admin: React.FC = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Acesso">
                                             <span className={`role-badge ${u.role}`}>
                                                 {u.role === 'admin' ? 'GESTOR' : 'PROFESSOR'}
                                             </span>
                                         </td>
-                                        <td>
-                                            <p className="escola-text">{u.escola || 'Plataforma Global'}</p>
-                                            <p className="disciplina-text text-xs text-slate-400">{u.disciplina || 'Geral'}</p>
+                                        <td data-label="Escola">
+                                            <div>
+                                                <p className="escola-text">{u.escola || 'Plataforma Global'}</p>
+                                                <p className="disciplina-text">{u.disciplina || 'Geral'}</p>
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Plano">
                                             <span className={`plan-badge ${u.plan_type} ${u.plan_type === 'premium' ? 'text-amber-500' : ''}`}>
                                                 {u.plan_type?.toUpperCase() || 'FREE'}
                                             </span>
@@ -204,7 +206,7 @@ export const Admin: React.FC = () => {
                                         <td>
                                             <div className="action-btns">
                                                 <button className="icon-btn delete" onClick={() => handleDeleteUser(u.id)} disabled={u.id === currentUser.id} style={{ color: '#ef4444' }}>
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={18} />
                                                 </button>
                                             </div>
                                         </td>

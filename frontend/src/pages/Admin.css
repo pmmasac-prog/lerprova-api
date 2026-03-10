@@ -788,23 +788,6 @@
 @media (min-width: 480px) and (max-width: 767px) {
     .admin-container {
         padding: 16px;
-        padding-top: 70px;
-    }
-    
-    .mobile-menu-toggle {
-        display: flex;
-    }
-    
-    .admin-sidebar {
-        position: fixed;
-        left: -100%;
-        width: 280px;
-        transition: left 0.3s ease;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-    }
-    
-    .admin-sidebar.open {
-        left: 0;
     }
     
     .admin-header {
@@ -812,6 +795,24 @@
         gap: 14px;
         padding: 18px;
         border-radius: 18px;
+    }
+    
+    .admin-header > .flex {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+    }
+    
+    .admin-header > .flex > button:first-child {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+    }
+    
+    .admin-header .btn-emerald {
+        width: 100%;
+        justify-content: center;
     }
     
     .admin-title {
@@ -826,22 +827,24 @@
     .admin-stat {
         padding: 14px;
         border-radius: 14px;
+        flex-direction: column;
+        text-align: center;
     }
     
-    .stat-value {
-        font-size: 24px;
+    .admin-stat .icon-bg {
+        margin: 0 auto 8px;
     }
     
-    .stat-label {
-        font-size: 11px;
+    .stat-info {
+        text-align: center;
     }
     
-    .admin-modal {
-        margin: 10px;
-        padding: 24px;
-        border-radius: 20px;
-        max-height: 90vh;
-        overflow-y: auto;
+    .stat-info .value {
+        font-size: 18px;
+    }
+    
+    .stat-info .label {
+        font-size: 10px;
     }
     
     .form-grid {
@@ -853,13 +856,19 @@
         grid-column: span 1;
     }
     
+    .users-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
     .users-table {
         font-size: 13px;
+        min-width: 600px;
     }
     
     .users-table th,
     .users-table td {
-        padding: 12px;
+        padding: 12px 8px;
     }
     
     .user-avatar {
@@ -877,24 +886,7 @@
 @media (max-width: 479px) {
     .admin-container {
         padding: 12px;
-        padding-top: 70px;
-    }
-    
-    .mobile-menu-toggle {
-        display: flex;
-    }
-    
-    .admin-sidebar {
-        position: fixed;
-        left: -100%;
-        width: 100%;
-        max-width: 300px;
-        transition: left 0.3s ease;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-    }
-    
-    .admin-sidebar.open {
-        left: 0;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
     
     .admin-header {
@@ -902,43 +894,113 @@
         gap: 12px;
         padding: 16px;
         border-radius: 16px;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
+        position: relative;
+    }
+    
+    /* Botão voltar fixo no canto */
+    .admin-header > .flex {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .admin-header > .flex > button:first-child {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Botão Cadastrar full width */
+    .admin-header .btn-emerald {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+        font-size: 14px;
     }
     
     .admin-title {
-        font-size: 18px;
+        font-size: 16px;
         text-align: center;
+        padding-top: 8px;
     }
     
     .admin-subtitle {
-        font-size: 12px;
+        font-size: 11px;
         text-align: center;
     }
     
     .admin-stats-bar {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        margin-bottom: 20px;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 16px;
     }
     
     .admin-stat {
-        padding: 14px;
-        border-radius: 14px;
-        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        gap: 8px;
+        flex-direction: column;
+        text-align: center;
     }
     
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
+    .admin-stat .icon-bg {
+        width: 36px;
+        height: 36px;
+        margin: 0 auto;
     }
     
-    .stat-value {
-        font-size: 22px;
+    .admin-stat .icon-bg svg {
+        width: 18px;
+        height: 18px;
     }
     
-    .stat-label {
-        font-size: 11px;
+    .stat-info {
+        text-align: center;
+    }
+    
+    .stat-info .value {
+        font-size: 16px;
+        font-weight: 700;
+    }
+    
+    .stat-info .label {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+    
+    /* Content card */
+    .admin-content.card {
+        padding: 12px;
+        border-radius: 16px;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .search-box input {
+        font-size: 16px; /* Previne zoom iOS */
+    }
+    
+    .refresh-btn {
+        width: 100%;
+        justify-content: center;
     }
     
     /* Tabelas em cards no mobile */
@@ -946,17 +1008,27 @@
         overflow-x: visible;
     }
     
+    .users-table {
+        display: block;
+    }
+    
     .users-table thead {
         display: none;
     }
     
+    .users-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
     .users-table tbody tr {
-        display: block;
-        padding: 16px;
-        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        padding: 14px;
         background: var(--admin-glass);
         border: 1px solid var(--admin-border);
-        border-radius: 16px;
+        border-radius: 14px;
         backdrop-filter: blur(12px);
     }
     
@@ -964,30 +1036,99 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 0;
+        padding: 8px 0;
         border: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .users-table tbody td:first-child {
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.2);
     }
     
     .users-table tbody td:last-child {
         border-bottom: none;
         justify-content: center;
-        padding-top: 14px;
+        padding-top: 12px;
     }
     
     .users-table tbody td::before {
         content: attr(data-label);
         font-weight: 600;
         color: var(--admin-text-muted);
-        font-size: 11px;
+        font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        flex-shrink: 0;
+        margin-right: 12px;
+    }
+    
+    .users-table tbody td:first-child::before,
+    .users-table tbody td:last-child::before {
+        display: none;
     }
     
     .user-info-cell {
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 6px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .user-info-cell > div {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    .user-name {
+        font-size: 14px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .user-email {
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .role-badge {
+        font-size: 9px;
+        padding: 4px 8px;
+    }
+    
+    .plan-badge {
+        font-size: 9px;
+        padding: 4px 8px;
+    }
+    
+    .escola-text {
+        font-size: 12px;
+        text-align: right;
+    }
+    
+    .disciplina-text {
+        font-size: 10px;
+        text-align: right;
+    }
+    
+    .action-btns {
+        gap: 8px;
+    }
+    
+    .icon-btn {
+        width: 44px;
+        height: 44px;
     }
     
     /* Modal fullscreen no mobile */
