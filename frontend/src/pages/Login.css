@@ -43,6 +43,16 @@
     50% { opacity: 1; transform: scale(1.05); }
 }
 
+/* ===== WRAPPER ===== */
+.login-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+    padding-top: 40px;
+}
+
 /* ===== LOGO AREA ===== */
 .login-logo {
     display: flex;

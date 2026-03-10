@@ -58,15 +58,17 @@ export const Login: React.FC = () => {
                 LERPROVA · SISTEMA EDUCACIONAL
             </div>
 
-            {/* Logo */}
-            <div className="login-logo">
-                <div className="login-logo-icon">
-                    <Shield />
+            {/* Main Content Wrapper */}
+            <div className="login-wrapper">
+                {/* Logo */}
+                <div className="login-logo">
+                    <div className="login-logo-icon">
+                        <Shield />
+                    </div>
                 </div>
-            </div>
 
-            {/* Login Card */}
-            <div className="login-card">
+                {/* Login Card */}
+                <div className="login-card">
                 {/* Type Selector */}
                 <div className="login-type-selector">
                     <span className="login-type-label">Tipo de Acesso</span>
@@ -148,6 +150,7 @@ export const Login: React.FC = () => {
                         )}
                     </button>
                 </form>
+            </div>
             </div>
         </div>
     );

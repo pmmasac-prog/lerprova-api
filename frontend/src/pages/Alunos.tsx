@@ -238,7 +238,7 @@ export const Alunos: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowHelpModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                            <button className="back-btn-modal" onClick={() => setShowHelpModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                            <button className="back-btn-modal" onClick={() => setShowHelpModal(false)} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#10b981' }}>
                                 <ArrowLeft size={16} />
                             </button>
                             <h2 className="modal-title" style={{ margin: 0 }}>Modelo de Importação CSV</h2>
@@ -291,7 +291,7 @@ export const Alunos: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowQRModal(false)}>
                     <div className="modal-content qr-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                            <button className="back-btn-modal" onClick={() => setShowQRModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                            <button className="back-btn-modal" onClick={() => setShowQRModal(false)} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#10b981' }}>
                                 <ArrowLeft size={16} />
                             </button>
                             <h2 className="modal-title" style={{ margin: 0 }}>{selectedAluno.nome}</h2>
