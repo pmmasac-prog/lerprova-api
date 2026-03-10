@@ -690,3 +690,312 @@
     cursor: not-allowed;
     transform: none;
 }
+
+/* ===== RESPONSIVE COMPLETO ===== */
+
+/* === Wide Desktop (1400px+) === */
+@media (min-width: 1400px) {
+    .portal-container {
+        padding: 40px 64px;
+    }
+    
+    .portal-header {
+        padding: 36px 48px;
+    }
+    
+    .portal-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 28px;
+    }
+    
+    .portal-nav {
+        gap: 16px;
+    }
+}
+
+/* === Desktop (1024px - 1399px) === */
+@media (min-width: 1024px) and (max-width: 1399px) {
+    .portal-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* === Tablet (768px - 1023px) === */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .portal-container {
+        padding: 24px 32px;
+    }
+    
+    .portal-header {
+        padding: 28px 32px;
+    }
+    
+    .portal-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .portal-nav {
+        gap: 8px;
+    }
+    
+    .portal-nav-btn {
+        padding: 12px 16px;
+        font-size: 0.75rem;
+    }
+    
+    .portal-modal {
+        max-width: 80%;
+    }
+}
+
+/* === Mobile Large (480px - 767px) === */
+@media (min-width: 480px) and (max-width: 767px) {
+    .portal-container {
+        padding: 16px 20px;
+    }
+    
+    .portal-header {
+        padding: 20px;
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+    
+    .student-info {
+        align-items: center;
+    }
+    
+    .student-avatar {
+        width: 56px;
+        height: 56px;
+        font-size: 1.2rem;
+    }
+    
+    .student-name {
+        font-size: 1.3rem;
+    }
+    
+    .portal-nav {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .portal-nav-btn {
+        padding: 10px 14px;
+        font-size: 0.7rem;
+    }
+    
+    .portal-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+    
+    .portal-card {
+        padding: 18px;
+    }
+    
+    .portal-modal {
+        max-width: 95%;
+        padding: 24px;
+    }
+}
+
+/* === Mobile (< 480px) === */
+@media (max-width: 479px) {
+    .portal-container {
+        padding: 12px 16px;
+        padding-bottom: 100px;
+    }
+    
+    .portal-header {
+        padding: 16px;
+        flex-direction: column;
+        gap: 14px;
+        text-align: center;
+        border-radius: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .student-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .student-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 1rem;
+        border-radius: 14px;
+    }
+    
+    .student-name {
+        font-size: 1.2rem;
+    }
+    
+    .student-turma {
+        font-size: 0.75rem;
+    }
+    
+    .portal-nav {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+    }
+    
+    .portal-nav-btn {
+        padding: 10px 12px;
+        font-size: 0.65rem;
+        gap: 4px;
+        border-radius: 12px;
+    }
+    
+    .portal-nav-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .portal-section-title {
+        font-size: 1rem;
+        margin-bottom: 14px;
+    }
+    
+    .portal-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .portal-card {
+        padding: 16px;
+        border-radius: 18px;
+    }
+    
+    .portal-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    
+    .portal-card-title {
+        font-size: 0.9rem;
+    }
+    
+    .portal-card-value {
+        font-size: 1.6rem;
+    }
+    
+    /* Provas em lista */
+    .prova-item {
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px;
+    }
+    
+    .prova-info {
+        width: 100%;
+    }
+    
+    .prova-nota {
+        width: 100%;
+        text-align: left;
+        font-size: 1.8rem;
+    }
+    
+    /* Modal fullscreen */
+    .portal-modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+    
+    .portal-modal {
+        max-width: 100%;
+        width: 100%;
+        max-height: 95vh;
+        border-radius: 24px 24px 0 0;
+        padding: 20px;
+        margin: 0;
+        animation: slideUpModal 0.3s ease-out;
+    }
+    
+    @keyframes slideUpModal {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .portal-modal h3 {
+        font-size: 1rem;
+    }
+    
+    .portal-modal input {
+        padding: 16px;
+        font-size: 16px; /* Previne zoom no iOS */
+    }
+    
+    .portal-modal-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .portal-modal-cancel,
+    .portal-modal-submit {
+        padding: 16px;
+        font-size: 0.85rem;
+    }
+    
+    /* Stats row */
+    .portal-stats {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .portal-stat-item {
+        padding: 14px;
+    }
+    
+    /* Empty state */
+    .portal-empty {
+        padding: 40px 20px;
+    }
+    
+    .portal-empty-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .portal-empty-text {
+        font-size: 0.9rem;
+    }
+}
+
+/* === Landscape Mobile === */
+@media (max-height: 500px) and (orientation: landscape) {
+    .portal-header {
+        flex-direction: row;
+        padding: 12px 20px;
+    }
+    
+    .student-info {
+        flex-direction: row;
+    }
+    
+    .portal-modal {
+        max-height: 100%;
+        border-radius: 18px;
+        margin: 8px;
+    }
+}
+
+/* === Safe area === */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .portal-container {
+        padding-bottom: max(100px, calc(80px + env(safe-area-inset-bottom)));
+    }
+}

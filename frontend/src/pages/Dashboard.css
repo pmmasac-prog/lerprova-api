@@ -500,9 +500,55 @@
 }
 
 /* ---- Responsive tweaks ---- */
-@media (max-width: 768px) {
+
+/* === Wide Desktop (1400px+) === */
+@media (min-width: 1400px) {
+    .op-dashboard {
+        padding: 40px 64px;
+    }
+    
+    .op-hero-card {
+        padding: 48px 56px;
+    }
+    
+    .op-turmas-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 28px;
+    }
+}
+
+/* === Desktop (1024px - 1399px) === */
+@media (min-width: 1024px) and (max-width: 1399px) {
+    .op-turmas-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* === Tablet (768px - 1023px) === */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .op-dashboard {
+        padding: 24px;
+    }
+    
+    .op-hero-card {
+        padding: 32px 28px;
+    }
+    
+    .op-turmas-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+/* === Mobile (< 768px) === */
+@media (max-width: 767px) {
+    .op-dashboard {
+        padding: 16px;
+    }
+    
     .op-hero-card {
         padding: 24px 20px;
+        border-radius: 20px;
     }
 
     .op-hero-title {
@@ -515,5 +561,58 @@
 
     .op-greeting {
         font-size: 1.3rem;
+    }
+    
+    .op-turmas-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    
+    .op-turma-card {
+        padding: 18px;
+    }
+    
+    .op-section-title {
+        font-size: 1rem;
+    }
+    
+    .op-alerts-container {
+        gap: 10px;
+    }
+    
+    .op-alert-card {
+        padding: 14px 16px;
+    }
+}
+
+/* === Mobile Small (< 480px) === */
+@media (max-width: 479px) {
+    .op-dashboard {
+        padding: 12px;
+    }
+    
+    .op-hero-card {
+        padding: 20px 16px;
+        border-radius: 18px;
+    }
+    
+    .op-hero-title {
+        font-size: 1rem;
+    }
+    
+    .op-greeting {
+        font-size: 1.1rem;
+    }
+    
+    .op-hero-cta {
+        padding: 14px;
+        font-size: 0.85rem;
+    }
+}
+
+/* === Landscape Mobile === */
+@media (max-height: 500px) and (orientation: landscape) {
+    .op-turmas-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }

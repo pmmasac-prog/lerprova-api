@@ -751,31 +751,140 @@
     border-radius: 10px;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-    .turma-detail-header {
-        flex-wrap: wrap;
-        gap: 12px;
-    }
+/* ===== RESPONSIVE COMPLETO ===== */
 
+/* === Wide Desktop (1400px+) === */
+@media (min-width: 1400px) {
+    .turma-detail-container {
+        padding: 40px 64px;
+    }
+    
+    .alunos-list-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .stats-row {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* === Desktop (1024px - 1399px) === */
+@media (min-width: 1024px) and (max-width: 1399px) {
+    .alunos-list-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* === Tablet (768px - 1023px) === */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .turma-detail-container {
+        padding: 24px;
+    }
+    
+    .alunos-list-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* === Mobile (< 768px) === */
+@media (max-width: 767px) {
+    .turma-detail-container {
+        padding: 16px;
+    }
+    
+    .turma-detail-header {
+        flex-direction: column;
+        gap: 14px;
+        text-align: center;
+    }
+    
+    .header-info h1 {
+        font-size: 1.4rem;
+    }
+    
     .header-actions {
         width: 100%;
-        justify-content: flex-end;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
     }
-
+    
+    .tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        margin-bottom: -8px;
+    }
+    
+    .tab {
+        flex-shrink: 0;
+        padding: 10px 16px;
+    }
+    
     .alunos-list-container {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
-
+    
     .stats-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
+    
+    .stat-card {
+        padding: 14px;
+    }
+}
 
+/* === Mobile Small (< 480px) === */
+@media (max-width: 479px) {
+    .turma-detail-container {
+        padding: 12px;
+    }
+    
+    .turma-detail-header {
+        padding: 16px;
+        border-radius: 18px;
+    }
+    
+    .header-info h1 {
+        font-size: 1.2rem;
+    }
+    
     .tabs {
         gap: 4px;
     }
 
     .tab span {
         display: none;
+    }
+    
+    .tab {
+        padding: 10px 12px;
+    }
+    
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .aluno-card {
+        padding: 14px;
+    }
+    
+    /* Modal fullscreen */
+    .turma-detail-container .modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+    
+    .turma-detail-container .modal-content {
+        margin: 0;
+        border-radius: 24px 24px 0 0;
+        max-height: 95vh;
+        padding: 20px;
     }
 }

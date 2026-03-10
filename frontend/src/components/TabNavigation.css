@@ -208,3 +208,39 @@
         font-size: 9px;
     }
 }
+
+/* ===== RESPONSIVE ADICIONAL ===== */
+
+/* === Mobile Small === */
+@media (max-width: 380px) {
+    .tab-bar {
+        padding: 6px 8px;
+    }
+    
+    .tab-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .tab-label {
+        font-size: 8px;
+    }
+}
+
+/* === Safe area para notch === */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .tab-bar {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+}
+
+/* === Landscape mobile === */
+@media (max-height: 500px) and (orientation: landscape) {
+    .tab-bar {
+        padding: 4px 12px;
+    }
+    
+    .tab-item {
+        padding: 4px 8px;
+    }
+}
