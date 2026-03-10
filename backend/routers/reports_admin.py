@@ -292,6 +292,98 @@ def calcular_idade(data_nascimento: str) -> int:
         return None
 
 
+# ==================== FUNÇÕES OTIMIZADAS (BATCH) ====================
+
+def carregar_frequencias_batch(db: Session, dias: List[str], aluno_ids: List[int] = None) -> dict:
+    """Carrega todas as frequências de uma vez e retorna dict por aluno_id"""
+    query = db.query(models.Frequencia).filter(models.Frequencia.data.in_(dias))
+    if aluno_ids:
+        query = query.filter(models.Frequencia.aluno_id.in_(aluno_ids))
+    
+    frequencias = query.all()
+    
+    # Organiza por aluno_id
+    resultado = {}
+    for f in frequencias:
+        if f.aluno_id not in resultado:
+            resultado[f.aluno_id] = []
+        resultado[f.aluno_id].append(f)
+    
+    return resultado
+
+
+def carregar_primeiras_frequencias_batch(db: Session, aluno_ids: List[int]) -> dict:
+    """Carrega primeira frequência de todos os alunos em uma query"""
+    resultados = db.query(
+        models.Frequencia.aluno_id,
+        func.min(models.Frequencia.data).label('primeira')
+    ).filter(
+        models.Frequencia.aluno_id.in_(aluno_ids)
+    ).group_by(models.Frequencia.aluno_id).all()
+    
+    return {r.aluno_id: r.primeira for r in resultados}
+
+
+def carregar_acompanhamentos_batch(db: Session, aluno_ids: List[int], tipo_acao: str = None) -> dict:
+    """Carrega último acompanhamento de cada aluno"""
+    from sqlalchemy.orm import aliased
+    from sqlalchemy import select
+    
+    # Subquery para pegar o id do último acompanhamento de cada aluno
+    subq = db.query(
+        models.AcompanhamentoAluno.aluno_id,
+        func.max(models.AcompanhamentoAluno.id).label('max_id')
+    ).filter(
+        models.AcompanhamentoAluno.aluno_id.in_(aluno_ids)
+    )
+    
+    if tipo_acao:
+        subq = subq.filter(models.AcompanhamentoAluno.tipo_acao == tipo_acao)
+    
+    subq = subq.group_by(models.AcompanhamentoAluno.aluno_id).subquery()
+    
+    # Query principal
+    acompanhamentos = db.query(models.AcompanhamentoAluno).join(
+        subq, models.AcompanhamentoAluno.id == subq.c.max_id
+    ).all()
+    
+    return {a.aluno_id: a for a in acompanhamentos}
+
+
+def calcular_faltas_consecutivas_batch(frequencias_aluno: List, dias_ordenados: List[str]) -> dict:
+    """Calcula faltas consecutivas usando lista de frequências em memória"""
+    if not dias_ordenados:
+        return {"consecutivas": 0, "ultima_presenca": None, "dias_sem_entrada": 0}
+    
+    datas_presentes = {f.data for f in frequencias_aluno if f.presente}
+    
+    # Calcular faltas consecutivas (do mais recente para o mais antigo)
+    faltas_consecutivas = 0
+    ultima_presenca = None
+    
+    for dia in dias_ordenados:
+        if dia in datas_presentes:
+            ultima_presenca = dia
+            break
+        faltas_consecutivas += 1
+    
+    # Calcular dias sem entrada
+    hoje = datetime.now().strftime("%Y-%m-%d")
+    dias_sem_entrada = 0
+    if ultima_presenca:
+        for dia in dias_ordenados:
+            if dia <= hoje and dia > ultima_presenca:
+                dias_sem_entrada += 1
+    else:
+        dias_sem_entrada = len([d for d in dias_ordenados if d <= hoje])
+    
+    return {
+        "consecutivas": faltas_consecutivas,
+        "ultima_presenca": ultima_presenca,
+        "dias_sem_entrada": dias_sem_entrada
+    }
+
+
 # ==================== ENDPOINTS ====================
 
 @router.get("/configuracao")
@@ -347,7 +439,7 @@ async def update_configuracao_frequencia(
     return {"message": "Configurações atualizadas com sucesso"}
 
 
-# ==================== 1. RELATÓRIO DE INFREQUÊNCIA POR PERÍODO ====================
+# ==================== 1. RELATÓRIO DE INFREQUÊNCIA POR PERÍODO (OTIMIZADO) ====================
 
 @router.post("/infrequencia")
 async def relatorio_infrequencia(
@@ -357,18 +449,11 @@ async def relatorio_infrequencia(
 ):
     """
     Relatório de infrequência por período.
-    
-    Campos: aluno, turma, turno, total dias letivos, dias presentes, dias ausentes,
-    frequência percentual, faltas justificadas, faltas não justificadas,
-    faltas consecutivas, última presença, status de risco
-    
-    IMPORTANTE: Conta apenas dias que efetivamente tiveram registro de frequência,
-    a partir da primeira frequência registrada do aluno.
+    OTIMIZADO: Batch loading de frequências e primeira frequência.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    # Buscar dias que efetivamente tiveram registro de frequência no período
     dias_com_frequencia = get_dias_com_frequencia(db, request.data_inicio, request.data_fim)
     
     if not dias_com_frequencia:
@@ -380,17 +465,22 @@ async def relatorio_infrequencia(
             "mensagem": "Nenhum registro de frequência encontrado no período"
         }
     
-    # Buscar alunos
-    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
+    dias_ordenados = sorted(dias_com_frequencia)
     
+    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
     if request.turma_id:
         query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == request.turma_id)
     
     alunos = query.all()
+    aluno_ids = [a.id for a in alunos]
+    
+    # BATCH: Carregar todas frequências e primeiras frequências de uma vez
+    frequencias_batch = carregar_frequencias_batch(db, dias_com_frequencia, aluno_ids)
+    primeiras_freq_batch = carregar_primeiras_frequencias_batch(db, aluno_ids)
+    
     resultado = []
     
     for aluno in alunos:
-        # Buscar turno da turma do aluno
         turno = get_turno_aluno(aluno)
         turma_nomes = [t.nome for t in aluno.turmas]
         turma_str = ", ".join(turma_nomes) if turma_nomes else "Sem turma"
@@ -398,41 +488,33 @@ async def relatorio_infrequencia(
         if request.turno and turno != request.turno:
             continue
         
-        # Buscar primeira frequência do aluno
-        primeira_freq = get_primeira_frequencia(db, aluno.id)
-        
+        # Usar batch para primeira frequência
+        primeira_freq = primeiras_freq_batch.get(aluno.id)
         if not primeira_freq:
-            # Aluno sem nenhuma frequência registrada
             continue
         
-        # Filtrar dias com frequência a partir da primeira frequência do aluno
-        dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
-        
+        dias_validos = [d for d in dias_ordenados if d >= primeira_freq]
         if not dias_validos:
             continue
         
         total_dias_letivos = len(dias_validos)
         
-        # Buscar frequência do aluno nos dias válidos
-        frequencias = db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_validos)
-        ).all()
+        # Usar batch de frequências
+        freqs_aluno = frequencias_batch.get(aluno.id, [])
+        freqs_validas = [f for f in freqs_aluno if f.data in dias_validos]
         
-        dias_presentes = len([f for f in frequencias if f.presente])
+        dias_presentes = len([f for f in freqs_validas if f.presente])
         dias_ausentes = total_dias_letivos - dias_presentes
-        faltas_justificadas = len([f for f in frequencias if not f.presente and f.falta_justificada])
+        faltas_justificadas = len([f for f in freqs_validas if not f.presente and f.falta_justificada])
         faltas_nao_justificadas = dias_ausentes - faltas_justificadas
         
         frequencia_pct = (dias_presentes / total_dias_letivos * 100) if total_dias_letivos > 0 else 0
         
-        # Calcular faltas consecutivas usando dias válidos do aluno
-        info_consecutivas = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
+        # Calcular faltas consecutivas em memória
+        info_consecutivas = calcular_faltas_consecutivas_batch(freqs_aluno, sorted(dias_validos, reverse=True))
         
-        # Calcular status de risco
         risco = calcular_score_risco(frequencia_pct, info_consecutivas["consecutivas"])
         
-        # Determinar classificação
         if frequencia_pct >= 90:
             classificacao = "regular"
         elif frequencia_pct >= 85:
@@ -464,7 +546,6 @@ async def relatorio_infrequencia(
             "situacao_matricula": aluno.situacao_matricula or "ativo"
         })
     
-    # Ordenar por frequência (menor primeiro) para destacar problemáticos
     resultado.sort(key=lambda x: x["frequencia_percentual"])
     
     return {
@@ -481,7 +562,7 @@ async def relatorio_infrequencia(
     }
 
 
-# ==================== 2. RELATÓRIO DE FALTAS CONSECUTIVAS ====================
+# ==================== 2. RELATÓRIO DE FALTAS CONSECUTIVAS (OTIMIZADO) ====================
 
 @router.get("/faltas-consecutivas")
 async def relatorio_faltas_consecutivas(
@@ -492,14 +573,12 @@ async def relatorio_faltas_consecutivas(
 ):
     """
     Relatório de faltas consecutivas.
-    
-    Campos: aluno, turma, faltas consecutivas, última presença,
-    dias sem entrada, responsável, telefone, status
+    OTIMIZADO: Batch loading de frequências e acompanhamentos.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    # Período: últimos 45 dias - buscar dias que tiveram registro de frequência
+    # Período: últimos 45 dias
     hoje = datetime.now().strftime("%Y-%m-%d")
     inicio = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")
     dias_com_frequencia = get_dias_com_frequencia(db, inicio, hoje)
@@ -507,25 +586,35 @@ async def relatorio_faltas_consecutivas(
     if not dias_com_frequencia:
         return {"alunos": [], "total": 0, "mensagem": "Nenhum registro de frequência encontrado"}
     
-    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
+    dias_ordenados = sorted(dias_com_frequencia, reverse=True)
     
+    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
     if turma_id:
         query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == turma_id)
     
     alunos = query.filter(models.Aluno.situacao_matricula != "transferido").all()
+    aluno_ids = [a.id for a in alunos]
+    
+    # BATCH: Carregar todas frequências e primeiras frequências
+    frequencias_batch = carregar_frequencias_batch(db, dias_com_frequencia, aluno_ids)
+    primeiras_freq_batch = carregar_primeiras_frequencias_batch(db, aluno_ids)
+    acompanhamentos_batch = carregar_acompanhamentos_batch(db, aluno_ids)
+    
     resultado = []
     
     for aluno in alunos:
-        # Filtrar dias a partir da primeira frequência do aluno
-        primeira_freq = get_primeira_frequencia(db, aluno.id)
+        # Verificar primeira frequência (do batch)
+        primeira_freq = primeiras_freq_batch.get(aluno.id)
         if not primeira_freq:
             continue
         
-        dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
+        dias_validos = [d for d in dias_ordenados if d >= primeira_freq]
         if not dias_validos:
             continue
         
-        info = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
+        # Calcular faltas consecutivas em memória
+        freqs_aluno = frequencias_batch.get(aluno.id, [])
+        info = calcular_faltas_consecutivas_batch(freqs_aluno, dias_validos)
         
         if info["consecutivas"] >= minimo:
             turma_nomes = [t.nome for t in aluno.turmas]
@@ -545,11 +634,8 @@ async def relatorio_faltas_consecutivas(
                 nivel = "atencao"
                 status = "Atenção"
             
-            # Verificar se há acompanhamento recente
-            acompanhamento = db.query(models.AcompanhamentoAluno).filter(
-                models.AcompanhamentoAluno.aluno_id == aluno.id
-            ).order_by(desc(models.AcompanhamentoAluno.data_acao)).first()
-            
+            # Usar acompanhamento do batch
+            acompanhamento = acompanhamentos_batch.get(aluno.id)
             status_contato = "Pendente"
             if acompanhamento:
                 if acompanhamento.resultado == "sucesso":
@@ -590,7 +676,7 @@ async def relatorio_faltas_consecutivas(
     }
 
 
-# ==================== 3. ALUNOS EM RISCO DE EVASÃO ====================
+# ==================== 3. ALUNOS EM RISCO DE EVASÃO (OTIMIZADO) ====================
 
 @router.post("/risco-evasao")
 async def relatorio_risco_evasao(
@@ -600,22 +686,17 @@ async def relatorio_risco_evasao(
 ):
     """
     Relatório de alunos em risco de evasão.
-    
-    Critérios: frequência <85%, 3+ faltas consecutivas, queda de frequência,
-    faltas alternadas, dias sem entrada
-    
-    Saída: aluno, score, nível, motivo, ação recomendada
+    OTIMIZADO: Batch loading de frequências.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    # Buscar dias que efetivamente tiveram registro de frequência
     dias_com_frequencia = get_dias_com_frequencia(db, request.data_inicio, request.data_fim)
     
     if not dias_com_frequencia:
         return {"alunos_em_risco": [], "total": 0, "mensagem": "Nenhum registro de frequência encontrado"}
     
-    # Período anterior para comparação (mesma duração, antes do início)
+    # Período anterior para comparação
     duracao = (datetime.strptime(request.data_fim, "%Y-%m-%d") - 
                datetime.strptime(request.data_inicio, "%Y-%m-%d")).days
     periodo_ant_fim = (datetime.strptime(request.data_inicio, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -623,62 +704,54 @@ async def relatorio_risco_evasao(
     dias_freq_anterior = get_dias_com_frequencia(db, periodo_ant_inicio, periodo_ant_fim)
     
     query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
-    
     if request.turma_id:
         query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == request.turma_id)
     
     alunos = query.filter(
         models.Aluno.situacao_matricula.in_(["ativo", "infrequente", "em_risco"])
     ).all()
+    aluno_ids = [a.id for a in alunos]
+    
+    # BATCH: Carregar todas frequências e primeiras frequências de uma vez
+    todos_dias = list(set(dias_com_frequencia + (dias_freq_anterior or [])))
+    frequencias_batch = carregar_frequencias_batch(db, todos_dias, aluno_ids)
+    primeiras_freq_batch = carregar_primeiras_frequencias_batch(db, aluno_ids)
     
     resultado = []
     
     for aluno in alunos:
-        # Buscar primeira frequência do aluno
-        primeira_freq = get_primeira_frequencia(db, aluno.id)
+        primeira_freq = primeiras_freq_batch.get(aluno.id)
         if not primeira_freq:
             continue
         
-        # Filtrar dias válidos para este aluno
         dias_validos = [d for d in dias_com_frequencia if d >= primeira_freq]
         if not dias_validos:
             continue
         
         total_dias = len(dias_validos)
+        freqs_aluno = frequencias_batch.get(aluno.id, [])
         
-        # Frequência atual
-        presencas = db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_validos),
-            models.Frequencia.presente == True
-        ).count()
-        
+        # Frequência atual (em memória)
+        freqs_periodo = [f for f in freqs_aluno if f.data in dias_validos]
+        presencas = len([f for f in freqs_periodo if f.presente])
         freq_atual = (presencas / total_dias * 100) if total_dias > 0 else 100
         
-        # Frequência anterior
+        # Frequência anterior (em memória)
         freq_anterior = None
         if dias_freq_anterior:
             dias_ant_validos = [d for d in dias_freq_anterior if d >= primeira_freq]
             if dias_ant_validos:
-                presencas_ant = db.query(models.Frequencia).filter(
-                    models.Frequencia.aluno_id == aluno.id,
-                    models.Frequencia.data.in_(dias_ant_validos),
-                    models.Frequencia.presente == True
-                ).count()
+                freqs_ant = [f for f in freqs_aluno if f.data in dias_ant_validos]
+                presencas_ant = len([f for f in freqs_ant if f.presente])
                 freq_anterior = (presencas_ant / len(dias_ant_validos) * 100) if dias_ant_validos else None
         
-        # Faltas consecutivas
-        info_consec = calcular_faltas_consecutivas(db, aluno.id, dias_validos)
+        # Faltas consecutivas (em memória)
+        info_consec = calcular_faltas_consecutivas_batch(freqs_aluno, sorted(dias_validos, reverse=True))
         
-        # Faltas alternadas (faltas que não são consecutivas)
-        todas_faltas = db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_validos),
-            models.Frequencia.presente == False
-        ).count()
+        # Faltas alternadas
+        todas_faltas = len([f for f in freqs_periodo if not f.presente])
         faltas_alternadas = max(0, todas_faltas - info_consec["consecutivas"])
         
-        # Calcular score de risco
         risco = calcular_score_risco(
             freq_atual,
             info_consec["consecutivas"],
@@ -686,7 +759,6 @@ async def relatorio_risco_evasao(
             faltas_alternadas
         )
         
-        # Incluir apenas alunos com risco médio ou maior
         if risco["nivel"] in ["medio", "alto", "critico"]:
             turma_nomes = [t.nome for t in aluno.turmas]
             turno = get_turno_aluno(aluno)
@@ -712,7 +784,6 @@ async def relatorio_risco_evasao(
                 "telefone": aluno.telefone_responsavel
             })
     
-    # Ordenar por score (maior primeiro)
     resultado.sort(key=lambda x: x["score_risco"], reverse=True)
     
     return {
@@ -809,7 +880,7 @@ async def relatorio_evasao_abandono(
     }
 
 
-# ==================== 5. MENORES COM COMUNICAÇÃO OBRIGATÓRIA ====================
+# ==================== 5. MENORES COM COMUNICAÇÃO OBRIGATÓRIA (OTIMIZADO) ====================
 
 @router.get("/menores-comunicacao")
 async def relatorio_menores_comunicacao(
@@ -819,54 +890,61 @@ async def relatorio_menores_comunicacao(
 ):
     """
     Relatório de menores de idade com comunicação obrigatória aos responsáveis.
-    
-    Cruza: menor de idade, faltas consecutivas, frequência baixa,
-    ausência não justificada, tempo sem entrada
+    OTIMIZADO: Carrega todos os dados em batch para evitar N+1 queries.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
-    # Período: últimos 30 dias
+    # Período: últimos 45 dias
     hoje = datetime.now().strftime("%Y-%m-%d")
     inicio = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")
     dias_letivos = get_dias_letivos(db, inicio, hoje)
     total_dias = len(dias_letivos)
+    dias_ordenados = sorted(dias_letivos, reverse=True)
     
+    # Buscar alunos (apenas menores de 18)
     alunos = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).filter(
         models.Aluno.situacao_matricula.in_(["ativo", "infrequente", "em_risco"])
     ).all()
     
-    resultado = []
-    
+    # Filtrar menores de 18 e coletar IDs
+    alunos_menores = []
     for aluno in alunos:
         idade = calcular_idade(aluno.data_nascimento)
+        if idade is None or idade < 18:
+            aluno._idade_calc = idade
+            alunos_menores.append(aluno)
+    
+    if not alunos_menores:
+        return {"alunos": [], "total": 0, "por_situacao": {}}
+    
+    aluno_ids = [a.id for a in alunos_menores]
+    
+    # BATCH: Carregar todas frequências de uma vez
+    frequencias_batch = carregar_frequencias_batch(db, dias_letivos, aluno_ids)
+    
+    # BATCH: Carregar últimos acompanhamentos
+    acompanhamentos_batch = carregar_acompanhamentos_batch(db, aluno_ids, "aviso_responsavel")
+    
+    resultado = []
+    
+    for aluno in alunos_menores:
+        # Usar dados em memória (sem queries adicionais)
+        freqs_aluno = frequencias_batch.get(aluno.id, [])
         
-        # Só menores de 18 anos
-        if idade is not None and idade >= 18:
-            continue
+        # Calcular faltas consecutivas em memória
+        info = calcular_faltas_consecutivas_batch(freqs_aluno, dias_ordenados)
         
-        info = calcular_faltas_consecutivas(db, aluno.id, dias_letivos)
-        
-        # Calcular frequência
-        presencas = db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos),
-            models.Frequencia.presente == True
-        ).count()
-        
+        # Calcular frequência em memória
+        presencas = len([f for f in freqs_aluno if f.presente])
         freq_pct = (presencas / total_dias * 100) if total_dias > 0 else 100
         
-        # Faltas não justificadas
+        # Faltas em memória
         faltas_totais = total_dias - presencas
-        faltas_justificadas = db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos),
-            models.Frequencia.presente == False,
-            models.Frequencia.falta_justificada == True
-        ).count()
+        faltas_justificadas = len([f for f in freqs_aluno if not f.presente and f.falta_justificada])
         faltas_nao_justificadas = faltas_totais - faltas_justificadas
         
-        # Critérios para comunicação:
+        # Critérios para comunicação
         need_contact = (
             info["consecutivas"] >= minimo_faltas or
             freq_pct < 85 or
@@ -874,11 +952,8 @@ async def relatorio_menores_comunicacao(
         )
         
         if need_contact:
-            # Verificar último contato
-            ultimo_contato = db.query(models.AcompanhamentoAluno).filter(
-                models.AcompanhamentoAluno.aluno_id == aluno.id,
-                models.AcompanhamentoAluno.tipo_acao == "aviso_responsavel"
-            ).order_by(desc(models.AcompanhamentoAluno.data_acao)).first()
+            # Usar acompanhamento do batch
+            ultimo_contato = acompanhamentos_batch.get(aluno.id)
             
             # Determinar motivo do alerta
             if info["consecutivas"] >= 5:
@@ -912,7 +987,7 @@ async def relatorio_menores_comunicacao(
                 "aluno_nome": aluno.nome,
                 "aluno_codigo": aluno.codigo,
                 "turma": turma_nomes[0] if turma_nomes else "",
-                "idade": idade,
+                "idade": aluno._idade_calc,
                 "responsavel": aluno.nome_responsavel,
                 "contato": aluno.telefone_responsavel or aluno.email_responsavel,
                 "quantidade_faltas": faltas_totais,
@@ -940,7 +1015,7 @@ async def relatorio_menores_comunicacao(
     }
 
 
-# ==================== 6. RELATÓRIO GERENCIAL ====================
+# ==================== 6. RELATÓRIO GERENCIAL (OTIMIZADO) ====================
 
 @router.post("/gerencial")
 async def relatorio_gerencial(
@@ -950,10 +1025,7 @@ async def relatorio_gerencial(
 ):
     """
     Relatório gerencial completo.
-    
-    Mostra: turmas com maior infrequência, alunos em risco por turma,
-    taxa média de frequência, alunos com mais faltas, evolução,
-    casos com alerta aberto, alunos recuperados
+    OTIMIZADO: Uma única query para frequências, processamento em memória.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
@@ -964,28 +1036,40 @@ async def relatorio_gerencial(
     if total_dias == 0:
         return {"message": "Nenhum dia letivo no período"}
     
+    # BATCH: Carregar todos os alunos com turmas
+    todos_alunos = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).all()
+    aluno_ids = [a.id for a in todos_alunos]
+    
+    # BATCH: Carregar todas as frequências do período de uma vez
+    frequencias_batch = carregar_frequencias_batch(db, dias_letivos, aluno_ids)
+    
+    # Construir mapa aluno->turmas
+    aluno_turmas = {}
+    turma_alunos = {}
+    for aluno in todos_alunos:
+        aluno_turmas[aluno.id] = aluno.turmas
+        for turma in aluno.turmas:
+            if turma.id not in turma_alunos:
+                turma_alunos[turma.id] = []
+            turma_alunos[turma.id].append(aluno)
+    
+    # Processar turmas
     turmas = db.query(models.Turma).all()
     turmas_data = []
     
     for turma in turmas:
-        # Buscar alunos da turma
-        alunos = db.query(models.Aluno).join(models.aluno_turma).filter(
-            models.aluno_turma.c.turma_id == turma.id
-        ).all()
-        
-        if not alunos:
+        alunos_turma = turma_alunos.get(turma.id, [])
+        if not alunos_turma:
             continue
         
         total_presencas = 0
         alunos_risco = 0
         alunos_criticos = 0
         
-        for aluno in alunos:
-            presencas = db.query(models.Frequencia).filter(
-                models.Frequencia.aluno_id == aluno.id,
-                models.Frequencia.data.in_(dias_letivos),
-                models.Frequencia.presente == True
-            ).count()
+        for aluno in alunos_turma:
+            # Usar frequências do batch (memória)
+            freqs_aluno = frequencias_batch.get(aluno.id, [])
+            presencas = len([f for f in freqs_aluno if f.presente])
             
             total_presencas += presencas
             freq_pct = (presencas / total_dias * 100) if total_dias > 0 else 100
@@ -995,13 +1079,13 @@ async def relatorio_gerencial(
             elif freq_pct < 85:
                 alunos_risco += 1
         
-        taxa_media = (total_presencas / (len(alunos) * total_dias) * 100) if len(alunos) > 0 else 0
+        taxa_media = (total_presencas / (len(alunos_turma) * total_dias) * 100) if len(alunos_turma) > 0 else 0
         
         turmas_data.append({
             "turma_id": turma.id,
             "turma_nome": turma.nome,
             "turno": extrair_turno(turma.nome),
-            "total_alunos": len(alunos),
+            "total_alunos": len(alunos_turma),
             "taxa_frequencia": round(taxa_media, 2),
             "alunos_risco": alunos_risco,
             "alunos_criticos": alunos_criticos
@@ -1010,16 +1094,12 @@ async def relatorio_gerencial(
     # Ordenar por taxa de frequência (menor primeiro)
     turmas_data.sort(key=lambda x: x["taxa_frequencia"])
     
-    # Top 10 alunos com mais faltas
+    # Top 10 alunos com mais faltas (usando batch)
     alunos_mais_faltas = []
-    todos_alunos = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).all()
-    
     for aluno in todos_alunos:
-        faltas = total_dias - db.query(models.Frequencia).filter(
-            models.Frequencia.aluno_id == aluno.id,
-            models.Frequencia.data.in_(dias_letivos),
-            models.Frequencia.presente == True
-        ).count()
+        freqs_aluno = frequencias_batch.get(aluno.id, [])
+        presencas = len([f for f in freqs_aluno if f.presente])
+        faltas = total_dias - presencas
         
         if faltas > 0:
             turma_nomes = [t.nome for t in aluno.turmas]
@@ -1033,22 +1113,22 @@ async def relatorio_gerencial(
     
     alunos_mais_faltas.sort(key=lambda x: x["total_faltas"], reverse=True)
     
-    # Alertas abertos
+    # Alertas abertos (query simples)
     alertas_abertos = db.query(models.AlertaFrequencia).filter(
         models.AlertaFrequencia.status == "aberto"
     ).count()
     
-    # Alunos recuperados (com acompanhamento bem-sucedido)
+    # Alunos recuperados
     recuperados = db.query(models.AcompanhamentoAluno).filter(
         models.AcompanhamentoAluno.aluno_retornou == True,
         models.AcompanhamentoAluno.data_acao >= request.data_inicio
     ).count()
     
-    # Taxa média geral
-    total_presencas_geral = db.query(models.Frequencia).filter(
-        models.Frequencia.data.in_(dias_letivos),
-        models.Frequencia.presente == True
-    ).count()
+    # Taxa média geral (calculada do batch)
+    total_presencas_geral = sum(
+        len([f for f in freqs if f.presente]) 
+        for freqs in frequencias_batch.values()
+    )
     
     total_registros_esperados = len(todos_alunos) * total_dias
     taxa_geral = (total_presencas_geral / total_registros_esperados * 100) if total_registros_esperados > 0 else 0
@@ -1062,8 +1142,8 @@ async def relatorio_gerencial(
             "alertas_abertos": alertas_abertos,
             "alunos_recuperados": recuperados
         },
-        "turmas_por_frequencia": turmas_data[:10],  # Top 10 piores
-        "alunos_mais_faltas": alunos_mais_faltas[:10],  # Top 10
+        "turmas_por_frequencia": turmas_data[:10],
+        "alunos_mais_faltas": alunos_mais_faltas[:10],
         "turmas_em_risco": [t for t in turmas_data if t["taxa_frequencia"] < 85]
     }
 
