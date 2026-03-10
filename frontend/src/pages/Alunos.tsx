@@ -251,14 +251,20 @@ export const Alunos: React.FC = () => {
                             <div className="csv-header">
                                 <div className="csv-cell">nome</div>
                                 <div className="csv-cell">codigo</div>
+                                <div className="csv-cell">responsavel</div>
+                                <div className="csv-cell">telefone</div>
                             </div>
                             <div className="csv-row">
                                 <div className="csv-cell">João Silva</div>
                                 <div className="csv-cell">101</div>
+                                <div className="csv-cell">Maria Silva</div>
+                                <div className="csv-cell">11999998888</div>
                             </div>
                             <div className="csv-row">
                                 <div className="csv-cell">Maria Souza</div>
                                 <div className="csv-cell">102</div>
+                                <div className="csv-cell">Ana Souza</div>
+                                <div className="csv-cell">11988887777</div>
                             </div>
                         </div>
 
@@ -266,7 +272,9 @@ export const Alunos: React.FC = () => {
                             <h4>Dicas importantes:</h4>
                             <ul>
                                 <li>O código deve ser único para cada aluno.</li>
-                                <li>Se o código já existir no sistema, o aluno será ignorado.</li>
+                                <li>Se o código já existir no sistema, o aluno será atualizado com os dados do responsável.</li>
+                                <li><strong>Colunas opcionais:</strong> responsavel, telefone, email, data_nascimento</li>
+                                <li>O telefone será usado para envio de mensagens WhatsApp nos relatórios de frequência.</li>
                                 <li>Você pode usar programas como Excel ou Google Sheets para criar o arquivo e salvar como CSV.</li>
                             </ul>
                         </div>

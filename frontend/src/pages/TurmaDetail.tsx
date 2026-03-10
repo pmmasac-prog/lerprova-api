@@ -30,7 +30,7 @@ export const TurmaDetail: React.FC = () => {
     const [showFrequenciaModal, setShowFrequenciaModal] = useState(false);
     const [showAlunoModal, setShowAlunoModal] = useState(false);
     const [showAddAlunoModal, setShowAddAlunoModal] = useState(false);
-    const [newAluno, setNewAluno] = useState({ nome: '', codigo: '' });
+    const [newAluno, setNewAluno] = useState({ nome: '', codigo: '', nome_responsavel: '', telefone_responsavel: '' });
     const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [frequenciaState, setFrequenciaState] = useState<{ [key: number]: boolean }>({});
@@ -145,7 +145,7 @@ export const TurmaDetail: React.FC = () => {
                 turma_id: parseInt(id || '0')
             });
             setShowAddAlunoModal(false);
-            setNewAluno({ nome: '', codigo: '' });
+            setNewAluno({ nome: '', codigo: '', nome_responsavel: '', telefone_responsavel: '' });
             loadData();
         } catch (error) {
             console.error('Erro ao adicionar aluno:', error);
@@ -189,9 +189,13 @@ export const TurmaDetail: React.FC = () => {
                 const lines = text.split(/\r?\n/);
 
                 // Get headers and clean them
-                const rawHeaders = lines[0].split(/[;,]/).map(h => h.trim().toLowerCase());
+                const rawHeaders = lines[0].split(/[;,]/).map(h => h.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                 const nomeIdx = rawHeaders.indexOf('nome');
                 const codigoIdx = rawHeaders.indexOf('codigo') !== -1 ? rawHeaders.indexOf('codigo') : rawHeaders.indexOf('matricula');
+                const responsavelIdx = rawHeaders.findIndex(h => h.includes('responsavel') && h.includes('nome') || h === 'responsavel');
+                const telefoneIdx = rawHeaders.findIndex(h => h.includes('telefone') || h.includes('celular') || h.includes('whatsapp'));
+                const emailIdx = rawHeaders.findIndex(h => h.includes('email'));
+                const nascimentoIdx = rawHeaders.findIndex(h => h.includes('nascimento') || h === 'data_nascimento');
 
                 if (nomeIdx === -1) {
                     alert('CSV inválido. Certifique-se de ter uma coluna chamada "nome".');
@@ -209,6 +213,10 @@ export const TurmaDetail: React.FC = () => {
                     const values = line.split(/[;,]/);
                     const nome = values[nomeIdx]?.trim();
                     const codigo = codigoIdx !== -1 ? values[codigoIdx]?.trim() : (i + (alunos.length || 0)).toString();
+                    const nomeResponsavel = responsavelIdx !== -1 ? values[responsavelIdx]?.trim() : undefined;
+                    const telefoneResponsavel = telefoneIdx !== -1 ? values[telefoneIdx]?.trim() : undefined;
+                    const emailResponsavel = emailIdx !== -1 ? values[emailIdx]?.trim() : undefined;
+                    const dataNascimento = nascimentoIdx !== -1 ? values[nascimentoIdx]?.trim() : undefined;
 
                     if (nome) {
                         try {
@@ -216,7 +224,11 @@ export const TurmaDetail: React.FC = () => {
                                 nome,
                                 codigo: codigo || (Date.now() + i).toString(),
                                 turma_id: parseInt(id),
-                                qr_token: `ALUNO_${codigo}`
+                                qr_token: `ALUNO_${codigo}`,
+                                nome_responsavel: nomeResponsavel || null,
+                                telefone_responsavel: telefoneResponsavel || null,
+                                email_responsavel: emailResponsavel || null,
+                                data_nascimento: dataNascimento || null
                             });
                             successCount++;
                         } catch (err) {
@@ -461,6 +473,32 @@ export const TurmaDetail: React.FC = () => {
                                 placeholder="Ex: 2024001"
                                 value={newAluno.codigo}
                                 onChange={(e) => setNewAluno({ ...newAluno, codigo: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="add-aluno-responsavel">Nome do Responsável (opcional)</label>
+                            <input
+                                id="add-aluno-responsavel"
+                                name="add-aluno-responsavel"
+                                type="text"
+                                className="form-input"
+                                placeholder="Ex: Maria Silva"
+                                value={newAluno.nome_responsavel}
+                                onChange={(e) => setNewAluno({ ...newAluno, nome_responsavel: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="add-aluno-telefone">Telefone do Responsável (opcional)</label>
+                            <input
+                                id="add-aluno-telefone"
+                                name="add-aluno-telefone"
+                                type="tel"
+                                className="form-input"
+                                placeholder="Ex: 11999998888"
+                                value={newAluno.telefone_responsavel}
+                                onChange={(e) => setNewAluno({ ...newAluno, telefone_responsavel: e.target.value })}
                             />
                         </div>
 

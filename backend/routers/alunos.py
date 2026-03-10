@@ -15,6 +15,10 @@ async def create_aluno(data: dict, user: users_db.User = Depends(get_current_use
     codigo = data.get("codigo")
     raw_turma_id = data.get("turma_id")
     nome = data.get("nome")
+    nome_responsavel = data.get("nome_responsavel")
+    telefone_responsavel = data.get("telefone_responsavel")
+    email_responsavel = data.get("email_responsavel")
+    data_nascimento = data.get("data_nascimento")
     
     # 1. Validar turma_id de forma segura
     try:
@@ -40,10 +44,24 @@ async def create_aluno(data: dict, user: users_db.User = Depends(get_current_use
         aluno = models.Aluno(
             nome=nome,
             codigo=codigo,
-            qr_token=token
+            qr_token=token,
+            nome_responsavel=nome_responsavel,
+            telefone_responsavel=telefone_responsavel,
+            email_responsavel=email_responsavel,
+            data_nascimento=data_nascimento
         )
         db.add(aluno)
         db.flush() # Para pegar o ID
+    else:
+        # Atualizar dados do responsável se fornecidos
+        if nome_responsavel:
+            aluno.nome_responsavel = nome_responsavel
+        if telefone_responsavel:
+            aluno.telefone_responsavel = telefone_responsavel
+        if email_responsavel:
+            aluno.email_responsavel = email_responsavel
+        if data_nascimento:
+            aluno.data_nascimento = data_nascimento
     
     # 3. Vincular à turma se fornecido e se ainda não estiver vinculado
     if turma_id:
