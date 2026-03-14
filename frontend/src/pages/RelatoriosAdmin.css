@@ -13,7 +13,7 @@
     justify-content: space-between;
     align-items: flex-start;
     padding: 24px 0;
-    border-bottom: 1px solid rgba(16, 185, 129, 0.15);
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 0;
 }
 
@@ -37,9 +37,9 @@
 /* ==================== TABS PREMIUM ==================== */
 .report-tabs {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     padding: 20px 0;
-    border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+    border-bottom: 1px solid var(--border-color);
     overflow-x: auto;
     scrollbar-width: thin;
 }
@@ -48,24 +48,22 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 24px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     color: var(--color-text-muted);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
-    backdrop-filter: blur(8px);
 }
 
 .tab-btn:hover {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.2);
+    background: var(--bg-card-light);
+    border-color: var(--border-color-dark);
     color: var(--color-text);
-    transform: translateY(-2px);
 }
 
 .tab-btn.active {
@@ -157,8 +155,9 @@
 
 .stat-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(16, 185, 129, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    background: var(--bg-card-light);
+    border-color: var(--color-success);
+    box-shadow: var(--shadow-md);
 }
 
 .stat-icon {

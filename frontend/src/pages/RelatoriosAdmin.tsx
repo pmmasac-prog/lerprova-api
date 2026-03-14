@@ -239,24 +239,21 @@ const WhatsAppButton: React.FC<{ telefone: string | null | undefined; tipo: Tipo
 const StatusBadge: React.FC<{ status: string; tipo?: 'risco' | 'contato' | 'classificacao' }> = ({ status, tipo = 'risco' }) => {
     const configs: Record<string, Record<string, { bg: string; text: string; label: string }>> = {
         risco: {
-            critico: { bg: '#7f1d1d', text: '#fca5a5', label: 'Crítico' },
-            alto: { bg: '#9a3412', text: '#fdba74', label: 'Alto' },
-            medio: { bg: '#854d0e', text: '#fde047', label: 'Médio' },
-            baixo: { bg: '#166534', text: '#86efac', label: 'Baixo' },
-            atencao: { bg: '#854d0e', text: '#fde047', label: 'Atenção' },
-            alerta: { bg: '#9a3412', text: '#fdba74', label: 'Alerta' },
-            abandono: { bg: '#581c87', text: '#e9d5ff', label: 'Abandono' },
+            critico: { bg: 'var(--bg-danger-soft)', text: 'var(--color-danger-dark)', label: 'Crítico' },
+            alto: { bg: 'var(--bg-warning-soft)', text: 'var(--color-warning-dark)', label: 'Alto' },
+            medio: { bg: 'var(--bg-warning-soft)', text: 'var(--color-warning-dark)', label: 'Médio' },
+            baixo: { bg: 'var(--bg-success-soft)', text: 'var(--color-success-dark)', label: 'Baixo' },
+            atencao: { bg: 'var(--bg-warning-soft)', text: 'var(--color-warning-dark)', label: 'Atenção' },
+            alerta: { bg: 'var(--bg-warning-soft)', text: 'var(--color-warning-dark)', label: 'Alerta' },
+            abandono: { bg: 'var(--bg-purple-soft)', text: 'var(--color-purple)', label: 'Abandono' },
         },
         contato: {
-            pendente: { bg: '#7f1d1d', text: '#fca5a5', label: 'Pendente' },
-            avisado: { bg: '#1e40af', text: '#93c5fd', label: 'Avisado' },
-            sem_retorno: { bg: '#9a3412', text: '#fdba74', label: 'Sem Retorno' },
-            resolvido: { bg: '#166534', text: '#86efac', label: 'Resolvido' },
+            pendente: { bg: 'var(--bg-danger-soft)', text: 'var(--color-danger-dark)', label: 'Pendente' },
+            avisado: { bg: 'var(--bg-info-soft)', text: 'var(--color-info-dark)', label: 'Avisado' },
+            sem_retorno: { bg: 'var(--bg-warning-soft)', text: 'var(--color-warning-dark)', label: 'Sem Retorno' },
+            resolvido: { bg: 'var(--bg-success-soft)', text: 'var(--color-success-dark)', label: 'Resolvido' },
         },
         classificacao: {
-            regular: { bg: '#166534', text: '#86efac', label: 'Regular' },
-            atencao: { bg: '#854d0e', text: '#fde047', label: 'Atenção' },
-            risco: { bg: '#9a3412', text: '#fdba74', label: 'Risco' },
             critico: { bg: '#7f1d1d', text: '#fca5a5', label: 'Crítico' },
         }
     };
@@ -293,7 +290,7 @@ const StatCard: React.FC<{ label: string; value: string | number; icon: React.Re
 
 const ProgressBar: React.FC<{ value: number; max?: number; color?: string }> = ({ value, max = 100, color }) => {
     const pct = Math.min((value / max) * 100, 100);
-    const barColor = color || (pct >= 90 ? '#22c55e' : pct >= 85 ? '#eab308' : pct >= 75 ? '#f97316' : 'var(--color-danger)');
+    const barColor = color || (pct >= 90 ? 'var(--color-success)' : pct >= 85 ? 'var(--color-warning)' : pct >= 75 ? 'var(--color-warning)' : 'var(--color-danger)');
 
     return (
         <div className="progress-bar-container">
@@ -564,19 +561,19 @@ export const RelatoriosAdmin: React.FC = () => {
                     <h3><Activity size={18} /> Situação dos Alunos</h3>
                     <div className="situation-grid">
                         <div className="situation-item">
-                            <span className="situation-value" style={{ color: '#22c55e' }}>
+                            <span className="situation-value" style={{ color: 'var(--color-success)' }}>
                                 {dashboard.situacao_alunos.ativos}
                             </span>
                             <span className="situation-label">Ativos</span>
                         </div>
                         <div className="situation-item">
-                            <span className="situation-value" style={{ color: '#eab308' }}>
+                            <span className="situation-value" style={{ color: 'var(--color-warning)' }}>
                                 {dashboard.situacao_alunos.infrequentes}
                             </span>
                             <span className="situation-label">Infrequentes</span>
                         </div>
                         <div className="situation-item">
-                            <span className="situation-value" style={{ color: '#f97316' }}>
+                            <span className="situation-value" style={{ color: 'var(--color-warning)' }}>
                                 {dashboard.situacao_alunos.em_risco}
                             </span>
                             <span className="situation-label">Em Risco</span>
@@ -881,7 +878,7 @@ export const RelatoriosAdmin: React.FC = () => {
                             >
                                 <div className="risk-main">
                                     <div className="score-circle" style={{
-                                        background: aluno.score_risco >= 60 ? 'var(--color-danger)' : aluno.score_risco >= 40 ? '#f97316' : '#eab308'
+                                        background: aluno.score_risco >= 60 ? 'var(--color-danger)' : aluno.score_risco >= 40 ? 'var(--color-warning)' : 'var(--color-success)'
                                     }}>
                                         {aluno.score_risco}
                                     </div>

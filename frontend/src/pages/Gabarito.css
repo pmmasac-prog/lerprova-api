@@ -67,24 +67,25 @@
     padding: 14px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: 12px;
     color: var(--color-text-muted);
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab:hover {
     background: var(--bg-card-light);
     border-color: var(--border-color-dark);
-    color: var(--color-text-secondary);
+    color: var(--color-text);
 }
 
 .tab.active {
-    background: var(--bg-info-soft);
-    border: 1px solid var(--color-primary);
-    color: var(--color-primary);
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+    box-shadow: var(--shadow-md);
 }
 
 .gabarito-content {
@@ -137,16 +138,16 @@
 .history-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 16px;
     padding: 20px;
-    transition: all 0.3s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .history-card:hover {
     border-color: var(--color-primary);
     background: var(--bg-card-light);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
 }
 
 .history-turma {
@@ -256,15 +257,15 @@
 }
 
 .option-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--color-text-muted);
     font-weight: 800;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
