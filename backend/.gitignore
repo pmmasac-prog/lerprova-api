@@ -1,20 +1,34 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-.venv
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Ambientes virtuais
 venv/
-ENV/
+env/
+.venv/
 .env
 
-# Database
+# Variáveis de ambiente
+*.env
+.env.*
+
+# Banco de dados local
 *.db
-lerprova_server.db
+*.sqlite3
 
 # Logs
-logs/
-debug_logs/
 *.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
 
 # OS
 .DS_Store
