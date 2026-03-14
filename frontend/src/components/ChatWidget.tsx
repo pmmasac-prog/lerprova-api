@@ -104,7 +104,7 @@ export function ChatWidget() {
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 p-4 rounded-full shadow-lg text-white transition-all duration-300 z-[9999] hover:scale-110",
+          "fixed bottom-24 right-4 sm:bottom-6 sm:right-6 p-4 rounded-full shadow-lg text-white transition-all duration-300 z-[9999] hover:scale-110",
           "bg-blue-600 hover:bg-blue-700",
           isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
         )}
@@ -116,7 +116,7 @@ export function ChatWidget() {
       {/* Janela do Chat */}
       <div
         className={cn(
-          "fixed bottom-6 right-6 w-80 sm:w-[400px] h-[600px] max-h-[85vh] bg-[#1a1f2e] border border-gray-800 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 z-[9999] overflow-hidden",
+          "fixed bottom-24 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-80 md:w-[400px] h-[520px] sm:h-[600px] max-h-[75vh] sm:max-h-[85vh] bg-[#1a1f2e] border border-gray-800 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 z-[9999] overflow-hidden",
           isOpen ? "scale-100 opacity-100 transform translate-y-0" : "scale-95 opacity-0 pointer-events-none transform translate-y-4"
         )}
       >
