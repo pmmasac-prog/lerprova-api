@@ -170,9 +170,9 @@ code {
 
 /* Botão Secundário */
 .btn-secondary {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
   color: var(--color-text-secondary);
-  border: none;
+  border: 1px solid var(--border-color);
   padding: 8px 14px;
   border-radius: 10px;
   font-weight: 600;
@@ -186,7 +186,7 @@ code {
 .chip {
   padding: 8px 14px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   color: var(--color-text-secondary);
   font-size: 12px;
@@ -310,7 +310,7 @@ code {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 0 12px;
   height: 38px;
@@ -346,13 +346,15 @@ code {
 }
 
 .modal-content {
-  background: #fff;
+  background: var(--bg-secondary);
   border-radius: 25px;
   padding: 25px;
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  border: 1px solid var(--border-color);
+  color: var(--color-text);
 }
 
 .modal-header {

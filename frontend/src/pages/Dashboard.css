@@ -353,7 +353,7 @@
 .op-turma-name {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #f1f5f9;
+    color: var(--color-text-dark);
     display: block;
 }
 
@@ -389,7 +389,7 @@
     top: 26px;
     bottom: -6px;
     width: 1px;
-    background: #1e293b;
+    background: var(--border-color);
 }
 
 .op-history-dot {
@@ -409,7 +409,7 @@
 
 .op-history-text {
     font-size: 0.82rem;
-    color: #cbd5e1;
+    color: var(--color-text-secondary);
     display: block;
 }
 
@@ -434,9 +434,10 @@
     gap: 10px;
     padding: 20px 16px;
     border-radius: 12px;
-    background: #1a1d27;
+    background: var(--bg-secondary);
     color: #475569;
     font-size: 0.82rem;
+    border: 1px solid var(--border-color);
 }
 
 /* ---- Error State ---- */
