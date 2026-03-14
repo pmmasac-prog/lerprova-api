@@ -1,7 +1,7 @@
 // ./Relatorios/components/RankingTurma.tsx
 import React, { useMemo } from 'react';
 import type { Turma, Resultado } from '../types';
-import { Edit3, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Edit3 } from 'lucide-react';
 
 interface RankingTurmaProps {
     turma: Turma | undefined;
@@ -48,105 +48,77 @@ export const RankingTurma: React.FC<RankingTurmaProps> = (props) => {
                     {overallStats.total} provas • {resultados.length} resultados
                 </p>
 
-                {/* Resumo pedagógico (usa classes do CSS v2 que você colou) */}
+                {/* Resumo pedagógico em linha única */}
                 {!loading && resultados.length > 0 && (
-                    <div style={{ marginTop: 10 }}>
-                        <div className="insights-grid">
-                            <div className="insight-card">
-                                <div className="insight-top">
-                                    <div className="insight-title">Risco alto (&lt; 5)</div>
-                                    <div className="insight-value">{counts.high}</div>
-                                </div>
-                                <div className="insight-meta">
-                                    <span>Prioridade máxima</span>
-                                    <span className={`insight-trend ${counts.high > 0 ? 'down' : 'up'}`}>
-                                        {counts.high > 0 ? 'Crítico' : 'Ok'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="insight-card">
-                                <div className="insight-top">
-                                    <div className="insight-title">Abaixo de 7</div>
-                                    <div className="insight-value">{counts.high + counts.mid}</div>
-                                </div>
-                                <div className="insight-meta">
-                                    <span>Risco médio: {counts.mid}</span>
-                                    <span className={`insight-trend ${(counts.high + counts.mid) > 0 ? 'flat' : 'up'}`}>
-                                        {(counts.high + counts.mid) > 0 ? 'Atenção' : 'Ok'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="risk-summary-bar">
+                        <span><strong>Risco alto (&lt; 5):</strong> {counts.high} ({counts.high > 0 ? 'Crítico' : 'Ok'})</span>
+                        <span className="divider">|</span>
+                        <span><strong>Abaixo de 7:</strong> {counts.high + counts.mid} (Atenção: {counts.mid})</span>
                     </div>
                 )}
 
                 {loading ? (
                     <p className="empty-text">Carregando...</p>
                 ) : resultados.length > 0 ? (
-                    pedagogicList.map((r, idx) => {
-                        const risk = computeRisk(r.nota);
-                        const rowClass =
-                            risk === 'high' ? 'aluno-row risk-high' : risk === 'mid' ? 'aluno-row risk-mid' : 'aluno-row risk-low';
+                    <div className="matrix-scroll" style={{ marginTop: 10 }}>
+                        <table className="matrix-table">
+                            <thead>
+                                <tr>
+                                    <th className="matrix-fixed-col" style={{ width: '40px' }}>#</th>
+                                    <th className="matrix-fixed-col">Aluno</th>
+                                    <th className="matrix-stats-col">Risco</th>
+                                    <th className="matrix-stats-col">Nota</th>
+                                    <th className="matrix-stats-col" style={{ width: '40px' }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pedagogicList.map((r, idx) => {
+                                    const risk = computeRisk(r.nota);
+                                    const notaPillClass =
+                                        r.nota >= 7 ? 'attendance-badge good' : 'attendance-badge bad';
 
-                        const riskLabel =
-                            risk === 'high' ? (
-                                <span className="risk-pill high">
-                                    <AlertTriangle size={14} />
-                                    RISCO ALTO
-                                </span>
-                            ) : risk === 'mid' ? (
-                                <span className="risk-pill mid">
-                                    <AlertTriangle size={14} />
-                                    RISCO MÉDIO
-                                </span>
-                            ) : (
-                                <span className="risk-pill low">
-                                    <CheckCircle2 size={14} />
-                                    OK
-                                </span>
-                            );
+                                    const riskIndicator = 
+                                        risk === 'high' ? <span className="status-dot absent" title="Risco Alto"></span> :
+                                        risk === 'mid' ? <span className="status-dot risk-mid-dot" title="Atenção"></span> :
+                                        <span className="status-dot present" title="OK"></span>;
 
-                        const notaPillClass =
-                            r.nota >= 7 ? 'metric-pill good' : r.nota >= 5 ? 'metric-pill warn' : 'metric-pill bad';
-
-                        return (
-                            <div key={r.id} className={rowClass}>
-                                {/* Avatar com iniciais (melhora leitura rápida) */}
-                                <div className="aluno-avatar">
-                                    {String(r.nome || '')
-                                        .trim()
-                                        .split(/\s+/)
-                                        .slice(0, 2)
-                                        .map(p => p[0]?.toUpperCase())
-                                        .join('')}
-                                </div>
-
-                                <div className="aluno-info">
-                                    <div className="aluno-left">
-                                        <div className="aluno-name">{r.nome}</div>
-                                        <div className="aluno-sub">
-                                            <span>Ordem: {idx + 1}</span>
-                                            <span>Acertos: {r.acertos}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="aluno-metrics">
-                                        {riskLabel}
-                                        <span className={notaPillClass}>Nota {r.nota.toFixed(1)}</span>
-
-                                        <button
-                                            className="icon-btn"
-                                            title="Editar Manualmente"
-                                            onClick={() => props.onEdit?.(r)}
-                                        >
-                                            <Edit3 size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
+                                    return (
+                                        <tr key={r.id}>
+                                            <td className="matrix-fixed-col" style={{ textAlign: 'center', opacity: 0.5 }}>{idx + 1}</td>
+                                            <td className="matrix-fixed-col matrix-name">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <div className="aluno-avatar-mini">
+                                                        {String(r.nome || '')
+                                                            .trim()
+                                                            .split(/\s+/)
+                                                            .slice(0, 2)
+                                                            .map(p => p[0]?.toUpperCase())
+                                                            .join('')}
+                                                    </div>
+                                                    {r.nome}
+                                                </div>
+                                            </td>
+                                            <td className="matrix-stats-col" style={{ textAlign: 'center' }}>
+                                                {riskIndicator}
+                                            </td>
+                                            <td className="matrix-stats-col">
+                                                <span className={notaPillClass}>{r.nota.toFixed(1)}</span>
+                                            </td>
+                                            <td className="matrix-stats-col" style={{ textAlign: 'center' }}>
+                                                <button
+                                                    className="icon-btn"
+                                                    style={{ padding: '4px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
+                                                    onClick={() => props.onEdit?.(r)}
+                                                >
+                                                    <Edit3 size={14} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <p className="empty-text">Nenhum resultado encontrado</p>
                 )}

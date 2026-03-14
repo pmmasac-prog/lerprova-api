@@ -579,6 +579,65 @@
     text-align: center;
 }
 
+/* Risk Refinement */
+.risk-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.risk-summary-bar .divider {
+    opacity: 0.2;
+    color: var(--color-text-muted);
+}
+
+.risk-summary-bar strong {
+    color: var(--color-text-dark);
+}
+
+.aluno-avatar-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: var(--color-primary);
+    font-size: 0.65rem;
+    flex-shrink: 0;
+}
+
+.status-dot.risk-mid-dot {
+    background: var(--color-warning);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+}
+
+.attendance-badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.attendance-badge.good {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
+}
+
+.attendance-badge.bad {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+}
+
 /* Footer */
 .relatorios-footer {
     position: fixed;
