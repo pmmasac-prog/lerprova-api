@@ -133,7 +133,7 @@ export const Admin: React.FC = () => {
                     </div>
                 </div>
                 <div className="admin-stat">
-                    <div className="icon-bg icon-emerald" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                    <div className="icon-bg icon-emerald" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--color-primary)' }}>
                         <School size={24} />
                     </div>
                     <div className="stat-info">
@@ -203,7 +203,7 @@ export const Admin: React.FC = () => {
                                         </td>
                                         <td>
                                             <div className="action-btns">
-                                                <button className="icon-btn delete" onClick={() => handleDeleteUser(u.id)} disabled={u.id === currentUser.id} style={{ color: '#ef4444' }}>
+                                                <button className="icon-btn delete" onClick={() => handleDeleteUser(u.id)} disabled={u.id === currentUser.id} style={{ color: 'var(--color-danger)' }}>
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>

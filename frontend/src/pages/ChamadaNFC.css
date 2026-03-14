@@ -1,21 +1,21 @@
 /* ===== CHAMADA NFC - EMERALD PREMIUM DESIGN ===== */
 
 :root {
-    --nfc-emerald: #10b981;
-    --nfc-emerald-hover: #059669;
+    --nfc-emerald: var(--color-success);
+    --nfc-emerald-hover: var(--color-success-dark);
     --nfc-emerald-glow: rgba(16, 185, 129, 0.4);
-    --nfc-gold: #f59e0b;
-    --nfc-bg: #0b0e14;
+    --nfc-gold: var(--color-warning);
+    --nfc-bg: var(--bg-primary);
     --nfc-card: rgba(15, 23, 42, 0.8);
     --nfc-border: rgba(16, 185, 129, 0.15);
-    --nfc-text: #f8fafc;
-    --nfc-text-muted: #94a3b8;
-    --nfc-text-dim: #64748b;
+    --nfc-text: var(--color-text-dark);
+    --nfc-text-muted: var(--color-text-muted);
+    --nfc-text-dim: var(--color-text-muted);
 }
 
 .nfc-container {
     min-height: 100vh;
-    background: linear-gradient(180deg, var(--nfc-bg) 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--nfc-bg) 0%, var(--bg-primary) 100%);
     color: var(--nfc-text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     position: relative;
@@ -135,7 +135,7 @@
 }
 
 .nfc-not-supported svg {
-    color: #ef4444;
+    color: var(--color-danger);
     margin-bottom: 20px;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .nfc-reader-card.error {
-    border-color: #ef4444;
+    border-color: var(--color-danger);
     background: rgba(239, 68, 68, 0.05);
 }
 
@@ -255,7 +255,7 @@
 }
 
 .nfc-reader-status.error h2 {
-    color: #ef4444;
+    color: var(--color-danger);
 }
 
 .nfc-reader-status.error p {
@@ -313,7 +313,7 @@
 }
 
 .nfc-toggle-btn.active {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
     box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
 }
 
@@ -484,7 +484,7 @@
 }
 
 .nfc-modal {
-    background: linear-gradient(180deg, #0f1117 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
     border: 1px solid var(--nfc-border);
     border-radius: 28px;
     padding: 32px;
@@ -640,6 +640,6 @@
 
 .nfc-modal-cancel:hover {
     background: rgba(239, 68, 68, 0.1);
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }

@@ -66,7 +66,7 @@ export const Debug: React.FC = () => {
     };
 
     return (
-        <div className="p-6 bg-[#f8fafc] min-h-screen">
+        <div className="p-6 bg-[var(--color-text-dark)] min-h-screen">
             <div className="flex items-center gap-4 mb-8">
                 <button onClick={() => navigate(-1)} className="btn-secondary">
                     <ArrowLeft size={20} />

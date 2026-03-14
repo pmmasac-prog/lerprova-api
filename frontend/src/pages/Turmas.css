@@ -3,20 +3,21 @@
    ============================================ */
 
 .turmas-container {
-    background: #0f1117;
+    background: var(--bg-primary);
     min-height: 100vh;
-    padding-bottom: 100px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #e2e8f0;
+    padding-bottom: 120px;
+    font-family: 'Inter', sans-serif;
+    color: var(--color-text);
+    transition: all 0.3s ease;
 }
 
 .turmas-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 28px 24px;
-    background: linear-gradient(to bottom, #11141d, #0f1117);
-    border-bottom: 1px solid #1e293b;
+    padding: 32px 24px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 @media (min-width: 768px) {
@@ -26,23 +27,23 @@
 }
 
 .turmas-title {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--color-text-dark);
     letter-spacing: -0.5px;
 }
 
 .turmas-subtitle {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     margin-top: 2px;
     font-weight: 500;
 }
 
 /* Add Button */
-.btn-primary {
-    background: #3b82f6;
-    color: white;
+.new-turma-btn {
+    background: var(--color-primary);
+    color: #fff;
     border: none;
     padding: 4px;
     cursor: pointer;
@@ -56,8 +57,8 @@
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
-.btn-primary:hover {
-    background: #2563eb;
+.new-turma-btn:hover {
+    background: var(--color-primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
 }
@@ -118,7 +119,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #3b82f6;
+    color: var(--color-primary);
     flex-shrink: 0;
 }
 
@@ -160,7 +161,7 @@
     height: 32px;
     background: transparent;
     border: none;
-    color: #475569;
+    color: var(--color-text-secondary);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -170,7 +171,7 @@
 }
 
 .icon-btn:hover {
-    color: #ef4444;
+    color: var(--color-danger);
     background: rgba(239, 68, 68, 0.1);
 }
 
@@ -181,12 +182,12 @@
     align-items: center;
     padding: 60px;
     text-align: center;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .empty-state h3 {
     margin: 16px 0 6px;
-    color: #f1f5f9;
+    color: var(--color-text);
     font-size: 1.1rem;
     font-weight: 700;
 }
@@ -194,7 +195,7 @@
 .empty-state p {
     font-size: 0.9rem;
     margin-bottom: 20px;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 /* Weekday Selector */
@@ -207,26 +208,26 @@
 .weekday-btn {
     flex: 1;
     height: 40px;
-    border: 1px solid #1e293b;
-    background: #1a1d27;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
     border-radius: 10px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .weekday-btn.active {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: #fff;
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .weekday-btn:hover:not(.active) {
-    border-color: #334155;
-    color: #94a3b8;
+    border-color: var(--border-color);
+    color: var(--color-text-muted);
 }
 
 /* Modal overrides for dark theme */
@@ -236,27 +237,27 @@
 }
 
 .turmas-container .modal-content {
-    background: #1a1d27;
-    border: 1px solid #334155;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 24px;
 }
 
 .turmas-container .form-input {
-    background: #0f1117;
-    border: 1px solid #1e293b;
-    color: #f8fafc;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--color-text-dark);
     border-radius: 12px;
     padding: 14px 18px;
 }
 
 .turmas-container .form-input:focus {
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
 }
 
 .turmas-container .form-label {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.8rem;
     font-weight: 700;
 }

@@ -1,25 +1,26 @@
 /* ===== STUDENT PORTAL - EMERALD PREMIUM DESIGN ===== */
 
 :root {
-    --portal-emerald: #10b981;
-    --portal-emerald-hover: #059669;
+    --portal-emerald: var(--color-success);
+    --portal-emerald-hover: var(--color-success-dark);
     --portal-emerald-glow: rgba(16, 185, 129, 0.4);
-    --portal-gold: #f59e0b;
-    --portal-bg: #020617;
-    --portal-card: rgba(15, 23, 42, 0.8);
-    --portal-border: rgba(16, 185, 129, 0.15);
-    --portal-text: #f8fafc;
-    --portal-text-muted: #94a3b8;
-    --portal-text-dim: #64748b;
+    --portal-gold: var(--color-warning);
+    --portal-bg: var(--bg-primary);
+    --portal-card: var(--bg-secondary);
+    --portal-border: var(--border-color);
+    --portal-text: var(--color-text);
+    --portal-text-muted: var(--color-text-muted);
+    --portal-text-dim: var(--color-text-secondary);
 }
 
 .portal-container {
     min-height: 100vh;
-    background: linear-gradient(180deg, var(--portal-bg) 0%, #0a0d12 100%);
-    color: var(--portal-text);
+    background: var(--bg-primary);
+    color: var(--color-text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     padding-bottom: 48px;
     position: relative;
+    transition: all 0.3s ease;
 }
 
 .portal-container::before {
@@ -113,7 +114,7 @@
 .portal-logout:hover {
     background: rgba(239, 68, 68, 0.1);
     border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    color: var(--color-danger);
 }
 
 /* ===== MAIN CONTENT ===== */
@@ -258,7 +259,7 @@
 }
 
 .portal-qr-title {
-    color: #0f1117;
+    color: var(--bg-primary);
     font-size: 0.6rem;
     font-weight: 900;
     text-transform: uppercase;
@@ -448,7 +449,7 @@
 }
 
 .portal-presence-dot.absent {
-    background: #ef4444;
+    background: var(--color-danger);
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
@@ -501,7 +502,7 @@
 .portal-error svg {
     width: 56px;
     height: 56px;
-    color: #ef4444;
+    color: var(--color-danger);
     margin-bottom: 20px;
 }
 
@@ -555,7 +556,7 @@
 }
 
 .portal-modal {
-    background: linear-gradient(180deg, #0f1117 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
     border: 1px solid var(--portal-border);
     width: 100%;
     max-width: 380px;

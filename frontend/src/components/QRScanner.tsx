@@ -173,7 +173,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
             <div className="modal-content" style={{ 
                 maxWidth: '600px', 
                 width: '95%',
-                background: 'linear-gradient(180deg, #0f1117 0%, #0a0d12 100%)',
+                background: 'linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 100%)',
                 border: '1px solid rgba(16, 185, 129, 0.2)',
                 borderRadius: '24px',
                 padding: '24px'
@@ -186,7 +186,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                 }}>
                     <h2 style={{ 
                         margin: 0,
-                        background: 'linear-gradient(135deg, #fff 0%, #10b981 100%)',
+                        background: 'linear-gradient(135deg, #fff 0%, var(--color-success) 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         fontSize: '1.3rem',
@@ -200,7 +200,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                             borderRadius: '12px',
                             padding: '10px',
                             cursor: 'pointer',
-                            color: '#94a3b8',
+                            color: 'var(--color-text-muted)',
                             transition: 'all 0.2s'
                         }}
                     >
@@ -216,12 +216,12 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                         borderRadius: '16px',
                         border: '1px solid rgba(239, 68, 68, 0.2)'
                     }}>
-                        <AlertCircle size={48} color="#ef4444" style={{ marginBottom: '16px' }} />
+                        <AlertCircle size={48} color="var(--color-danger)" style={{ marginBottom: '16px' }} />
                         <p style={{ color: '#fca5a5', marginBottom: '16px' }}>{error}</p>
                         <button 
                             onClick={startScanner}
                             style={{
-                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                background: 'linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%)',
                                 border: 'none',
                                 borderRadius: '12px',
                                 padding: '12px 24px',
@@ -254,7 +254,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                     <div style={{ 
                         marginTop: '16px', 
                         textAlign: 'center', 
-                        color: '#10b981',
+                        color: 'var(--color-success)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -267,7 +267,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
 
                 <div style={{ 
                     marginTop: '20px', 
-                    color: '#64748b', 
+                    color: 'var(--color-text-muted)', 
                     fontSize: '0.85rem', 
                     textAlign: 'center',
                     lineHeight: '1.5'
@@ -296,12 +296,12 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onClose, onSuccess }) => {
                             padding: '16px 20px',
                             borderRadius: '16px',
                             background: toast.type === 'success' 
-                                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                                ? 'linear-gradient(135deg, var(--color-success-dark) 0%, #047857 100%)'
                                 : toast.type === 'warning'
-                                ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)'
+                                ? 'linear-gradient(135deg, var(--color-warning-dark) 0%, #b45309 100%)'
                                 : toast.type === 'info'
-                                ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
-                                : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                                ? 'linear-gradient(135deg, var(--color-primary-dark) 0%, #1d4ed8 100%)'
+                                : 'linear-gradient(135deg, var(--color-danger-dark) 0%, #b91c1c 100%)',
                             boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
                             display: 'flex',
                             alignItems: 'center',

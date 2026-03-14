@@ -143,7 +143,7 @@ export const ImportMaster: React.FC = () => {
                 <div style={{ display: 'flex', gap: '20px' }}>
                     <div style={{ flex: 1 }}>
                         <h3 className="admin-card-title">Inserir Conteúdo</h3>
-                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '10px' }}>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '10px' }}>
                             {mode === 'csv' && "Formato: Turma;Nome do Aluno;Matrícula;Responsável;Telefone (últimos 2 opcionais)"}
                             {mode === 'json' && "Formato: [{ 'nome': 'Sala X', 'alunos': [...] }]"}
                             {mode === 'master' && "Formato: JSON Estrutural (Escolas, Anos Letivos, Períodos, Eventos)"}
@@ -152,8 +152,8 @@ export const ImportMaster: React.FC = () => {
                             style={{
                                 width: '100%',
                                 height: '350px',
-                                background: '#111827',
-                                border: '1px solid #374151',
+                                background: 'var(--bg-tertiary)',
+                                border: '1px solid var(--border-color)',
                                 borderRadius: '8px',
                                 color: '#e5e7eb',
                                 padding: '15px',
@@ -181,11 +181,11 @@ export const ImportMaster: React.FC = () => {
                         </button>
                     </div>
 
-                    <div style={{ width: '300px', background: '#111827', padding: '20px', borderRadius: '12px' }}>
-                        <h4 style={{ color: '#f3f4f6', marginBottom: '10px' }}>Orientações</h4>
+                    <div style={{ width: '300px', background: 'var(--bg-tertiary)', padding: '20px', borderRadius: '12px' }}>
+                        <h4 style={{ color: 'var(--color-text)', marginBottom: '10px' }}>Orientações</h4>
                         
                         {mode === 'master' ? (
-                            <div style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
                                 <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                                     <School size={32} color="var(--admin-emerald)" />
                                     <p><b>Escolas e Unidades</b>: Cria o registro oficial das escolas no sistema.</p>
@@ -195,12 +195,12 @@ export const ImportMaster: React.FC = () => {
                                     <p><b>Calendário 2026</b>: Define datas de início/fim e feriados.</p>
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px' }}>
-                                    <Users size={32} color="#3b82f6" />
+                                    <Users size={32} color="var(--color-primary)" />
                                     <p><b>Bimestres</b>: Organiza os períodos de notas e avaliações.</p>
                                 </div>
                             </div>
                         ) : (
-                            <ol style={{ color: '#94a3b8', fontSize: '0.85rem', paddingLeft: '15px', lineHeight: '1.6' }}>
+                            <ol style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', paddingLeft: '15px', lineHeight: '1.6' }}>
                                 <li style={{ marginBottom: '10px' }}>
                                     <b>CSV</b>: Cada linha deve ter os 3 campos separados por "<b>;</b>" ou "<b>,</b>".
                                 </li>
@@ -213,9 +213,9 @@ export const ImportMaster: React.FC = () => {
                             </ol>
                         )}
 
-                        <div style={{ marginTop: '20px', padding: '15px', background: '#1f2937', borderRadius: '8px', border: '1px dashed #4b5563' }}>
+                        <div style={{ marginTop: '20px', padding: '15px', background: '#1f2937', borderRadius: '8px', border: '1px dashed var(--color-text-muted)' }}>
                             <p style={{ color: '#60a5fa', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '8px' }}>Dica:</p>
-                            <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
                                 {mode === 'master' 
                                     ? "Use o arquivo 'dados_app_gestao_escolar_2026.json' para popular o sistema completo."
                                     : "Você pode copiar direto de uma planilha Excel."}

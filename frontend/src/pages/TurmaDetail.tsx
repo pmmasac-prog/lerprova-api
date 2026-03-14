@@ -393,7 +393,7 @@ export const TurmaDetail: React.FC = () => {
                         {alunos.sort((a, b) => a.nome.localeCompare(b.nome)).map((aluno, index) => (
                             <div key={aluno.id} className="aluno-row" onClick={() => handleAlunoClick(aluno)}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', width: '20px' }}>
+                                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: '800', width: '20px' }}>
                                         {(index + 1).toString().padStart(2, '0')}
                                     </span>
                                     <div className="aluno-avatar-small">
@@ -410,9 +410,9 @@ export const TurmaDetail: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-state-small">
-                        <User size={40} color="#64748b" />
+                        <User size={40} color="var(--color-text-muted)" />
                         <p>Nenhum aluno cadastrado</p>
-                        <button className="btn-text" onClick={() => setShowAddAlunoModal(true)} style={{ color: '#3b82f6', marginTop: '12px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
+                        <button className="btn-text" onClick={() => setShowAddAlunoModal(true)} style={{ color: 'var(--color-primary)', marginTop: '12px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem' }}>
                             + Adicionar Aluno
                         </button>
                     </div>
@@ -424,10 +424,10 @@ export const TurmaDetail: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowFrequenciaModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                            <button className="back-btn-modal" onClick={() => setShowFrequenciaModal(false)} style={{ background: '#0f1117', border: '1px solid #1e293b', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#94a3b8' }}>
+                            <button className="back-btn-modal" onClick={() => setShowFrequenciaModal(false)} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
                                 <ArrowLeft size={16} />
                             </button>
-                            <h2 className="modal-title" style={{ margin: 0 }}>Chamada</h2>
+                            <h2 className="modal-title" style={{ margin: 0, color: 'var(--color-text)' }}>Chamada</h2>
                         </div>
 
                         <div className="form-group">
@@ -477,7 +477,7 @@ export const TurmaDetail: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowAddAlunoModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                            <button className="back-btn-modal" onClick={() => setShowAddAlunoModal(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}>
+                            <button className="back-btn-modal" onClick={() => setShowAddAlunoModal(false)} style={{ background: 'var(--color-text)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
                                 <ArrowLeft size={16} />
                             </button>
                             <h2 className="modal-title" style={{ margin: 0 }}>Adicionar Aluno</h2>
@@ -547,10 +547,10 @@ export const TurmaDetail: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowAlunoModal(false)}>
                     <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                            <button className="back-btn-modal" onClick={() => setShowAlunoModal(false)} style={{ background: '#0f1117', border: '1px solid #1e293b', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#94a3b8' }}>
+                            <button className="back-btn-modal" onClick={() => setShowAlunoModal(false)} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
                                 <ArrowLeft size={16} />
                             </button>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8' }}>Detalhes do Aluno</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-muted)' }}>Detalhes do Aluno</span>
                         </div>
 
                         <div className="aluno-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -568,7 +568,7 @@ export const TurmaDetail: React.FC = () => {
                                     className="action-icon-btn"
                                     onClick={handleUnlinkAluno}
                                     title="Remover desta Turma"
-                                    style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}
+                                    style={{ color: 'var(--color-warning)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}
                                 >
                                     <UserMinus size={18} />
                                 </button>
@@ -621,7 +621,7 @@ export const TurmaDetail: React.FC = () => {
                                     <div className="stats-row">
                                         <div className="stat-box">
                                             <div className="stat-box-label">Média Geral</div>
-                                            <div className="stat-box-value" style={{ color: parseFloat(selectedAlunoStats.media) >= 7 ? '#10b981' : parseFloat(selectedAlunoStats.media) >= 5 ? '#f59e0b' : '#ef4444' }}>
+                                            <div className="stat-box-value" style={{ color: parseFloat(selectedAlunoStats.media) >= 7 ? 'var(--color-success)' : parseFloat(selectedAlunoStats.media) >= 5 ? 'var(--color-warning)' : 'var(--color-danger)' }}>
                                                 {selectedAlunoStats.media}
                                             </div>
                                         </div>
@@ -635,21 +635,21 @@ export const TurmaDetail: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <h3 style={{ fontSize: '14px', margin: '20px 0 10px', color: '#64748b' }}>Últimas Avaliações</h3>
+                                    <h3 style={{ fontSize: '14px', margin: '20px 0 10px', color: 'var(--color-text-muted)' }}>Últimas Avaliações</h3>
 
                                     {alunoResultados.length > 0 ? (
                                         <div className="resultados-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {alunoResultados.map((res: any) => (
-                                                <div key={res.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: '#0f1117', borderRadius: '12px', border: '1px solid #1e293b', alignItems: 'center' }}>
+                                                <div key={res.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', background: 'var(--bg-primary)', borderRadius: '12px', border: '1px solid var(--border-color)', alignItems: 'center' }}>
                                                     <div>
-                                                        <div style={{ fontWeight: '600', fontSize: '13px', color: '#f1f5f9' }}>{res.assunto || 'Avaliação'}</div>
-                                                        <div style={{ fontSize: '11px', color: '#64748b' }}>{new Date(res.data).toLocaleDateString()} • {res.acertos} acertos</div>
+                                                        <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--color-text)' }}>{res.assunto || 'Avaliação'}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{new Date(res.data).toLocaleDateString()} • {res.acertos} acertos</div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <div style={{
                                                             fontWeight: 'bold',
                                                             fontSize: '14px',
-                                                            color: res.nota >= 7 ? '#10b981' : res.nota >= 5 ? '#f59e0b' : '#ef4444',
+                                                            color: res.nota >= 7 ? 'var(--color-success)' : res.nota >= 5 ? 'var(--color-warning)' : 'var(--color-danger)',
                                                             background: res.nota >= 7 ? 'rgba(16,185,129,0.1)' : res.nota >= 5 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
                                                             padding: '4px 10px',
                                                             borderRadius: '8px'
@@ -657,7 +657,7 @@ export const TurmaDetail: React.FC = () => {
                                                             {res.nota.toFixed(1)}
                                                         </div>
                                                         <button
-                                                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'color 0.2s' }}
+                                                            style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '6px', transition: 'color 0.2s' }}
                                                             title="Editar Nota"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -686,12 +686,12 @@ export const TurmaDetail: React.FC = () => {
                             {activeTab === 'frequencia' && (
                                 <div className="frequencia-content">
                                     <div style={{ textAlign: 'center', padding: '20px' }}>
-                                        <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#3b82f6' }}>{selectedAlunoStats.presenca}</div>
-                                        <p style={{ color: '#64748b' }}>Frequência Global</p>
+                                        <div style={{ fontSize: '48px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{selectedAlunoStats.presenca}</div>
+                                        <p style={{ color: 'var(--color-text-muted)' }}>Frequência Global</p>
                                     </div>
 
                                     <div className="freq-history-real" style={{ marginTop: '20px' }}>
-                                        <h3 style={{ fontSize: '14px', margin: '0 0 10px', color: '#64748b' }}>Histórico de Presenças</h3>
+                                        <h3 style={{ fontSize: '14px', margin: '0 0 10px', color: 'var(--color-text-muted)' }}>Histórico de Presenças</h3>
                                         {alunoFreqHistory.length > 0 ? (
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                                 {alunoFreqHistory.map((entry: any) => (
@@ -713,9 +713,9 @@ export const TurmaDetail: React.FC = () => {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div style={{ textAlign: 'center', padding: '30px', background: '#0f1117', borderRadius: '16px', border: '1px dashed #334155' }}>
-                                                <Calendar size={32} color="#64748b" />
-                                                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '10px' }}>Nenhuma aula registrada ainda</p>
+                                            <div style={{ textAlign: 'center', padding: '30px', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+                                                <Calendar size={32} color="var(--color-text-muted)" />
+                                                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '10px' }}>Nenhuma aula registrada ainda</p>
                                             </div>
                                         )}
                                     </div>
@@ -740,10 +740,10 @@ export const TurmaDetail: React.FC = () => {
                                             </div>
 
                                             {selectedResultadoForCard && (
-                                                <div className="omr-grid-view" style={{ background: '#0f1117', padding: '20px', borderRadius: '16px', border: '1px solid #1e293b' }}>
+                                                <div className="omr-grid-view" style={{ background: 'var(--bg-primary)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-                                                        <h4 style={{ fontSize: '14px', color: '#f1f5f9' }}>{selectedResultadoForCard.assunto}</h4>
-                                                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#3b82f6' }}>
+                                                        <h4 style={{ fontSize: '14px', color: 'var(--color-text)' }}>{selectedResultadoForCard.assunto}</h4>
+                                                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
                                                             {selectedResultadoForCard.acertos} / {JSON.parse(selectedResultadoForCard.respostas_aluno || '[]').length} Acertos
                                                         </div>
                                                     </div>
@@ -766,7 +766,7 @@ export const TurmaDetail: React.FC = () => {
                                                                             alignItems: 'center',
                                                                             gap: '4px'
                                                                         }}>
-                                                                            <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>{idx + 1}</span>
+                                                                            <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 'bold' }}>{idx + 1}</span>
                                                                             <div style={{
                                                                                 width: '32px',
                                                                                 height: '32px',
@@ -778,12 +778,12 @@ export const TurmaDetail: React.FC = () => {
                                                                                 fontWeight: 'bold',
                                                                                 background: isCorrect ? '#dcfce7' : '#fee2e2',
                                                                                 color: isCorrect ? '#166534' : '#991b1b',
-                                                                                border: `1px solid ${isCorrect ? '#10b981' : '#ef4444'}`
+                                                                                border: `1px solid ${isCorrect ? 'var(--color-success)' : 'var(--color-danger)'}`
                                                                             }}>
                                                                                 {resp}
                                                                             </div>
                                                                             {!isCorrect && (
-                                                                                <span style={{ fontSize: '9px', color: '#10b981', fontWeight: 'bold' }}>→{correta}</span>
+                                                                                <span style={{ fontSize: '9px', color: 'var(--color-success)', fontWeight: 'bold' }}>→{correta}</span>
                                                                             )}
                                                                         </div>
                                                                     );
@@ -798,7 +798,7 @@ export const TurmaDetail: React.FC = () => {
                                         </>
                                     ) : (
                                         <div className="cartao-placeholder">
-                                            <ClipboardCheck size={48} color="#64748b" />
+                                            <ClipboardCheck size={48} color="var(--color-text-muted)" />
                                             <p>Nenhum cartão disponível</p>
                                         </div>
                                     )}
@@ -808,18 +808,18 @@ export const TurmaDetail: React.FC = () => {
                             {activeTab === 'dados' && (
                                 <div className="dados-content" style={{ padding: '10px 0' }}>
                                     <div style={{ 
-                                        background: '#0f1117', 
+                                        background: 'var(--bg-primary)', 
                                         borderRadius: '16px', 
-                                        border: '1px solid #1e293b',
+                                        border: '1px solid var(--border-color)',
                                         padding: '20px'
                                     }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                            <h3 style={{ fontSize: '14px', color: '#f1f5f9', margin: 0 }}>Dados do Aluno e Responsável</h3>
+                                            <h3 style={{ fontSize: '14px', color: 'var(--color-text)', margin: 0 }}>Dados do Aluno e Responsável</h3>
                                             {!editingAluno ? (
                                                 <button 
                                                     onClick={() => setEditingAluno(true)}
                                                     style={{ 
-                                                        background: '#3b82f6', 
+                                                        background: 'var(--color-primary)', 
                                                         border: 'none', 
                                                         color: 'white', 
                                                         padding: '8px 16px', 
@@ -838,9 +838,9 @@ export const TurmaDetail: React.FC = () => {
                                                     <button 
                                                         onClick={() => setEditingAluno(false)}
                                                         style={{ 
-                                                            background: '#1e293b', 
-                                                            border: '1px solid #334155', 
-                                                            color: '#94a3b8', 
+                                                            background: 'var(--border-color)', 
+                                                            border: '1px solid var(--border-color)', 
+                                                            color: 'var(--color-text-muted)', 
                                                             padding: '8px 16px', 
                                                             borderRadius: '8px', 
                                                             cursor: 'pointer',
@@ -852,7 +852,7 @@ export const TurmaDetail: React.FC = () => {
                                                     <button 
                                                         onClick={handleSaveAlunoEdit}
                                                         style={{ 
-                                                            background: '#10b981', 
+                                                            background: 'var(--color-success)', 
                                                             border: 'none', 
                                                             color: 'white', 
                                                             padding: '8px 16px', 
@@ -874,49 +874,49 @@ export const TurmaDetail: React.FC = () => {
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                                     <div>
-                                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Nome do Aluno</div>
-                                                        <div style={{ fontSize: '14px', color: '#f1f5f9' }}>{selectedAluno.nome}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>Nome do Aluno</div>
+                                                        <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>{selectedAluno.nome}</div>
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Matrícula</div>
-                                                        <div style={{ fontSize: '14px', color: '#f1f5f9' }}>{selectedAluno.codigo}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>Matrícula</div>
+                                                        <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>{selectedAluno.codigo}</div>
                                                     </div>
                                                 </div>
                                                 
-                                                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '16px' }}>
-                                                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px', fontWeight: 600 }}>Contato do Responsável</div>
+                                                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                                                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px', fontWeight: 600 }}>Contato do Responsável</div>
                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                                         <div>
-                                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Nome</div>
-                                                            <div style={{ fontSize: '14px', color: '#f1f5f9' }}>
-                                                                {editAlunoData.nome_responsavel || <span style={{ color: '#64748b' }}>Não informado</span>}
+                                                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>Nome</div>
+                                                            <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>
+                                                                {editAlunoData.nome_responsavel || <span style={{ color: 'var(--color-text-muted)' }}>Não informado</span>}
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>
+                                                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>
                                                                 <Phone size={12} style={{ display: 'inline', marginRight: '4px' }} />
                                                                 Telefone
                                                             </div>
-                                                            <div style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                            <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>
                                                                 {editAlunoData.telefone_responsavel ? (
                                                                     <a 
                                                                         href={`https://wa.me/55${editAlunoData.telefone_responsavel.replace(/\D/g, '')}`}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
-                                                                        style={{ color: '#10b981', textDecoration: 'none' }}
+                                                                        style={{ color: 'var(--color-success)', textDecoration: 'none' }}
                                                                     >
                                                                         {editAlunoData.telefone_responsavel}
                                                                     </a>
-                                                                ) : <span style={{ color: '#64748b' }}>Não informado</span>}
+                                                                ) : <span style={{ color: 'var(--color-text-muted)' }}>Não informado</span>}
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>
+                                                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>
                                                                 <Mail size={12} style={{ display: 'inline', marginRight: '4px' }} />
                                                                 E-mail
                                                             </div>
-                                                            <div style={{ fontSize: '14px', color: '#f1f5f9' }}>
-                                                                {editAlunoData.email_responsavel || <span style={{ color: '#64748b' }}>Não informado</span>}
+                                                            <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>
+                                                                {editAlunoData.email_responsavel || <span style={{ color: 'var(--color-text-muted)' }}>Não informado</span>}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -926,7 +926,7 @@ export const TurmaDetail: React.FC = () => {
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                                     <div>
-                                                        <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome do Aluno</label>
+                                                        <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Nome do Aluno</label>
                                                         <input 
                                                             type="text"
                                                             value={editAlunoData.nome}
@@ -936,7 +936,7 @@ export const TurmaDetail: React.FC = () => {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Matrícula</label>
+                                                        <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Matrícula</label>
                                                         <input 
                                                             type="text"
                                                             value={editAlunoData.codigo}
@@ -947,11 +947,11 @@ export const TurmaDetail: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 
-                                                <div style={{ borderTop: '1px solid #1e293b', paddingTop: '16px' }}>
-                                                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px', fontWeight: 600 }}>Contato do Responsável</div>
+                                                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                                                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '12px', fontWeight: 600 }}>Contato do Responsável</div>
                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                                         <div>
-                                                            <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome do Responsável</label>
+                                                            <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Nome do Responsável</label>
                                                             <input 
                                                                 type="text"
                                                                 value={editAlunoData.nome_responsavel}
@@ -962,7 +962,7 @@ export const TurmaDetail: React.FC = () => {
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Telefone (WhatsApp)</label>
+                                                            <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Telefone (WhatsApp)</label>
                                                             <input 
                                                                 type="tel"
                                                                 value={editAlunoData.telefone_responsavel}
@@ -973,7 +973,7 @@ export const TurmaDetail: React.FC = () => {
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>E-mail</label>
+                                                            <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>E-mail</label>
                                                             <input 
                                                                 type="email"
                                                                 value={editAlunoData.email_responsavel}

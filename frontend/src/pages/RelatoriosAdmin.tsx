@@ -261,7 +261,7 @@ const StatusBadge: React.FC<{ status: string; tipo?: 'risco' | 'contato' | 'clas
         }
     };
 
-    const config = configs[tipo]?.[status] || { bg: '#374151', text: '#9ca3af', label: status };
+    const config = configs[tipo]?.[status] || { bg: 'var(--border-color)', text: '#9ca3af', label: status };
 
     return (
         <span style={{
@@ -293,7 +293,7 @@ const StatCard: React.FC<{ label: string; value: string | number; icon: React.Re
 
 const ProgressBar: React.FC<{ value: number; max?: number; color?: string }> = ({ value, max = 100, color }) => {
     const pct = Math.min((value / max) * 100, 100);
-    const barColor = color || (pct >= 90 ? '#22c55e' : pct >= 85 ? '#eab308' : pct >= 75 ? '#f97316' : '#ef4444');
+    const barColor = color || (pct >= 90 ? '#22c55e' : pct >= 85 ? '#eab308' : pct >= 75 ? '#f97316' : 'var(--color-danger)');
 
     return (
         <div className="progress-bar-container">
@@ -534,7 +534,7 @@ export const RelatoriosAdmin: React.FC = () => {
                         label="Total de Alunos"
                         value={dashboard.total_alunos}
                         icon={<Users size={24} />}
-                        color="#3b82f6"
+                        color="var(--color-primary)"
                     />
                     <StatCard
                         label="Frequência do Mês"
@@ -554,7 +554,7 @@ export const RelatoriosAdmin: React.FC = () => {
                         label="Pendências"
                         value={dashboard.pendencias_comunicacao}
                         icon={<Phone size={24} />}
-                        color="#ef4444"
+                        color="var(--color-danger)"
                         subtext="comunicação obrigatória"
                     />
                 </div>
@@ -582,7 +582,7 @@ export const RelatoriosAdmin: React.FC = () => {
                             <span className="situation-label">Em Risco</span>
                         </div>
                         <div className="situation-item">
-                            <span className="situation-value" style={{ color: '#ef4444' }}>
+                            <span className="situation-value" style={{ color: 'var(--color-danger)' }}>
                                 {dashboard.situacao_alunos.abandono_presumido}
                             </span>
                             <span className="situation-label">Abandono Presumido</span>
@@ -620,7 +620,7 @@ export const RelatoriosAdmin: React.FC = () => {
                         <StatCard label="Regulares" value={infrequencia.resumo.regulares} icon={<CheckCircle size={18} />} color="#22c55e" />
                         <StatCard label="Atenção" value={infrequencia.resumo.atencao} icon={<AlertCircle size={18} />} color="#eab308" />
                         <StatCard label="Risco" value={infrequencia.resumo.risco} icon={<AlertTriangle size={18} />} color="#f97316" />
-                        <StatCard label="Críticos" value={infrequencia.resumo.criticos} icon={<XCircle size={18} />} color="#ef4444" />
+                        <StatCard label="Críticos" value={infrequencia.resumo.criticos} icon={<XCircle size={18} />} color="var(--color-danger)" />
                     </div>
                 )}
 
@@ -881,7 +881,7 @@ export const RelatoriosAdmin: React.FC = () => {
                             >
                                 <div className="risk-main">
                                     <div className="score-circle" style={{
-                                        background: aluno.score_risco >= 60 ? '#ef4444' : aluno.score_risco >= 40 ? '#f97316' : '#eab308'
+                                        background: aluno.score_risco >= 60 ? 'var(--color-danger)' : aluno.score_risco >= 40 ? '#f97316' : '#eab308'
                                     }}>
                                         {aluno.score_risco}
                                     </div>
@@ -1216,14 +1216,14 @@ export const RelatoriosAdmin: React.FC = () => {
                                     <User size={24} />
                                 </div>
                                 <div>
-                                    <h2 style={{ margin: 0, fontSize: '18px', color: '#f1f5f9' }}>{selectedAlunoModal.nome}</h2>
-                                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                    <h2 style={{ margin: 0, fontSize: '18px', color: 'var(--color-text)' }}>{selectedAlunoModal.nome}</h2>
+                                    <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
                                         {selectedAlunoModal.codigo} · {selectedAlunoModal.turma}
                                     </span>
                                 </div>
                             </div>
                             <button onClick={fecharModalAluno} style={{
-                                background: 'none', border: 'none', color: '#94a3b8',
+                                background: 'none', border: 'none', color: 'var(--color-text-muted)',
                                 cursor: 'pointer', padding: '8px'
                             }}>
                                 <X size={24} />
@@ -1233,7 +1233,7 @@ export const RelatoriosAdmin: React.FC = () => {
                         {loadingModal ? (
                             <div style={{ padding: '40px', textAlign: 'center' }}>
                                 <RefreshCw size={32} className="spinning" color="var(--admin-emerald)" />
-                                <p style={{ color: '#94a3b8', marginTop: '10px' }}>Carregando...</p>
+                                <p style={{ color: 'var(--color-text-muted)', marginTop: '10px' }}>Carregando...</p>
                             </div>
                         ) : (
                             <div style={{ padding: '20px' }}>
@@ -1243,7 +1243,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                     marginBottom: '20px', border: '1px solid var(--admin-border)'
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '14px', color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <Phone size={16} /> Contato do Responsável
                                         </h3>
                                         {!editandoAluno ? (
@@ -1257,13 +1257,13 @@ export const RelatoriosAdmin: React.FC = () => {
                                         ) : (
                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                 <button onClick={() => setEditandoAluno(false)} style={{
-                                                    background: 'var(--admin-border)', border: 'none', color: '#94a3b8',
+                                                    background: 'var(--admin-border)', border: 'none', color: 'var(--color-text-muted)',
                                                     padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px'
                                                 }}>
                                                     Cancelar
                                                 </button>
                                                 <button onClick={salvarEdicaoAluno} style={{
-                                                    background: '#10b981', border: 'none', color: '#fff',
+                                                    background: 'var(--color-success)', border: 'none', color: '#fff',
                                                     padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
                                                     display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px'
                                                 }}>
@@ -1276,34 +1276,34 @@ export const RelatoriosAdmin: React.FC = () => {
                                     {!editandoAluno ? (
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                                             <div>
-                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome</label>
-                                                <span style={{ fontSize: '14px', color: '#f1f5f9' }}>
-                                                    {alunoDetalhes?.nome_responsavel || <em style={{ color: '#64748b' }}>Não informado</em>}
+                                                <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Nome</label>
+                                                <span style={{ fontSize: '14px', color: 'var(--color-text)' }}>
+                                                    {alunoDetalhes?.nome_responsavel || <em style={{ color: 'var(--color-text-muted)' }}>Não informado</em>}
                                                 </span>
                                             </div>
                                             <div>
-                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Telefone</label>
-                                                <span style={{ fontSize: '14px', color: '#f1f5f9' }}>
+                                                <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Telefone</label>
+                                                <span style={{ fontSize: '14px', color: 'var(--color-text)' }}>
                                                     {alunoDetalhes?.telefone_responsavel ? (
                                                         <a href={`https://wa.me/55${alunoDetalhes.telefone_responsavel.replace(/\D/g, '')}`}
                                                             target="_blank" rel="noopener noreferrer"
-                                                            style={{ color: '#10b981', textDecoration: 'none' }}>
+                                                            style={{ color: 'var(--color-success)', textDecoration: 'none' }}>
                                                             {alunoDetalhes.telefone_responsavel}
                                                         </a>
-                                                    ) : <em style={{ color: '#64748b' }}>Não informado</em>}
+                                                    ) : <em style={{ color: 'var(--color-text-muted)' }}>Não informado</em>}
                                                 </span>
                                             </div>
                                             <div>
-                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>E-mail</label>
-                                                <span style={{ fontSize: '14px', color: '#f1f5f9' }}>
-                                                    {alunoDetalhes?.email_responsavel || <em style={{ color: '#64748b' }}>Não informado</em>}
+                                                <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>E-mail</label>
+                                                <span style={{ fontSize: '14px', color: 'var(--color-text)' }}>
+                                                    {alunoDetalhes?.email_responsavel || <em style={{ color: 'var(--color-text-muted)' }}>Não informado</em>}
                                                 </span>
                                             </div>
                                         </div>
                                     ) : (
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                                             <div>
-                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Nome do Responsável</label>
+                                                <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Nome do Responsável</label>
                                                 <input
                                                     type="text"
                                                     value={editAlunoData.nome_responsavel}
@@ -1312,12 +1312,12 @@ export const RelatoriosAdmin: React.FC = () => {
                                                     style={{
                                                         width: '100%', padding: '8px 12px', borderRadius: '8px',
                                                         border: '1px solid var(--admin-border)', background: 'var(--admin-card)',
-                                                        color: '#f1f5f9', fontSize: '13px'
+                                                        color: 'var(--color-text)', fontSize: '13px'
                                                     }}
                                                 />
                                             </div>
                                             <div>
-                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>Telefone (WhatsApp)</label>
+                                                <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>Telefone (WhatsApp)</label>
                                                 <input
                                                     type="tel"
                                                     value={editAlunoData.telefone_responsavel}
@@ -1326,12 +1326,12 @@ export const RelatoriosAdmin: React.FC = () => {
                                                     style={{
                                                         width: '100%', padding: '8px 12px', borderRadius: '8px',
                                                         border: '1px solid var(--admin-border)', background: 'var(--admin-card)',
-                                                        color: '#f1f5f9', fontSize: '13px'
+                                                        color: 'var(--color-text)', fontSize: '13px'
                                                     }}
                                                 />
                                             </div>
                                             <div>
-                                                <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '4px' }}>E-mail</label>
+                                                <label style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>E-mail</label>
                                                 <input
                                                     type="email"
                                                     value={editAlunoData.email_responsavel}
@@ -1340,7 +1340,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                                     style={{
                                                         width: '100%', padding: '8px 12px', borderRadius: '8px',
                                                         border: '1px solid var(--admin-border)', background: 'var(--admin-card)',
-                                                        color: '#f1f5f9', fontSize: '13px'
+                                                        color: 'var(--color-text)', fontSize: '13px'
                                                     }}
                                                 />
                                             </div>
@@ -1354,35 +1354,35 @@ export const RelatoriosAdmin: React.FC = () => {
                                         background: 'var(--admin-bg)', padding: '16px', borderRadius: '12px',
                                         border: '1px solid var(--admin-border)'
                                     }}>
-                                        <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <Calendar size={16} /> Histórico de Frequência
                                         </h3>
 
                                         {/* Estatísticas */}
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
                                             <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
                                                     {historicoFrequencia.estatisticas?.frequencia_percentual || 0}%
                                                 </div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Frequência</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Frequência</div>
                                             </div>
                                             <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
                                                 <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>
                                                     {historicoFrequencia.estatisticas?.presencas || 0}
                                                 </div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Presenças</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Presenças</div>
                                             </div>
                                             <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-danger)' }}>
                                                     {historicoFrequencia.estatisticas?.ausencias || 0}
                                                 </div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Faltas</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Faltas</div>
                                             </div>
                                             <div style={{ background: 'var(--admin-card)', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-warning)' }}>
                                                     {historicoFrequencia.estatisticas?.justificadas || 0}
                                                 </div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>Justificadas</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Justificadas</div>
                                             </div>
                                         </div>
 
@@ -1404,7 +1404,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                                         </span>
                                                     ))}
                                                     {historicoFrequencia.datas_presente.length > 20 && (
-                                                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                                                             +{historicoFrequencia.datas_presente.length - 20} mais
                                                         </span>
                                                     )}
@@ -1415,7 +1415,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                         {/* Datas de Ausência */}
                                         {historicoFrequencia.datas_ausente?.length > 0 && (
                                             <div style={{ marginBottom: '16px' }}>
-                                                <h4 style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <h4 style={{ fontSize: '12px', color: 'var(--color-danger)', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     <XCircle size={14} /> Faltas ({historicoFrequencia.datas_ausente.length})
                                                 </h4>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -1424,7 +1424,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                                             padding: '4px 8px', borderRadius: '6px',
                                                             background: 'rgba(239, 68, 68, 0.1)',
                                                             border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                            color: '#ef4444', fontSize: '11px'
+                                                            color: 'var(--color-danger)', fontSize: '11px'
                                                         }}>
                                                             {new Date(f.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                         </span>
@@ -1436,7 +1436,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                         {/* Datas Justificadas */}
                                         {historicoFrequencia.datas_justificada?.length > 0 && (
                                             <div>
-                                                <h4 style={{ fontSize: '12px', color: '#f59e0b', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <h4 style={{ fontSize: '12px', color: 'var(--color-warning)', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     <AlertCircle size={14} /> Justificadas ({historicoFrequencia.datas_justificada.length})
                                                 </h4>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -1445,7 +1445,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                                             padding: '4px 8px', borderRadius: '6px',
                                                             background: 'rgba(245, 158, 11, 0.1)',
                                                             border: '1px solid rgba(245, 158, 11, 0.3)',
-                                                            color: '#f59e0b', fontSize: '11px'
+                                                            color: 'var(--color-warning)', fontSize: '11px'
                                                         }}>
                                                             {new Date(j.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                         </span>
@@ -1455,7 +1455,7 @@ export const RelatoriosAdmin: React.FC = () => {
                                         )}
 
                                         {(!historicoFrequencia.datas_presente?.length && !historicoFrequencia.datas_ausente?.length) && (
-                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                                            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-text-muted)' }}>
                                                 <Calendar size={32} />
                                                 <p style={{ margin: '10px 0 0' }}>Nenhum registro de frequência ainda</p>
                                             </div>

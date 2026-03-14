@@ -4,17 +4,17 @@
 */
 
 :root {
-    --ps-bg: #0f172a;
-    --ps-surface: #111827;
-    --ps-surface-2: #1e293b;
+    --ps-bg: var(--bg-primary);
+    --ps-surface: var(--bg-tertiary);
+    --ps-surface-2: var(--border-color);
 
     --ps-border: rgba(148, 163, 184, 0.22);
-    --ps-text: #e2e8f0;
-    --ps-muted: #94a3b8;
+    --ps-text: var(--color-text);
+    --ps-muted: var(--color-text-muted);
 
-    --ps-primary: #3b82f6;
-    --ps-danger: #ef4444;
-    --ps-success: #10b981;
+    --ps-primary: var(--color-primary);
+    --ps-danger: var(--color-danger);
+    --ps-success: var(--color-success);
 
     --ps-radius-lg: 16px;
     --ps-radius-md: 12px;
@@ -116,7 +116,7 @@
 
 .btn-studio.cancel {
     background: transparent;
-    color: #cbd5e1;
+    color: var(--color-text-secondary);
     border-color: rgba(148, 163, 184, 0.22);
 }
 
@@ -295,7 +295,7 @@
 /* Print button */
 .btn-studio.print {
     background: rgba(16,185,129,0.12);
-    color: #a7f3d0;
+    color: var(--color-cyan);
     border-color: rgba(16,185,129,0.3);
 }
 
@@ -326,14 +326,14 @@
 }
 
 .print-header-report {
-    border-bottom: 3px solid #1e3a8a;
+    border-bottom: 3px solid var(--bg-secondary);
     padding-bottom: 16px;
     margin-bottom: 24px;
 }
 
 .print-header-report h1 {
     font-size: 1.6rem;
-    color: #1e3a8a;
+    color: var(--bg-secondary);
     margin: 0 0 12px 0;
 }
 
@@ -362,13 +362,13 @@
 
 .print-lesson-num {
     font-weight: 800;
-    color: #1e3a8a;
+    color: var(--bg-secondary);
     font-size: 0.9rem;
 }
 
 .print-lesson-date {
     font-size: 0.85rem;
-    color: #6b7280;
+    color: var(--color-text-muted);
 }
 
 .print-lesson-title {
@@ -388,7 +388,7 @@
 }
 
 .print-section strong {
-    color: #374151;
+    color: var(--border-color);
     margin-right: 6px;
     display: block;
     margin-bottom: 2px;
@@ -408,7 +408,7 @@
     top: 16px;
     right: 16px;
     z-index: 10001;
-    background: #ef4444;
+    background: var(--color-danger);
     color: white;
     border: none;
     border-radius: 8px;
@@ -466,7 +466,7 @@
 .studio-label {
     display: block;
     font-size: 0.82rem;
-    color: #cbd5e1;
+    color: var(--color-text-secondary);
     margin-bottom: 6px;
 }
 
@@ -747,14 +747,14 @@
     border-left: 3px solid rgba(16, 185, 129, 0.5);
     border-radius: 4px;
     font-size: 0.78rem;
-    color: #a7f3d0;
+    color: var(--color-cyan);
     line-height: 1.4;
 }
 
 .lesson-objetivo svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: #10b981;
+    color: var(--color-success);
 }
 
 /* Content tags (aula -> conteúdos) */
@@ -828,7 +828,7 @@
     min-height: 32px;
     background: transparent;
     border: 1px dashed rgba(148, 163, 184, 0.4);
-    color: #94a3b8;
+    color: var(--color-text-muted);
     padding: 4px 10px;
     border-radius: 999px;
     font-size: 0.75rem;
@@ -1001,7 +1001,7 @@
     background: rgba(16, 185, 129, 0.10);
     border: 1px solid rgba(16, 185, 129, 0.25);
     border-left: 3px solid rgba(16, 185, 129, 0.5);
-    color: #a7f3d0;
+    color: var(--color-cyan);
     padding: 6px 12px;
     border-radius: 6px;
     font-size: 0.75rem;

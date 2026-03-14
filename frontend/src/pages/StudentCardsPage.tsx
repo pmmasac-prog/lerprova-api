@@ -198,7 +198,7 @@ export const StudentCardsPage: React.FC = () => {
     if (loading) {
         return (
             <div className="admin-container">
-                <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
+                <div style={{ padding: '60px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                     <CreditCard size={40} style={{ opacity: 0.3, marginBottom: '16px' }} />
                     <p>Carregando alunos...</p>
                 </div>
@@ -212,7 +212,7 @@ export const StudentCardsPage: React.FC = () => {
             {toast && (
                 <div style={{
                     position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000,
-                    background: '#10b981', color: 'white', padding: '12px 20px',
+                    background: 'var(--color-success)', color: 'white', padding: '12px 20px',
                     borderRadius: '10px', fontSize: '0.9rem', fontWeight: '600',
                     boxShadow: '0 8px 24px rgba(16,185,129,0.3)',
                     animation: 'fadeIn 0.3s ease',
@@ -231,7 +231,7 @@ export const StudentCardsPage: React.FC = () => {
                     </h1>
                     <p className="admin-subtitle">
                         {students.length} alunos cadastrados
-                        {selectedIds.size > 0 && <> · <strong style={{ color: '#3b82f6' }}>{selectedIds.size} selecionados</strong></>}
+                        {selectedIds.size > 0 && <> · <strong style={{ color: 'var(--color-primary)' }}>{selectedIds.size} selecionados</strong></>}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -270,19 +270,19 @@ export const StudentCardsPage: React.FC = () => {
                 gap: '12px', marginTop: '16px',
             }}>
                 {[
-                    { label: 'Total Alunos', value: students.length, color: '#3b82f6' },
-                    { label: 'Turmas', value: uniqueTurmas.length, color: '#10b981' },
-                    { label: 'Filtrados', value: filteredStudents.length, color: '#f59e0b' },
-                    { label: 'Selecionados', value: selectedIds.size, color: '#8b5cf6' },
+                    { label: 'Total Alunos', value: students.length, color: 'var(--color-primary)' },
+                    { label: 'Turmas', value: uniqueTurmas.length, color: 'var(--color-success)' },
+                    { label: 'Filtrados', value: filteredStudents.length, color: 'var(--color-warning)' },
+                    { label: 'Selecionados', value: selectedIds.size, color: 'var(--color-purple)' },
                 ].map((s, i) => (
                     <div key={i} style={{
-                        background: '#0f172a', border: `1px solid ${s.color}33`, borderRadius: '10px',
+                        background: 'var(--bg-primary)', border: `1px solid ${s.color}33`, borderRadius: '10px',
                         padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px',
                     }}>
                         <Users size={18} color={s.color} />
                         <div>
-                            <p style={{ color: '#f1f5f9', fontSize: '1.3rem', fontWeight: 'bold', margin: 0 }}>{s.value}</p>
-                            <p style={{ color: '#64748b', fontSize: '0.7rem', margin: 0 }}>{s.label}</p>
+                            <p style={{ color: 'var(--color-text)', fontSize: '1.3rem', fontWeight: 'bold', margin: 0 }}>{s.value}</p>
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem', margin: 0 }}>{s.label}</p>
                         </div>
                     </div>
                 ))}
@@ -301,7 +301,7 @@ export const StudentCardsPage: React.FC = () => {
                     <div className="admin-card" style={{ marginBottom: '16px' }}>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                             <div style={{ position: 'relative', flex: 1 }}>
-                                <Search size={16} style={{ position: 'absolute', left: '12px', top: '11px', color: '#64748b' }} />
+                                <Search size={16} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--color-text-muted)' }} />
                                 <input
                                     type="text"
                                     placeholder="Pesquisar nome ou matrícula..."
@@ -315,22 +315,22 @@ export const StudentCardsPage: React.FC = () => {
                                 onClick={() => setShowFilters(!showFilters)}
                                 style={{
                                     padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
-                                    background: showFilters ? '#1e40af' : '#1e293b',
-                                    border: showFilters ? '2px solid #3b82f6' : '1px solid #374151',
-                                    color: '#f3f4f6', display: 'flex', alignItems: 'center', gap: '6px',
+                                    background: showFilters ? '#1e40af' : 'var(--border-color)',
+                                    border: showFilters ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
+                                    color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '6px',
                                     fontSize: '0.85rem', whiteSpace: 'nowrap',
                                 }}
                             >
                                 <Filter size={15} />
-                                Filtros {activeFilters > 0 && <span style={{ background: '#3b82f6', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>{activeFilters}</span>}
+                                Filtros {activeFilters > 0 && <span style={{ background: 'var(--color-primary)', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>{activeFilters}</span>}
                             </button>
                         </div>
 
                         {showFilters && (
-                            <div style={{ marginTop: '12px', padding: '14px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                            <div style={{ marginTop: '12px', padding: '14px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                                 {/* Turnos */}
                                 <div style={{ marginBottom: '12px' }}>
-                                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Turno
                                     </label>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -340,9 +340,9 @@ export const StudentCardsPage: React.FC = () => {
                                                 onClick={() => toggleSet(selectedTurnos, turno, setSelectedTurnos)}
                                                 style={{
                                                     padding: '5px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer',
-                                                    border: selectedTurnos.has(turno) ? '2px solid #3b82f6' : '1px solid #374151',
+                                                    border: selectedTurnos.has(turno) ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
                                                     background: selectedTurnos.has(turno) ? '#1e40af' : 'transparent',
-                                                    color: '#e2e8f0',
+                                                    color: 'var(--color-text)',
                                                 }}
                                             >
                                                 {turno}
@@ -352,7 +352,7 @@ export const StudentCardsPage: React.FC = () => {
                                 </div>
                                 {/* Turmas */}
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Turma
                                     </label>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', maxHeight: '100px', overflowY: 'auto' }}>
@@ -363,9 +363,9 @@ export const StudentCardsPage: React.FC = () => {
                                                 title={turma}
                                                 style={{
                                                     padding: '5px 10px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer',
-                                                    border: selectedTurmas.has(turma) ? '2px solid #10b981' : '1px solid #374151',
+                                                    border: selectedTurmas.has(turma) ? '2px solid var(--color-success)' : '1px solid var(--border-color)',
                                                     background: selectedTurmas.has(turma) ? '#064e3b' : 'transparent',
-                                                    color: '#e2e8f0', maxWidth: '180px',
+                                                    color: 'var(--color-text)', maxWidth: '180px',
                                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                                 }}
                                             >
@@ -380,7 +380,7 @@ export const StudentCardsPage: React.FC = () => {
                                         style={{
                                             marginTop: '10px', width: '100%', padding: '6px',
                                             background: '#7f1d1d', color: '#fca5a5',
-                                            border: '1px solid #dc2626', borderRadius: '6px',
+                                            border: '1px solid var(--color-danger-dark)', borderRadius: '6px',
                                             cursor: 'pointer', fontSize: '0.8rem',
                                             display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center',
                                         }}
@@ -395,11 +395,11 @@ export const StudentCardsPage: React.FC = () => {
                     {/* TABELA DE ALUNOS */}
                     <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
                         {filteredStudents.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#4b5563' }}>
+                            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-muted)' }}>
                                 <Users size={36} style={{ opacity: 0.2, marginBottom: '12px' }} />
                                 <p style={{ fontSize: '0.95rem' }}>Nenhum aluno encontrado</p>
                                 {activeFilters > 0 && (
-                                    <button onClick={clearFilters} style={{ marginTop: '8px', color: '#3b82f6', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.85rem' }}>
+                                    <button onClick={clearFilters} style={{ marginTop: '8px', color: 'var(--color-primary)', background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.85rem' }}>
                                         Limpar filtros
                                     </button>
                                 )}
@@ -408,18 +408,18 @@ export const StudentCardsPage: React.FC = () => {
                             <>
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead>
-                                        <tr style={{ borderBottom: '1px solid #1e293b' }}>
-                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: '600', width: '40px' }}>
-                                                <button onClick={toggleSelectAllPage} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
+                                        <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: '600', width: '40px' }}>
+                                                <button onClick={toggleSelectAllPage} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0 }}>
                                                     {pagedStudents.every(s => selectedIds.has(s.id)) && pagedStudents.length > 0
-                                                        ? <CheckSquare size={16} color="#3b82f6" />
+                                                        ? <CheckSquare size={16} color="var(--color-primary)" />
                                                         : <Square size={16} />
                                                     }
                                                 </button>
                                             </th>
-                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Aluno</th>
-                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Matrícula</th>
-                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>Turma</th>
+                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: '600' }}>Aluno</th>
+                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: '600' }}>Matrícula</th>
+                                            <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: '600' }}>Turma</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -432,27 +432,27 @@ export const StudentCardsPage: React.FC = () => {
                                                     key={student.id}
                                                     style={{
                                                         cursor: 'pointer',
-                                                        background: isSelected ? '#1e293b' : 'transparent',
-                                                        borderBottom: '1px solid #0f172a',
+                                                        background: isSelected ? 'var(--border-color)' : 'transparent',
+                                                        borderBottom: '1px solid var(--bg-primary)',
                                                         transition: 'background 0.15s',
                                                     }}
                                                     onClick={() => setSelectedStudent(student)}
-                                                    onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#111827'; }}
+                                                    onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'var(--bg-tertiary)'; }}
                                                     onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
                                                 >
                                                     <td style={{ padding: '10px 14px' }}>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); toggleStudentSelection(student.id); }}
-                                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}
+                                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0 }}
                                                         >
-                                                            {isChecked ? <CheckSquare size={16} color="#3b82f6" /> : <Square size={16} />}
+                                                            {isChecked ? <CheckSquare size={16} color="var(--color-primary)" /> : <Square size={16} />}
                                                         </button>
                                                     </td>
                                                     <td style={{ padding: '10px 14px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                             <div style={{
-                                                                background: isSelected ? '#3b82f6' : '#1e293b',
-                                                                color: isSelected ? '#fff' : '#94a3b8',
+                                                                background: isSelected ? 'var(--color-primary)' : 'var(--border-color)',
+                                                                color: isSelected ? '#fff' : 'var(--color-text-muted)',
                                                                 width: '32px', height: '32px', borderRadius: '50%',
                                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                 fontSize: '10px', fontWeight: 'bold', flexShrink: 0,
@@ -460,11 +460,11 @@ export const StudentCardsPage: React.FC = () => {
                                                             }}>
                                                                 {initials}
                                                             </div>
-                                                            <span style={{ color: '#f1f5f9', fontSize: '0.9rem', fontWeight: '500' }}>{student.nome}</span>
+                                                            <span style={{ color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: '500' }}>{student.nome}</span>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: '0.85rem', fontFamily: 'monospace' }}>{student.codigo}</td>
-                                                    <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: '0.85rem' }}>{student.turma}</td>
+                                                    <td style={{ padding: '10px 14px', color: 'var(--color-text-muted)', fontSize: '0.85rem', fontFamily: 'monospace' }}>{student.codigo}</td>
+                                                    <td style={{ padding: '10px 14px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{student.turma}</td>
                                                 </tr>
                                             );
                                         })}
@@ -474,9 +474,9 @@ export const StudentCardsPage: React.FC = () => {
                                 {/* PAGINAÇÃO */}
                                 <div style={{
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                    padding: '10px 14px', borderTop: '1px solid #1e293b',
+                                    padding: '10px 14px', borderTop: '1px solid var(--border-color)',
                                 }}>
-                                    <span style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
                                         {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filteredStudents.length)} de {filteredStudents.length}
                                     </span>
                                     <div style={{ display: 'flex', gap: '6px' }}>
@@ -485,13 +485,13 @@ export const StudentCardsPage: React.FC = () => {
                                             disabled={page === 0}
                                             style={{
                                                 padding: '6px 10px', borderRadius: '6px', cursor: page === 0 ? 'default' : 'pointer',
-                                                background: 'transparent', border: '1px solid #374151',
-                                                color: page === 0 ? '#374151' : '#94a3b8',
+                                                background: 'transparent', border: '1px solid var(--border-color)',
+                                                color: page === 0 ? 'var(--border-color)' : 'var(--color-text-muted)',
                                             }}
                                         >
                                             <ChevronLeft size={16} />
                                         </button>
-                                        <span style={{ padding: '6px 12px', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                        <span style={{ padding: '6px 12px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
                                             {page + 1}/{totalPages}
                                         </span>
                                         <button
@@ -499,8 +499,8 @@ export const StudentCardsPage: React.FC = () => {
                                             disabled={page >= totalPages - 1}
                                             style={{
                                                 padding: '6px 10px', borderRadius: '6px', cursor: page >= totalPages - 1 ? 'default' : 'pointer',
-                                                background: 'transparent', border: '1px solid #374151',
-                                                color: page >= totalPages - 1 ? '#374151' : '#94a3b8',
+                                                background: 'transparent', border: '1px solid var(--border-color)',
+                                                color: page >= totalPages - 1 ? 'var(--border-color)' : 'var(--color-text-muted)',
                                             }}
                                         >
                                             <ChevronRight size={16} />
@@ -515,12 +515,12 @@ export const StudentCardsPage: React.FC = () => {
                 {/* COLUNA DIREITA — PREVIEW DA CARTEIRINHA */}
                 <div style={{ position: 'sticky', top: '20px', alignSelf: 'start' }}>
                     <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
-                        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ color: 'var(--admin-gold)', fontSize: '0.95rem', fontWeight: '700', margin: 0, display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <CreditCard size={16} /> Pré-visualização
                             </h3>
                             {selectedStudent && (
-                                <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
                                     {selectedStudent.codigo}
                                 </span>
                             )}
@@ -550,7 +550,7 @@ export const StudentCardsPage: React.FC = () => {
                                     <button
                                         style={{
                                             padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
-                                            background: '#1e293b', border: '1px solid #374151', color: '#94a3b8',
+                                            background: 'var(--border-color)', border: '1px solid var(--border-color)', color: 'var(--color-text-muted)',
                                             display: 'flex', alignItems: 'center', gap: '6px',
                                         }}
                                         onClick={handlePrint}
@@ -560,7 +560,7 @@ export const StudentCardsPage: React.FC = () => {
                                 </div>
                             </>
                         ) : (
-                            <div style={{ textAlign: 'center', padding: '40px 24px', color: '#4b5563' }}>
+                            <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--color-text-muted)' }}>
                                 <CreditCard size={48} style={{ opacity: 0.15, marginBottom: '16px' }} />
                                 <p style={{ fontSize: '0.9rem', margin: 0, lineHeight: '1.5' }}>
                                     Clique em um aluno na lista para visualizar a carteirinha

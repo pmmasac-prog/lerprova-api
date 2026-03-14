@@ -1,21 +1,21 @@
 /* ===== ALUNOS - EMERALD PREMIUM DESIGN ===== */
 
 :root {
-    --alunos-emerald: #10b981;
-    --alunos-emerald-hover: #059669;
+    --alunos-emerald: var(--color-success);
+    --alunos-emerald-hover: var(--color-success-dark);
     --alunos-emerald-glow: rgba(16, 185, 129, 0.4);
-    --alunos-gold: #f59e0b;
-    --alunos-bg: #0b0e14;
+    --alunos-gold: var(--color-warning);
+    --alunos-bg: var(--bg-primary);
     --alunos-card: rgba(15, 23, 42, 0.8);
     --alunos-border: rgba(16, 185, 129, 0.15);
-    --alunos-text: #f8fafc;
-    --alunos-text-muted: #94a3b8;
-    --alunos-text-dim: #64748b;
+    --alunos-text: var(--color-text-dark);
+    --alunos-text-muted: var(--color-text-muted);
+    --alunos-text-dim: var(--color-text-muted);
 }
 
 .alunos-container {
     min-height: 100vh;
-    background: linear-gradient(180deg, var(--alunos-bg) 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--alunos-bg) 0%, var(--bg-primary) 100%);
     color: var(--alunos-text);
     padding-bottom: 140px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -319,8 +319,8 @@
 
 .action-btn-delete:hover {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border-color: #ef4444;
+    color: var(--color-danger);
+    border-color: var(--color-danger);
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
 }
 
@@ -423,7 +423,7 @@
 }
 
 .modal-content {
-    background: linear-gradient(180deg, #0f1117 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
     border: 1px solid var(--alunos-border);
     border-radius: 28px;
     padding: 36px;
@@ -569,7 +569,7 @@
     background: #fff;
     border-radius: 24px;
     margin: 24px 0;
-    color: #0f1117;
+    color: var(--bg-primary);
     box-shadow: 
         inset 0 0 30px rgba(0, 0, 0, 0.05),
         0 8px 30px rgba(0, 0, 0, 0.2);

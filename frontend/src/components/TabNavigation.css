@@ -2,15 +2,16 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #0f1117;
+    background-color: var(--bg-primary);
     padding-bottom: 80px;
+    transition: background-color 0.3s ease;
 }
 
 .tab-navigation {
-    background: rgba(15, 17, 23, 0.8);
+    background: var(--glass-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border-color);
     position: fixed;
     bottom: 0;
     left: 0;
@@ -22,35 +23,12 @@
     justify-content: center;
 }
 
-.tab-container {
-    display: flex;
-    width: 100%;
-    max-width: 600px;
-    height: 100%;
-    padding: 0 12px;
-    gap: 8px;
-}
-
-.tab-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    border-radius: 16px;
-    margin: 6px 0;
-}
-
 .tab-item:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-card-light);
 }
 
 .tab-item-active {
-    background: rgba(59, 130, 246, 0.08);
+    background: var(--bg-info-soft);
 }
 
 .tab-item-active::before {
@@ -61,36 +39,28 @@
     transform: translateX(-50%);
     width: 20px;
     height: 3px;
-    background: #3b82f6;
+    background: var(--color-primary);
     border-radius: 0 0 4px 4px;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 10px var(--color-primary);
 }
 
 .tab-label {
     font-size: 10px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: all 0.3s;
 }
 
 .tab-label-active {
-    color: #3b82f6;
-}
-
-/* Notification Bell */
-.tab-notification {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
+    color: var(--color-primary);
 }
 
 .notification-bell-btn {
     position: relative;
     padding: 8px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     background: transparent;
     border: none;
     border-radius: 50%;
@@ -100,11 +70,10 @@
 }
 
 .notification-bell-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #e2e8f0;
+    background: var(--bg-card-light);
+    color: var(--color-text);
 }
 
-/* Dropdown abre PARA CIMA (nav fica no fundo da tela) */
 .notification-dropdown {
     position: absolute;
     bottom: 100%;
@@ -113,76 +82,26 @@
     width: 380px;
     max-height: 70vh;
     overflow-y: auto;
-    background: #1a1d27;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-lg);
     z-index: 2100;
 }
 
-/* Override Tailwind/light styles dentro do dropdown dark */
 .notification-dropdown h1 {
-    color: #e2e8f0;
+    color: var(--color-text-dark);
 }
 
 .notification-dropdown .text-gray-500,
 .notification-dropdown .text-gray-400 {
-    color: #94a3b8 !important;
-}
-
-.notification-dropdown .text-gray-600 {
-    color: #cbd5e1 !important;
-}
-
-.notification-dropdown .text-gray-700 {
-    color: #e2e8f0 !important;
-}
-
-.notification-dropdown .bg-gray-50 {
-    background: rgba(255, 255, 255, 0.05) !important;
-}
-
-.notification-dropdown .bg-gray-200 {
-    background: rgba(255, 255, 255, 0.1) !important;
-    color: #cbd5e1 !important;
-}
-
-.notification-dropdown .bg-blue-50 {
-    background: rgba(59, 130, 246, 0.1) !important;
-}
-
-.notification-dropdown .bg-blue-100 {
-    background: rgba(59, 130, 246, 0.15) !important;
-}
-
-.notification-dropdown .text-blue-900 {
-    color: #93c5fd !important;
-}
-
-.notification-dropdown .border-gray-300 {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-.notification-dropdown .border-blue-500 {
-    border-color: #3b82f6 !important;
-}
-
-.notification-dropdown .bg-red-100 {
-    background: rgba(239, 68, 68, 0.15) !important;
-}
-
-.notification-dropdown .text-red-700 {
-    color: #fca5a5 !important;
-}
-
-.notification-dropdown .border-red-400 {
-    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: var(--color-text-muted) !important;
 }
 
 .notification-dropdown select {
-    background: #252830;
-    color: #cbd5e1;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--bg-primary);
+    color: var(--color-text);
+    border-color: var(--border-color);
 }
 
 @media (max-width: 420px) {

@@ -15,8 +15,8 @@
 }
 
 .manual-entry-container {
-    background: #1a1d27;
-    border: 1px solid #334155;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 24px;
     width: 100%;
     max-width: 600px;
@@ -29,12 +29,12 @@
 
 .manual-entry-header {
     padding: 24px;
-    border-bottom: 1px solid #1e293b;
-    background: linear-gradient(to bottom, #11141d, #1a1d27);
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-tertiary));
 }
 
 .manual-entry-title {
-    color: #f8fafc;
+    color: var(--color-text-dark);
     font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
@@ -42,7 +42,7 @@
 }
 
 .manual-entry-subtitle {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
     margin: 4px 0 0;
     font-weight: 500;
@@ -56,8 +56,8 @@
 
 .manual-entry-footer {
     padding: 20px 24px;
-    border-top: 1px solid #1e293b;
-    background: #1a1d27;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
     display: flex;
     gap: 12px;
 }
@@ -73,23 +73,23 @@
     left: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: #475569;
+    color: var(--color-text-secondary);
 }
 
 .student-search-input {
     width: 100%;
     padding: 14px 16px 14px 48px;
-    background: #0f1117;
-    border: 1px solid #1e293b;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 14px;
-    color: #f1f5f9;
+    color: var(--color-text);
     font-size: 0.95rem;
     transition: all 0.2s;
 }
 
 .student-search-input:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
@@ -105,33 +105,33 @@
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    background: #0f1117;
-    border: 1px solid #1e293b;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .manual-student-item:hover {
-    background: #1a1d27;
-    border-color: #3b82f633;
+    background: var(--bg-tertiary);
+    border-color: var(--color-primary)33;
     transform: translateX(4px);
 }
 
 .manual-student-item.has-result {
-    border-left: 3px solid #10b981;
+    border-left: 3px solid var(--color-success);
 }
 
 .manual-student-avatar {
     width: 36px;
     height: 36px;
-    background: #1a1d27;
-    border: 1px solid #1e293b;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #3b82f6;
+    color: var(--color-primary);
     font-size: 0.8rem;
     font-weight: 700;
 }
@@ -141,20 +141,20 @@
 }
 
 .manual-student-name {
-    color: #f1f5f9;
+    color: var(--color-text);
     font-weight: 600;
     font-size: 0.95rem;
 }
 
 .manual-student-code {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.8rem;
 }
 
 .manual-nota-badge {
     padding: 4px 10px;
     background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    color: var(--color-success);
     border-radius: 8px;
     font-weight: 700;
     font-size: 0.85rem;
@@ -162,15 +162,15 @@
 
 /* Step 2: Nota Entry */
 .nota-entry-card {
-    background: #0f1117;
+    background: var(--bg-primary);
     padding: 32px;
     border-radius: 20px;
-    border: 1px solid #1e293b;
+    border: 1px solid var(--border-color);
     text-align: center;
 }
 
 .selected-student-label {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -179,7 +179,7 @@
 }
 
 .selected-student-name {
-    color: #f8fafc;
+    color: var(--color-text-dark);
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 32px;
@@ -192,33 +192,33 @@
 
 .nota-large-field {
     width: 100%;
-    background: #1a1d27;
-    border: 2px solid #1e293b;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
     border-radius: 16px;
     padding: 16px;
     font-size: 2.5rem;
     font-weight: 800;
-    color: #3b82f6;
+    color: var(--color-primary);
     text-align: center;
     transition: all 0.2s;
 }
 
 .nota-large-field:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.1);
 }
 
 .nota-help-text {
     margin-top: 16px;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
 }
 
 /* Buttons */
 .btn-save-manual {
     flex: 2;
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 12px;
@@ -233,15 +233,15 @@
 }
 
 .btn-save-manual:hover {
-    background: #2563eb;
+    background: var(--color-primary-dark);
     transform: translateY(-2px);
 }
 
 .btn-back-manual {
     flex: 1;
     background: transparent;
-    border: 1px solid #1e293b;
-    color: #94a3b8;
+    border: 1px solid var(--border-color);
+    color: var(--color-text-muted);
     border-radius: 12px;
     padding: 12px;
     font-weight: 600;
@@ -250,6 +250,6 @@
 }
 
 .btn-back-manual:hover {
-    background: #0f1117;
-    color: #f1f5f9;
+    background: var(--bg-primary);
+    color: var(--color-text);
 }

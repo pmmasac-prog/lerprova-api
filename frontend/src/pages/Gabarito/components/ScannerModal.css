@@ -164,7 +164,7 @@
 }
 
 .frame-overlay.active .corner {
-    border-color: #10b981;
+    border-color: var(--color-success);
 }
 
 .scan-line {
@@ -299,8 +299,8 @@
 }
 
 .capture-btn.loading {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
     color: #fff;
 }
 
@@ -329,23 +329,23 @@
 
 .auto-capture-bar {
     height: 100%;
-    background: #10b981;
+    background: var(--color-success);
     transition: width 0.3s ease;
 }
 
 /* Result View */
 .result-view {
     padding: 24px;
-    background: #1a1d27;
+    background: var(--bg-tertiary);
     height: 100%;
     overflow-y: auto;
 }
 
 .result-card {
-    background: #11141d;
+    background: var(--bg-secondary);
     padding: 32px 24px;
     border-radius: 20px;
-    border: 1px solid #1e293b;
+    border: 1px solid var(--border-color);
     text-align: center;
 }
 
@@ -353,11 +353,11 @@
     font-size: 2.2rem;
     font-weight: 900;
     margin: 16px 0 8px;
-    color: #f8fafc;
+    color: var(--color-text-dark);
 }
 
 .aluno-name {
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-weight: 600;
     margin-bottom: 32px;
 }
@@ -373,15 +373,15 @@
     display: flex;
     flex-direction: column;
     padding: 16px;
-    background: #1a1d27;
-    border: 1px solid #1e293b;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
 }
 
 .stat .label {
     font-size: 0.7rem;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-weight: 800;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
@@ -390,14 +390,14 @@
 .stat .value {
     font-size: 1.4rem;
     font-weight: 800;
-    color: #f1f5f9;
+    color: var(--color-text);
 }
 
 .stat .value.success {
-    color: #10b981;
+    color: var(--color-success);
 }
 .stat .value.warning {
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 .review-alert {
@@ -409,7 +409,7 @@
     padding: 12px 16px;
     border-radius: 12px;
     margin-bottom: 24px;
-    color: #f59e0b;
+    color: var(--color-warning);
     text-align: left;
 }
 
@@ -437,7 +437,7 @@
     border-top: 1px solid rgba(245, 158, 11, 0.2);
     font-size: 0.8rem;
     line-height: 1.4;
-    color: #f59e0b;
+    color: var(--color-warning);
     opacity: 0.9;
 }
 
@@ -449,7 +449,7 @@
 .audit-preview label {
     font-size: 0.75rem;
     font-weight: 800;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     display: block;
     margin-bottom: 12px;
@@ -458,7 +458,7 @@
 .audit-preview img {
     width: 100%;
     border-radius: 16px;
-    border: 1px solid #1e293b;
+    border: 1px solid var(--border-color);
 }
 
 .result-actions {
@@ -468,7 +468,7 @@
 }
 
 .next-btn {
-    background: #3b82f6;
+    background: var(--color-primary);
     color: #fff;
     border: none;
     padding: 16px;
@@ -497,18 +497,18 @@
 
 .finish-btn {
     background: transparent;
-    border: 1px solid #1e293b;
+    border: 1px solid var(--border-color);
     padding: 16px;
     border-radius: 16px;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .finish-btn:hover {
-    background: #1e293b;
-    color: #e2e8f0;
+    background: var(--border-color);
+    color: var(--color-text);
 }
 
 .spin {

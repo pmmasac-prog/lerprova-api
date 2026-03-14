@@ -166,7 +166,7 @@ export const Relatorios: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="mini-stat-icon" style={{
             width: '36px', height: '36px', borderRadius: '10px',
-            background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6',
+            background: 'rgba(59, 130, 246, 0.1)', color: 'var(--color-primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
             <TrendingUp size={20} />
@@ -186,7 +186,7 @@ export const Relatorios: React.FC = () => {
           const active = activeTab === tab.id;
           return (
             <button key={tab.id} className={`tab-item ${active ? 'tab-item-active' : ''}`} onClick={() => setActiveTab(tab.id)}>
-              <Icon size={16} color={active ? '#3b82f6' : '#94a3b8'} />
+              <Icon size={16} color={active ? 'var(--color-primary)' : 'var(--color-text-muted)'} />
               <span className={`tab-text ${active ? 'tab-text-active' : ''}`}>{tab.label}</span>
             </button>
           );

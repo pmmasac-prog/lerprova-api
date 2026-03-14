@@ -41,7 +41,7 @@ export const SchoolManagement: React.FC = () => {
             <p className="admin-subtitle">Gerencie as unidades e instituições cadastradas no sistema.</p>
           </div>
         </header>
-        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Carregando dados reais...</div>
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>Carregando dados reais...</div>
       </div>
     );
   }
@@ -59,16 +59,16 @@ export const SchoolManagement: React.FC = () => {
       </header>
 
       {showNewModal && (
-        <div className="admin-card" style={{ marginTop: '16px', border: '1px solid #f59e0b33' }}>
-          <p style={{ color: '#f59e0b', fontSize: '0.9rem', margin: 0 }}>Funcionalidade de cadastro de escola em desenvolvimento.</p>
-          <button onClick={() => setShowNewModal(false)} style={{ marginTop: '8px', color: '#94a3b8', background: 'none', border: '1px solid #374151', borderRadius: '6px', padding: '4px 12px', cursor: 'pointer', fontSize: '0.8rem' }}>Fechar</button>
+        <div className="admin-card" style={{ marginTop: '16px', border: '1px solid var(--color-warning)33' }}>
+          <p style={{ color: 'var(--color-warning)', fontSize: '0.9rem', margin: 0 }}>Funcionalidade de cadastro de escola em desenvolvimento.</p>
+          <button onClick={() => setShowNewModal(false)} style={{ marginTop: '8px', color: 'var(--color-text-muted)', background: 'none', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '4px 12px', cursor: 'pointer', fontSize: '0.8rem' }}>Fechar</button>
         </div>
       )}
 
       <div className="admin-card" style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--color-text-muted)' }} />
             <input
               id="school-search"
               name="school-search"
@@ -93,18 +93,18 @@ export const SchoolManagement: React.FC = () => {
           </thead>
           <tbody>
             {filteredSchools.length === 0 ? (
-              <tr><td colSpan={4} style={{ textAlign: 'center', color: '#94a3b8', padding: '30px' }}>Nenhuma escola encontrada</td></tr>
+              <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '30px' }}>Nenhuma escola encontrada</td></tr>
             ) : filteredSchools.map(school => (
               <tr key={school.id}>
                 <td style={{ fontWeight: '600' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ padding: '8px', background: '#1e293b', borderRadius: '8px' }}>
+                    <div style={{ padding: '8px', background: 'var(--border-color)', borderRadius: '8px' }}>
                       <School size={16} color="var(--admin-gold)" />
                     </div>
                     {school.name}
                   </div>
                 </td>
-                <td style={{ color: '#94a3b8' }}>
+                <td style={{ color: 'var(--color-text-muted)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <MapPin size={14} /> {school.address}
                   </div>

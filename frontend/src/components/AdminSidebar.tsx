@@ -33,7 +33,7 @@ export const AdminSidebar: React.FC = () => {
                     <span>Gerir Usuários</span>
                 </NavLink>
                 
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Estrutura escolar</div>
+                <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Estrutura escolar</div>
                 
                 <NavLink to="/admin/escolas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
                     <School size={18} />
@@ -60,7 +60,7 @@ export const AdminSidebar: React.FC = () => {
                     <span>Chamada NFC</span>
                 </NavLink>
 
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Sistema</div>
+                <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Sistema</div>
 
                 <NavLink to="/admin/licencas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
                     <Award size={18} />
@@ -77,7 +77,7 @@ export const AdminSidebar: React.FC = () => {
                     width: '100%',
                     padding: '12px',
                     background: 'rgba(239, 68, 68, 0.1)',
-                    color: '#ef4444',
+                    color: 'var(--color-danger)',
                     border: '1px solid rgba(239, 68, 68, 0.2)',
                     borderRadius: '12px',
                     display: 'flex',
@@ -101,7 +101,7 @@ const navItemStyle = ({ isActive }: { isActive: boolean }) => ({
     padding: '12px 16px',
     borderRadius: '12px',
     textDecoration: 'none',
-    color: isActive ? '#fff' : '#64748b',
+    color: isActive ? '#fff' : 'var(--color-text-muted)',
     background: isActive ? 'var(--admin-emerald)' : 'transparent',
     fontWeight: 700,
     transition: 'all 0.3s'

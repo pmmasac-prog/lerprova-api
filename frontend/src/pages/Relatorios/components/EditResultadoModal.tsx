@@ -105,13 +105,13 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                                 onChange={(e) => setOverrideNota(e.target.checked)}
                                 style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                             />
-                            <label htmlFor="override" style={{ fontWeight: 700, color: '#f1f5f9', cursor: 'pointer', fontSize: '14px' }}>
+                            <label htmlFor="override" style={{ fontWeight: 700, color: 'var(--color-text)', cursor: 'pointer', fontSize: '14px' }}>
                                 Sobrescrever nota final manualmente
                             </label>
                         </div>
                         {overrideNota && (
                             <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '32px' }}>
-                                <span style={{ fontSize: '14px', color: '#94a3b8' }}>Nota Manual:</span>
+                                <span style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>Nota Manual:</span>
                                 <input
                                     id="manual-nota-override"
                                     name="manual-nota-override"
@@ -125,8 +125,8 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                                         width: '100px',
                                         padding: '10px',
                                         borderRadius: '10px',
-                                        border: '2px solid #f59e0b',
-                                        background: '#1a1d27',
+                                        border: '2px solid var(--color-warning)',
+                                        background: 'var(--bg-tertiary)',
                                         color: '#fff',
                                         textAlign: 'center',
                                         fontSize: '18px',
@@ -134,7 +134,7 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                                     }}
                                     placeholder="0.0"
                                 />
-                                <div style={{ flex: 1, fontSize: '12px', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ flex: 1, fontSize: '12px', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <AlertCircle size={14} />
                                     <span>As respostas abaixo serão ignoradas no cálculo final.</span>
                                 </div>
@@ -156,8 +156,8 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                                 return (
                                     <div key={idx} className={`question-edit-card ${answers[idx] ? (isCorrect ? 'correct' : 'wrong') : ''}`}>
                                         <div className="question-footer" style={{ marginBottom: '8px', marginTop: 0 }}>
-                                            <span style={{ color: '#94a3b8' }}>Questão {idx + 1}</span>
-                                            {answers[idx] && (isCorrect ? <CheckCircle2 size={14} color="#10b981" /> : <AlertCircle size={14} color="#ef4444" />)}
+                                            <span style={{ color: 'var(--color-text-muted)' }}>Questão {idx + 1}</span>
+                                            {answers[idx] && (isCorrect ? <CheckCircle2 size={14} color="var(--color-success)" /> : <AlertCircle size={14} color="var(--color-danger)" />)}
                                         </div>
                                         <div className="options-row">
                                             {['A', 'B', 'C', 'D', 'E'].map(opt => (
@@ -171,7 +171,7 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
                                             ))}
                                         </div>
                                         <div className="question-footer">
-                                            <span>Gabarito: <strong style={{ color: '#10b981' }}>{correta}</strong></span>
+                                            <span>Gabarito: <strong style={{ color: 'var(--color-success)' }}>{correta}</strong></span>
                                         </div>
                                     </div>
                                 );

@@ -29,7 +29,7 @@ export const TabNavigation: React.FC = () => {
                             to={tab.path}
                             className={`tab-item ${active ? 'tab-item-active' : ''}`}
                         >
-                            <Icon size={22} color={active ? '#3b82f6' : '#475569'} />
+                            <Icon size={22} color={active ? 'var(--color-primary)' : 'var(--color-text-secondary)'} />
                             <span className={`tab-label ${active ? 'tab-label-active' : ''}`}>
                                 {tab.label}
                             </span>

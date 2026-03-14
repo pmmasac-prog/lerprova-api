@@ -59,7 +59,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({
                             value={`ALUNO_${studentCode}`} 
                             size={85} 
                             bgColor="#ffffff" 
-                            fgColor="#1e3a8a" 
+                            fgColor="var(--bg-secondary)" 
                             level="M"
                         />
                         <span className="qr-label">VERIFICAR</span>

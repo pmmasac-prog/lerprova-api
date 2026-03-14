@@ -1,8 +1,8 @@
 /* EditResultadoModal Styles */
 
 .edit-modal-container {
-    background: #1a1d27;
-    border: 1px solid #334155;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
     border-radius: 24px;
     width: 95%;
     max-width: 800px;
@@ -33,14 +33,14 @@
 }
 
 .edit-modal-title {
-    color: #f8fafc;
+    color: var(--color-text-dark);
     font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
 }
 
 .edit-modal-subtitle {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
     margin: 4px 0 0 0;
 }
@@ -57,10 +57,10 @@
 }
 
 .mini-stat-card {
-    background: #0f1117;
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 16px;
-    border: 1px solid #1e293b;
+    border: 1px solid var(--border-color);
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -71,14 +71,14 @@
 .mini-stat-value {
     font-size: 2rem;
     font-weight: 800;
-    color: #f8fafc;
+    color: var(--color-text-dark);
     line-height: 1;
 }
 
 .mini-stat-label {
     font-size: 0.7rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-top: 8px;
@@ -94,32 +94,32 @@
 
 .nota-badge-large.success {
     background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    color: var(--color-success);
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .nota-badge-large.warning {
     background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+    color: var(--color-warning);
     border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .nota-badge-large.danger {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--color-danger);
     border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .override-section {
-    background: #0f1117;
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 16px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-color);
     margin-bottom: 24px;
 }
 
 .override-section.active {
-    border-color: #f59e0b;
+    border-color: var(--color-warning);
     background: rgba(245, 158, 11, 0.05);
 }
 
@@ -130,7 +130,7 @@
     border-radius: 12px;
     display: flex;
     gap: 12px;
-    color: #3b82f6;
+    color: var(--color-primary);
     font-size: 0.85rem;
     margin-bottom: 24px;
     align-items: center;
@@ -150,8 +150,8 @@
 }
 
 .question-edit-card {
-    background: #0f1117;
-    border: 1px solid #1e293b;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 12px;
     transition: all 0.2s;
@@ -177,9 +177,9 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 1px solid #334155;
-    background: #1a1d27;
-    color: #94a3b8;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--color-text-muted);
     font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
@@ -190,20 +190,20 @@
 }
 
 .option-btn.selected.correct {
-    background: #10b981;
+    background: var(--color-success);
     color: white;
-    border-color: #10b981;
+    border-color: var(--color-success);
 }
 
 .option-btn.selected.wrong {
-    background: #ef4444;
+    background: var(--color-danger);
     color: white;
-    border-color: #ef4444;
+    border-color: var(--color-danger);
 }
 
 .question-footer {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-weight: 600;
     margin-top: 8px;
     display: flex;
@@ -220,8 +220,8 @@
 
 .btn-discard {
     padding: 12px 24px;
-    background: #1e293b;
-    color: #94a3b8;
+    background: var(--border-color);
+    color: var(--color-text-muted);
     border: none;
     border-radius: 12px;
     font-weight: 700;
@@ -231,7 +231,7 @@
 
 .btn-confirm {
     padding: 12px 24px;
-    background: #3b82f6;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 12px;
@@ -252,9 +252,9 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: #94a3b8;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    color: var(--color-text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -263,6 +263,6 @@
 }
 
 .back-circle-btn:hover {
-    background: #334155;
-    color: #f8fafc;
+    background: var(--border-color);
+    color: var(--color-text-dark);
 }

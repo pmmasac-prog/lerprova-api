@@ -23,16 +23,12 @@
     gap: 12px;
     font-size: 1.6rem;
     font-weight: 800;
-    color: #fff;
+    color: var(--color-text-dark);
     margin: 0;
-    background: linear-gradient(135deg, #fff 0%, #10b981 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .relatorios-admin .admin-subtitle {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.9rem;
     margin-top: 6px;
     letter-spacing: 0.3px;
@@ -56,7 +52,7 @@
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -68,14 +64,14 @@
 .tab-btn:hover {
     background: rgba(16, 185, 129, 0.08);
     border-color: rgba(16, 185, 129, 0.2);
-    color: #e2e8f0;
+    color: var(--color-text);
     transform: translateY(-2px);
 }
 
 .tab-btn.active {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
     border-color: rgba(16, 185, 129, 0.4);
-    color: #10b981;
+    color: var(--color-success);
     box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
 }
 
@@ -116,7 +112,7 @@
     align-items: center;
     justify-content: center;
     padding: 80px 20px;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-align: center;
     gap: 16px;
     background: rgba(255, 255, 255, 0.02);
@@ -148,16 +144,15 @@
 }
 
 .stat-card {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(16, 185, 129, 0.1);
-    border-left: 3px solid;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--color-success);
     border-radius: 16px;
     padding: 18px 22px;
     display: flex;
     align-items: center;
     gap: 16px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(12px);
 }
 
 .stat-card:hover {
@@ -178,14 +173,14 @@
 .stat-value {
     font-size: 1.8rem;
     font-weight: 800;
-    color: #f1f5f9;
+    color: var(--color-text);
     line-height: 1.2;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -193,7 +188,7 @@
 
 .stat-subtext {
     font-size: 0.7rem;
-    color: #475569;
+    color: var(--color-text-secondary);
     margin-top: 2px;
 }
 
@@ -205,19 +200,18 @@
 }
 
 .dashboard-card {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(16, 185, 129, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 24px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-md);
 }
 
 .dashboard-card h3 {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #f1f5f9;
+    color: var(--color-text);
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0 0 20px 0;
@@ -252,7 +246,7 @@
 .situation-label {
     display: block;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     margin-top: 6px;
     font-weight: 600;
 }
@@ -268,7 +262,7 @@
     align-items: center;
     gap: 8px;
     padding: 14px 24px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     border: none;
     border-radius: 12px;
     color: white;
@@ -296,11 +290,10 @@
     gap: 16px;
     align-items: center;
     padding: 20px;
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(16, 185, 129, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     margin-bottom: 24px;
-    backdrop-filter: blur(12px);
 }
 
 .filter-group {
@@ -311,7 +304,7 @@
 
 .filter-group label {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -324,7 +317,7 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: #e2e8f0;
+    color: var(--color-text);
     font-size: 0.85rem;
     transition: all 0.3s;
 }
@@ -332,12 +325,12 @@
 .filter-group input:focus,
 .filter-group select:focus {
     outline: none;
-    border-color: #10b981;
+    border-color: var(--color-success);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .filter-group span {
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
 }
 
@@ -346,7 +339,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     border: none;
     border-radius: 10px;
     color: white;
@@ -364,12 +357,12 @@
 
 /* ==================== TABLE PREMIUM ==================== */
 .report-table-container {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(16, 185, 129, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     overflow: hidden;
     backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .report-table {
@@ -382,23 +375,23 @@
     text-align: left;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 1px;
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .report-table td {
     padding: 14px 16px;
     font-size: 0.85rem;
-    color: #e2e8f0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--border-color);
     transition: background 0.2s;
 }
 
 .report-table tr:hover td {
-    background: rgba(16, 185, 129, 0.03);
+    background: var(--bg-card-light);
 }
 
 .report-table tr.row-critico {
@@ -439,12 +432,12 @@
 
 .aluno-nome {
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--color-text);
 }
 
 .aluno-codigo {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-family: 'JetBrains Mono', monospace;
 }
 
@@ -455,7 +448,7 @@
     min-width: 24px;
     height: 24px;
     padding: 0 6px;
-    background: #374151;
+    background: var(--border-color);
     border-radius: 4px;
     font-weight: 700;
     font-size: 0.8rem;
@@ -473,12 +466,12 @@
 
 .motivo {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     max-width: 200px;
 }
 
 .empty {
-    color: #4b5563;
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -497,7 +490,7 @@
     position: relative;
     width: 100%;
     height: 20px;
-    background: #1e293b;
+    background: var(--border-color);
     border-radius: 4px;
     overflow: hidden;
     min-width: 80px;
@@ -527,12 +520,11 @@
 }
 
 .consecutive-card {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(16, 185, 129, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(12px);
 }
 
 .consecutive-card:hover {
@@ -547,7 +539,7 @@
 
 .consecutive-card.nivel-critico {
     border-color: rgba(239, 68, 68, 0.4);
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--color-danger);
 }
 
 .consecutive-card.nivel-alerta {
@@ -570,7 +562,7 @@
 }
 
 .consecutive-card .aluno-info h4 {
-    color: #f1f5f9;
+    color: var(--color-text);
     font-size: 1rem;
     margin: 0 0 4px 0;
     font-weight: 700;
@@ -578,7 +570,7 @@
 
 .consecutive-card .turma {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .faltas-badge {
@@ -601,7 +593,7 @@
 
 .faltas-label {
     font-size: 0.65rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -618,20 +610,20 @@
     align-items: center;
     gap: 8px;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 .consecutive-card .info-row svg {
     flex-shrink: 0;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .consecutive-card .card-footer {
     display: flex;
     gap: 8px;
     padding: 12px 16px;
-    background: #0b0e14;
-    border-top: 1px solid #1e293b;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
 }
 
 /* ==================== RISK CARDS PREMIUM ==================== */
@@ -655,7 +647,7 @@
 }
 
 .risk-card.nivel-critico {
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--color-danger);
 }
 
 .risk-card.nivel-alto {
@@ -701,13 +693,13 @@
 .risk-card .aluno-info h4 {
     margin: 0;
     font-size: 1.05rem;
-    color: #f1f5f9;
+    color: var(--color-text);
     font-weight: 700;
 }
 
 .risk-card .aluno-info span {
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .risk-summary {
@@ -719,7 +711,7 @@
 .risk-summary .motivo {
     max-width: 280px;
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     text-align: right;
 }
 
@@ -744,7 +736,7 @@
 
 .detail-item label {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 700;
@@ -752,7 +744,7 @@
 
 .detail-item span {
     font-size: 0.95rem;
-    color: #e2e8f0;
+    color: var(--color-text);
 }
 
 .detail-item .highlight {
@@ -768,7 +760,7 @@
 .motivos-list label {
     display: block;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     margin-bottom: 10px;
     font-weight: 700;
@@ -781,7 +773,7 @@
 
 .motivos-list li {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     margin-bottom: 6px;
 }
 
@@ -809,7 +801,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 /* ==================== GERENCIAL PREMIUM ==================== */
@@ -827,7 +819,7 @@
     gap: 12px;
     margin: 0 0 24px 0;
     font-size: 1.1rem;
-    color: #f1f5f9;
+    color: var(--color-text);
     font-weight: 700;
 }
 
@@ -868,7 +860,7 @@
     justify-content: center;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 .turma-info {
@@ -879,13 +871,13 @@
 .turma-nome {
     display: block;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--color-text);
     font-size: 0.95rem;
 }
 
 .turma-meta {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 .turma-stats {
@@ -919,7 +911,7 @@
     align-items: center;
     gap: 12px;
     padding: 16px 24px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     color: white;
     border-radius: 14px;
     font-size: 0.95rem;
@@ -964,7 +956,7 @@
 
 .whatsapp-btn.disabled {
     background: rgba(55, 65, 81, 0.5);
-    color: #6b7280;
+    color: var(--color-text-muted);
     cursor: not-allowed;
     opacity: 0.5;
     box-shadow: none;
@@ -1027,12 +1019,12 @@
     gap: 16px;
     flex-wrap: wrap;
     padding: 12px 0;
-    border-top: 1px solid #1e293b;
+    border-top: 1px solid var(--border-color);
     margin-top: 12px;
 }
 
 .contato-info.sem-contato {
-    color: #6b7280;
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -1040,12 +1032,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
 }
 
 .contato-info .empty {
-    color: #6b7280;
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
@@ -1091,17 +1083,14 @@
 }
 
 .relatorios-admin .modal-content {
-    background: linear-gradient(180deg, #0f1117 0%, #0a0d12 100%);
+    background: var(--bg-secondary);
     border-radius: 24px;
     width: 90%;
     max-width: 720px;
     max-height: 90vh;
     overflow: auto;
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    box-shadow: 
-        0 25px 60px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(16, 185, 129, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
     animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1147,7 +1136,7 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1167,7 +1156,7 @@
 .modal-section h3 {
     margin: 0 0 16px 0;
     font-size: 14px;
-    color: #f1f5f9;
+    color: var(--color-text);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1183,11 +1172,11 @@
 }
 
 .stat-box {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-tertiary);
     padding: 14px;
     border-radius: 12px;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
 }
 
 .stat-box .stat-number {
@@ -1198,7 +1187,7 @@
 
 .stat-box .stat-label {
     font-size: 11px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -1226,13 +1215,13 @@
 .date-badge.ausente {
     background: rgba(239, 68, 68, 0.12);
     border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    color: var(--color-danger);
 }
 
 .date-badge.justificada {
     background: rgba(245, 158, 11, 0.12);
     border: 1px solid rgba(245, 158, 11, 0.3);
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 /* Modal Inputs */
@@ -1242,19 +1231,19 @@
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(0, 0, 0, 0.3);
-    color: #f1f5f9;
+    color: var(--color-text);
     font-size: 13px;
     transition: all 0.3s;
 }
 
 .modal-input:focus {
     outline: none;
-    border-color: #10b981;
+    border-color: var(--color-success);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .modal-input::placeholder {
-    color: #64748b;
+    color: var(--color-text-muted);
 }
 
 /* Modal Buttons */
@@ -1272,7 +1261,7 @@
 }
 
 .modal-btn.primary {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     color: #fff;
     box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
@@ -1285,21 +1274,21 @@
 .modal-btn.secondary {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 .modal-btn.secondary:hover {
     background: rgba(255, 255, 255, 0.08);
-    color: #f1f5f9;
+    color: var(--color-text);
 }
 
 .modal-btn.close {
     background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     padding: 8px;
 }
 
 .modal-btn.close:hover {
-    color: #f1f5f9;
+    color: var(--color-text);
 }

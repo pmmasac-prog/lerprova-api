@@ -1,20 +1,20 @@
 /* ===== ADMIN DESIGN SYSTEM: EMERALD PREMIUM V2 ===== */
 
 :root {
-    --admin-emerald: #10b981;
-    --admin-emerald-hover: #059669;
+    --admin-emerald: var(--color-success);
+    --admin-emerald-hover: var(--color-success-dark);
     --admin-emerald-glow: rgba(16, 185, 129, 0.4);
-    --admin-gold: #f59e0b;
+    --admin-gold: var(--color-warning);
     --admin-gold-glow: rgba(245, 158, 11, 0.3);
-    --admin-dark: #0f172a;
-    --admin-bg: #0b0e14;
+    --admin-dark: var(--bg-primary);
+    --admin-bg: var(--bg-primary);
     --admin-card-bg: rgba(15, 23, 42, 0.8);
-    --admin-card-bg-solid: #0f1117;
+    --admin-card-bg-solid: var(--bg-primary);
     --admin-border: rgba(16, 185, 129, 0.15);
     --admin-border-hover: rgba(16, 185, 129, 0.4);
-    --admin-text: #f8fafc;
-    --admin-text-muted: #94a3b8;
-    --admin-text-dim: #64748b;
+    --admin-text: var(--color-text-dark);
+    --admin-text-muted: var(--color-text-muted);
+    --admin-text-dim: var(--color-text-muted);
     --admin-glass: rgba(255, 255, 255, 0.02);
     --admin-glass-hover: rgba(255, 255, 255, 0.05);
 }
@@ -22,7 +22,7 @@
 /* ===== GLASSMORPHISM BASE ===== */
 .admin-container {
     padding: 24px;
-    background: linear-gradient(180deg, var(--admin-bg) 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--admin-bg) 0%, var(--bg-primary) 100%);
     min-height: 100vh;
     color: var(--admin-text);
     position: relative;
@@ -368,7 +368,7 @@
 }
 
 .admin-modal {
-    background: linear-gradient(180deg, #0f1117 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-primary) 100%);
     border: 1px solid var(--admin-border);
     border-radius: 32px;
     width: 100%;
@@ -459,7 +459,7 @@
 }
 
 .admin-select option {
-    background: #0f1117;
+    background: var(--bg-primary);
     color: var(--admin-text);
     padding: 12px;
 }
@@ -558,23 +558,27 @@
     overflow-x: auto;
 }
 
-.user-info-cell {
+.admin-layout {
     display: flex;
-    align-items: center;
-    gap: 14px;
+    background: var(--bg-primary);
+    min-height: 100vh;
 }
 
-.user-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 16px;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.admin-sidebar {
+    width: 260px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    padding: 24px;
+    position: fixed;
+    height: 100vh;
+}
+
+.admin-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
 }
 
 .action-btns {

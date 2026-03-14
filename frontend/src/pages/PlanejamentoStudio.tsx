@@ -488,7 +488,7 @@ export const PlanejamentoStudio: React.FC<TeachingStudioProps> = ({
     return (
         <div className="studio-container">
             <header className="studio-header">
-                <div className="studio-title"><BookOpen size={20} color="#3b82f6" /> Studio: {turmaNome}</div>
+                <div className="studio-title"><BookOpen size={20} color="var(--color-primary)" /> Studio: {turmaNome}</div>
                 <div className="studio-config-inline">
                     <input className="studio-input compact" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Título do Plano..." />
                     <input type="date" className="studio-input compact date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} />

@@ -84,7 +84,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
                 <div className="admin-stat">
-                    <div className="icon-bg icon-emerald" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                    <div className="icon-bg icon-emerald" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--color-primary)' }}>
                         <Globe size={24} />
                     </div>
                     <div className="stat-info">
@@ -98,22 +98,22 @@ export const AdminDashboard: React.FC = () => {
             {overview && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', margin: '20px 0' }}>
                     {[
-                        { label: 'Alunos', value: overview.alunos, icon: <Users size={20} />, color: '#10b981' },
-                        { label: 'Turmas', value: overview.turmas, icon: <BookOpen size={20} />, color: '#3b82f6' },
-                        { label: 'Gabaritos', value: overview.gabaritos, icon: <FileText size={20} />, color: '#f59e0b' },
-                        { label: 'Resultados', value: overview.resultados, icon: <BarChart3 size={20} />, color: '#8b5cf6' },
-                        { label: 'Eventos', value: overview.eventos, icon: <Calendar size={20} />, color: '#ec4899' },
-                        { label: 'Escolas', value: overview.schools, icon: <School size={20} />, color: '#06b6d4' },
+                        { label: 'Alunos', value: overview.alunos, icon: <Users size={20} />, color: 'var(--color-success)' },
+                        { label: 'Turmas', value: overview.turmas, icon: <BookOpen size={20} />, color: 'var(--color-primary)' },
+                        { label: 'Gabaritos', value: overview.gabaritos, icon: <FileText size={20} />, color: 'var(--color-warning)' },
+                        { label: 'Resultados', value: overview.resultados, icon: <BarChart3 size={20} />, color: 'var(--color-purple)' },
+                        { label: 'Eventos', value: overview.eventos, icon: <Calendar size={20} />, color: 'var(--color-pink)' },
+                        { label: 'Escolas', value: overview.schools, icon: <School size={20} />, color: 'var(--color-cyan)' },
                         { label: 'Média Notas', value: overview.media_notas?.toFixed(1) || '—', icon: <Activity size={20} />, color: '#f97316' },
                         { label: 'Presença', value: `${overview.pct_presenca}%`, icon: <Globe size={20} />, color: '#22c55e' },
                     ].map((item, idx) => (
                         <div key={idx} style={{
-                            background: '#0f172a', border: `1px solid ${item.color}33`, borderRadius: '10px',
+                            background: 'var(--bg-primary)', border: `1px solid ${item.color}33`, borderRadius: '10px',
                             padding: '16px', textAlign: 'center',
                         }}>
                             <div style={{ color: item.color, marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>{item.icon}</div>
-                            <p style={{ color: '#f1f5f9', fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{item.value}</p>
-                            <p style={{ color: '#64748b', fontSize: '0.75rem', margin: '4px 0 0' }}>{item.label}</p>
+                            <p style={{ color: 'var(--color-text)', fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{item.value}</p>
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', margin: '4px 0 0' }}>{item.label}</p>
                         </div>
                     ))}
                 </div>
@@ -137,12 +137,12 @@ export const AdminDashboard: React.FC = () => {
                                         <p className="user-name" style={{ fontSize: '14px' }}>{item.nome}</p>
                                         <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                                             {item.detalhes.provas_sem_nota > 0 && (
-                                                <span style={{ fontSize: '10px', color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                <span style={{ fontSize: '10px', color: 'var(--color-danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                                                     {item.detalhes.provas_sem_nota} Provas
                                                 </span>
                                             )}
                                             {item.detalhes.aulas_esquecidas > 0 && (
-                                                <span style={{ fontSize: '10px', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                <span style={{ fontSize: '10px', color: 'var(--color-warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                                                     {item.detalhes.aulas_esquecidas} Aulas
                                                 </span>
                                             )}
@@ -177,8 +177,8 @@ export const AdminDashboard: React.FC = () => {
                                 <div key={idx} className="activity-row" style={{ display: 'flex', gap: '12px', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
                                     <div className="activity-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--admin-emerald)', marginTop: '6px' }} />
                                     <div>
-                                        <p style={{ fontSize: '14px', color: '#f1f5f9' }}>{act.descricao}</p>
-                                        <p style={{ fontSize: '11px', color: '#64748b' }}>{new Date(act.timestamp).toLocaleTimeString()}</p>
+                                        <p style={{ fontSize: '14px', color: 'var(--color-text)' }}>{act.descricao}</p>
+                                        <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{new Date(act.timestamp).toLocaleTimeString()}</p>
                                     </div>
                                 </div>
                             ))

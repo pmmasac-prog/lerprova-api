@@ -8,7 +8,7 @@
     justify-content: center;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(180deg, #020617 0%, #0a0d12 100%);
+    background: linear-gradient(180deg, #020617 0%, var(--bg-primary) 100%);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     padding: 20px;
 }
@@ -88,7 +88,7 @@
 .login-logo-icon svg {
     width: 40px;
     height: 40px;
-    color: #10b981;
+    color: var(--color-success);
     filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.5));
 }
 
@@ -129,7 +129,7 @@
 
 .login-type-label {
     font-size: 10px;
-    color: #10b981;
+    color: var(--color-success);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -156,7 +156,7 @@
     border-radius: 14px;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: var(--color-text-muted);
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
@@ -164,11 +164,11 @@
 }
 
 .login-type-btn:hover {
-    color: #94a3b8;
+    color: var(--color-text-muted);
 }
 
 .login-type-btn.active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     color: #fff;
     box-shadow: 
         0 8px 20px rgba(16, 185, 129, 0.4),
@@ -192,7 +192,7 @@
     color: #fff;
     margin: 0;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #fff 0%, #10b981 100%);
+    background: linear-gradient(135deg, #fff 0%, var(--color-success) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -219,7 +219,7 @@
 
 .login-error svg {
     flex-shrink: 0;
-    color: #ef4444;
+    color: var(--color-danger);
 }
 
 .login-error span {
@@ -244,13 +244,13 @@
     left: 18px;
     top: 50%;
     transform: translateY(-50%);
-    color: #64748b;
+    color: var(--color-text-muted);
     pointer-events: none;
     transition: color 0.3s;
 }
 
 .login-input-group:focus-within .login-input-icon {
-    color: #10b981;
+    color: var(--color-success);
 }
 
 .login-input {
@@ -266,12 +266,12 @@
 }
 
 .login-input::placeholder {
-    color: #475569;
+    color: var(--color-text-secondary);
 }
 
 .login-input:focus {
     outline: none;
-    border-color: #10b981;
+    border-color: var(--color-success);
     background: rgba(16, 185, 129, 0.05);
     box-shadow: 
         0 0 0 4px rgba(16, 185, 129, 0.1),
@@ -283,7 +283,7 @@
     width: 100%;
     padding: 20px;
     margin-top: 8px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
     border: none;
     border-radius: 16px;
     color: #fff;
@@ -355,7 +355,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(90deg, #10b981, #059669);
+    background: linear-gradient(90deg, var(--color-success), var(--color-success-dark));
     color: #fff;
     font-size: 10px;
     font-weight: 700;

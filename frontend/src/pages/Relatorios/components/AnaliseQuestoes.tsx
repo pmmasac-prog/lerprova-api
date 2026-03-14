@@ -70,7 +70,7 @@ export const AnaliseQuestoes: React.FC<AnaliseQuestoesProps> = ({
                                             <div className="progress-bar-bg">
                                                 <div className="progress-bar-fill" style={{
                                                     width: `${q.perc}%`,
-                                                    background: q.perc >= 70 ? '#16a34a' : q.perc >= 50 ? '#ca8a04' : '#dc2626'
+                                                    background: q.perc >= 70 ? '#16a34a' : q.perc >= 50 ? '#ca8a04' : 'var(--color-danger-dark)'
                                                 }}></div>
                                             </div>
                                         </td>
@@ -82,7 +82,7 @@ export const AnaliseQuestoes: React.FC<AnaliseQuestoesProps> = ({
                 </div>
             ) : (
                 <div className="empty-box">
-                    <HelpCircle size={40} color="#cbd5e1" />
+                    <HelpCircle size={40} color="var(--color-text-secondary)" />
                     <p className="empty-text">Selecione um gabarito para ver o índice de erro</p>
                 </div>
             )}

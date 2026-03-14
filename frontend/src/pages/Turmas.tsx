@@ -172,7 +172,7 @@ export const Turmas: React.FC = () => {
 
             <div className="turmas-content">
                 {loading ? (
-                    <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: '40px' }}>Carregando turmas...</p>
+                    <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', marginTop: '40px' }}>Carregando turmas...</p>
                 ) : turmas.length > 0 ? (
                     <div className="turmas-grid">
                         {turmas.map(turma => (
@@ -188,7 +188,7 @@ export const Turmas: React.FC = () => {
                                 </div>
 
                                 <div className="turma-actions">
-                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); openEditModal(turma); }} title="Editar Turma" style={{ color: '#60a5fa' }}>
+                                    <button className="icon-btn" onClick={(e) => { e.stopPropagation(); openEditModal(turma); }} title="Editar Turma" style={{ color: 'var(--color-primary)' }}>
                                         <Edit2 size={18} />
                                     </button>
                                     <button className="icon-btn" onClick={(e) => { e.stopPropagation(); handleDeleteTurma(turma.id); }} title="Excluir Turma">

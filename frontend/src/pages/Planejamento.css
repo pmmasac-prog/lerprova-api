@@ -7,7 +7,7 @@
     font-size: 0.6rem;
     font-weight: 900;
     text-transform: uppercase;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     margin-bottom: 5px;
     letter-spacing: 1px;
 }
@@ -37,16 +37,16 @@
 /* UI: Planejamento Momento (mobile-first, acessível, responsivo, tokens) */
 
 :root {
-    --pm-bg: var(--bg-primary, #0f172a);
-    --pm-surface: var(--card-bg, #111827);
+    --pm-bg: var(--bg-primary, var(--bg-primary));
+    --pm-surface: var(--card-bg, var(--bg-tertiary));
     --pm-surface-2: rgba(255, 255, 255, .03);
     --pm-border: var(--border-color, rgba(148, 163, 184, .18));
     --pm-text: var(--text-primary, #e5e7eb);
-    --pm-muted: var(--text-dim, #94a3b8);
-    --pm-primary: var(--primary-color, #3b82f6);
+    --pm-muted: var(--text-dim, var(--color-text-muted));
+    --pm-primary: var(--primary-color, var(--color-primary));
     --pm-success: var(--success-color, #22c55e);
-    --pm-warn: #f59e0b;
-    --pm-danger: #ef4444;
+    --pm-warn: var(--color-warning);
+    --pm-danger: var(--color-danger);
 
     --pm-radius-lg: 20px;
     --pm-radius-md: 14px;
@@ -821,7 +821,7 @@
 }
 
 .modal-vincular {
-    background: #1e293b;
+    background: var(--border-color);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 24px;
@@ -840,19 +840,19 @@
 .modal-vincular-header h3 {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: var(--color-text);
     margin: 0;
 }
 
 .modal-vincular-desc {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     line-height: 1.5;
     margin-bottom: 20px;
 }
 
 .modal-vincular-desc strong {
-    color: #e2e8f0;
+    color: var(--color-text);
 }
 
 .modal-vincular-fields {
@@ -868,7 +868,7 @@
     gap: 6px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -878,15 +878,15 @@
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--bg-primary);
+    color: var(--color-text);
     font-size: 0.9rem;
     outline: none;
 }
 
 .modal-vincular-fields select:focus,
 .modal-vincular-fields input[type="date"]:focus {
-    border-color: #3b82f6;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
@@ -901,7 +901,7 @@
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: transparent;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.85rem;
     cursor: pointer;
 }
@@ -914,7 +914,7 @@
     padding: 8px 20px;
     border-radius: 8px;
     border: none;
-    background: #3b82f6;
+    background: var(--color-primary);
     color: #fff;
     font-size: 0.85rem;
     font-weight: 600;
@@ -925,7 +925,7 @@
 }
 
 .btn-vincular:hover {
-    background: #2563eb;
+    background: var(--color-primary-dark);
 }
 
 .btn-vincular:disabled {

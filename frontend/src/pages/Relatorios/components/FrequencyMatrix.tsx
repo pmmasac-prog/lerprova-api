@@ -113,7 +113,7 @@ export const FrequencyMatrix: React.FC<FrequencyMatrixProps> = ({ turmaId, month
                                         </td>
                                     );
                                 })}
-                                {dates.length === 0 && <td style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>-</td>}
+                                {dates.length === 0 && <td style={{ fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center' }}>-</td>}
                             </tr>
                         ))}
                     </tbody>

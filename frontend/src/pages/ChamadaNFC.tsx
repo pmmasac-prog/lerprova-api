@@ -239,9 +239,9 @@ export const ChamadaNFC: React.FC = () => {
     const getStatusColor = () => {
         switch (readStatus) {
             case 'success': return 'var(--nfc-emerald)';
-            case 'error': return '#ef4444';
-            case 'unknown': return '#f59e0b';
-            case 'reading': return '#3b82f6';
+            case 'error': return 'var(--color-danger)';
+            case 'unknown': return 'var(--color-warning)';
+            case 'reading': return 'var(--color-primary)';
             default: return 'rgba(255,255,255,0.1)';
         }
     };

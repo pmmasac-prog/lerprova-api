@@ -296,7 +296,7 @@ export const Gabarito: React.FC = () => {
                     <h1 className="gabarito-title">Gabaritos</h1>
                 </div>
                 {editingId && (
-                    <div className="status-badge" style={{ background: '#3b82f6' }}>
+                    <div className="status-badge" style={{ background: 'var(--color-primary)' }}>
                         <span>Editando</span>
                     </div>
                 )}
@@ -355,10 +355,10 @@ export const Gabarito: React.FC = () => {
                                                 <span className="dot">•</span>
                                                 <span>{g.num_questoes} questões</span>
                                                 <span className="dot">•</span>
-                                                <span style={{ fontWeight: 'bold', color: '#10b981' }}>{(g as any).total_resultados || 0} correções</span>
+                                                <span style={{ fontWeight: 'bold', color: 'var(--color-success)' }}>{(g as any).total_resultados || 0} correções</span>
                                             </div>
-                                            <div className="history-answers" style={{ fontSize: '0.8rem', color: '#94a3b8', background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                                <span style={{ color: '#64748b', fontWeight: 'bold', marginRight: '4px' }}>RESPOSTAS:</span>
+                                            <div className="history-answers" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '6px 10px', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                <span style={{ color: 'var(--color-text-muted)', fontWeight: 'bold', marginRight: '4px' }}>RESPOSTAS:</span>
                                                 {Array.isArray(g.respostas_corretas)
                                                     ? g.respostas_corretas.join(', ')
                                                     : 'Não disponível'
@@ -529,7 +529,7 @@ export const Gabarito: React.FC = () => {
                         <span>{editingId ? 'Atualizar Gabarito' : 'Salvar Gabarito'}</span>
                     </button>
                     {editingId && (
-                        <button className="reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: '#94a3b8' }}>
+                        <button className="reset-btn" onClick={handleReset} style={{ marginLeft: '10px', background: 'var(--color-text-muted)' }}>
                             <span>Cancelar Edição</span>
                         </button>
                     )}

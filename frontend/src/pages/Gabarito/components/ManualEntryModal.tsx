@@ -140,7 +140,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                                                         {notaValue.toFixed(1)}
                                                     </div>
                                                 )}
-                                                <ChevronRight size={16} color="#64748b" />
+                                                <ChevronRight size={16} color="var(--color-text-muted)" />
                                             </div>
                                         </div>
                                     );

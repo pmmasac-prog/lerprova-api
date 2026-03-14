@@ -326,7 +326,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                     ) : (
                         <div className="result-view">
                             <div className="result-card">
-                                <CheckCircle size={48} color="#10b981" />
+                                <CheckCircle size={48} color="var(--color-success)" />
                                 <h2>Nota: {result.nota}</h2>
                                 <p className="aluno-name">{result.aluno_nome}</p>
 

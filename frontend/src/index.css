@@ -6,29 +6,56 @@
 
 :root {
   /* Default Theme (Light) */
-  --bg-primary: #f8fafc;
+  --bg-primary: var(--color-text-dark);
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
   --bg-card-light: #ffffff;
+  --bg-tertiary: var(--color-text);
   
   /* Action Colors */
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-dark);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  
+  /* Semantic Content Backgrounds (Soft) */
+  --bg-success-soft: #dcfce7;
+  --bg-warning-soft: #fef9c3;
+  --bg-danger-soft: #fee2e2;
+  --bg-info-soft: #eff6ff;
+  --bg-indigo-soft: #e0e7ff;
+  --bg-purple-soft: #f3e8ff;
+  
+  /* Semantic Text Colors */
+  --color-success-dark: #166534;
+  --color-warning-dark: #854d0e;
+  --color-danger-dark: #991b1b;
+  --color-info-dark: #1e40af;
   
   /* Text Colors */
-  --color-text: #0f172a;
-  --color-text-dark: #0f172a;
-  --color-text-muted: #64748b;
-  --color-text-secondary: #475569;
+  --color-text: var(--bg-primary);
+  --color-text-dark: var(--bg-primary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-secondary: var(--color-text-secondary);
   
   /* Borders & Glass */
-  --border-color: #e2e8f0;
-  --border-color-dark: #cbd5e1;
+  --border-color: var(--color-text);
+  --border-color-dark: var(--color-text-secondary);
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.3);
+
+  /* Auxiliary Colors - Soft Backgrounds */
+  --bg-indigo-soft: rgba(99, 102, 241, 0.1);
+  --bg-purple-soft: rgba(168, 85, 247, 0.1);
+  --bg-pink-soft: rgba(236, 72, 153, 0.1);
+  --bg-cyan-soft: rgba(6, 182, 212, 0.1);
+
+  /* Auxiliary Colors - Text/Icons */
+  --color-indigo: var(--color-indigo);
+  --color-purple: var(--color-purple);
+  --color-pink: var(--color-pink);
+  --color-cyan: var(--color-cyan);
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -43,21 +70,44 @@
 }
 
 [data-theme='dark'] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
+  --bg-primary: var(--bg-primary);
+  --bg-secondary: var(--border-color);
   --bg-card: rgba(30, 41, 59, 0.7);
-  --bg-card-light: #1e293b;
+  --bg-card-light: var(--border-color);
+  --bg-tertiary: var(--bg-primary);
   
   --color-primary: #60a5fa;
-  --color-primary-hover: #3b82f6;
+  --color-primary-hover: var(--color-primary);
   
-  --color-text: #f8fafc;
-  --color-text-dark: #f8fafc;
-  --color-text-muted: #94a3b8;
-  --color-text-secondary: #cbd5e1;
+  /* Auxiliary Colors - Text/Icons */
+  --color-indigo: var(--color-indigo);
+  --color-purple: var(--color-purple);
+  --color-pink: var(--color-pink);
+  --color-cyan: var(--color-cyan);
+
+  /* Semantic Content Backgrounds (Soft - Dark variants) */
+  --bg-success-soft: rgba(16, 185, 129, 0.15);
+  --bg-warning-soft: rgba(245, 158, 11, 0.15);
+  --bg-danger-soft: rgba(239, 68, 68, 0.15);
+  --bg-info-soft: rgba(59, 130, 246, 0.15);
+  --bg-indigo-soft: rgba(79, 70, 229, 0.15);
+  --bg-purple-soft: rgba(168, 85, 247, 0.15);
+  --bg-pink-soft: rgba(236, 72, 153, 0.15);
+  --bg-cyan-soft: rgba(6, 182, 212, 0.15);
   
-  --border-color: #334155;
-  --border-color-dark: #475569;
+  /* Semantic Text Colors (Lightened for dark) */
+  --color-success-dark: #34d399;
+  --color-warning-dark: #fbbf24;
+  --color-danger-dark: #f87171;
+  --color-info-dark: #93c5fd;
+
+  --color-text: var(--color-text-dark);
+  --color-text-dark: var(--color-text-dark);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-secondary: var(--color-text-secondary);
+  
+  --border-color: var(--border-color);
+  --border-color-dark: var(--color-text-secondary);
   --glass-bg: rgba(15, 23, 42, 0.6);
   --glass-border: rgba(255, 255, 255, 0.1);
   
@@ -71,9 +121,26 @@
   --bg-secondary: #4f46e5;
   --bg-card: rgba(255, 255, 255, 0.1);
   --bg-card-light: rgba(255, 255, 255, 0.15);
+  --bg-tertiary: rgba(0, 0, 0, 0.2);
   
-  --color-primary: #f59e0b; /* Amber for contrast */
-  --color-primary-hover: #d97706;
+  --color-primary: var(--color-warning); /* Amber for contrast */
+  --color-primary-hover: var(--color-warning-dark);
+
+  /* Auxiliary Colors - Text/Icons */
+  --color-indigo: var(--color-indigo);
+  --color-purple: #d8b4fe;
+  --color-pink: var(--color-pink);
+  --color-cyan: var(--color-cyan);
+  
+  /* Semantic Content Backgrounds (Modern Glass) */
+  --bg-success-soft: rgba(16, 185, 129, 0.25);
+  --bg-warning-soft: rgba(245, 158, 11, 0.25);
+  --bg-danger-soft: rgba(239, 68, 68, 0.25);
+  --bg-info-soft: rgba(59, 130, 246, 0.25);
+  --bg-indigo-soft: rgba(255, 255, 255, 0.2);
+  --bg-purple-soft: rgba(168, 85, 247, 0.25);
+  --bg-pink-soft: rgba(236, 72, 153, 0.25);
+  --bg-cyan-soft: rgba(6, 182, 212, 0.25);
   
   --color-text: #ffffff;
   --color-text-dark: #ffffff;
@@ -239,18 +306,18 @@ code {
 }
 
 .nota-badge.success {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--bg-success-soft);
+  color: var(--color-success-dark);
 }
 
 .nota-badge.warning {
-  background: #fef9c3;
-  color: #854d0e;
+  background: var(--bg-warning-soft);
+  color: var(--color-warning-dark);
 }
 
 .nota-badge.danger {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--bg-danger-soft);
+  color: var(--color-danger-dark);
 }
 
 /* ===== CARDS ===== */
@@ -444,37 +511,37 @@ code {
 }
 
 .icon-blue {
-  background: #eff6ff;
-  color: #3b82f6;
-  border: 1px solid #dbeafe;
+  background: var(--bg-info-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--border-color);
 }
 
 .icon-purple {
-  background: #f3e8ff;
-  color: #a855f7;
-  border: 1px solid #f3e8ff;
+  background: var(--bg-purple-soft);
+  color: var(--color-purple);
+  border: 1px solid var(--border-color);
 }
 
 .icon-green {
-  background: #dcfce7;
-  color: #22c55e;
-  border: 1px solid #dcfce7;
+  background: var(--bg-success-soft);
+  color: var(--color-success);
+  border: 1px solid var(--border-color);
 }
 
 .icon-orange {
-  background: #ffedd5;
-  color: #f97316;
-  border: 1px solid #ffedd5;
+  background: var(--bg-warning-soft);
+  color: var(--color-warning);
+  border: 1px solid var(--border-color);
 }
 
 .icon-red {
-  background: #fee2e2;
-  color: #ef4444;
-  border: 1px solid #fecaca;
+  background: var(--bg-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid var(--border-color);
 }
 
 .icon-indigo {
-  background: #e0e7ff;
+  background: var(--bg-indigo-soft);
   color: #4f46e5;
-  border: 1px solid #c7d2fe;
+  border: 1px solid var(--border-color);
 }

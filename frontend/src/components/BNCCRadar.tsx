@@ -75,7 +75,7 @@ export const BNCCRadar: React.FC<BNCCRadarProps> = ({ data, size = 300 }) => {
                     <polygon
                         points={polygonPath}
                         fill="rgba(59, 130, 246, 0.3)"
-                        stroke="#3b82f6"
+                        stroke="var(--color-primary)"
                         strokeWidth="2"
                     />
                 )}
@@ -86,7 +86,7 @@ export const BNCCRadar: React.FC<BNCCRadarProps> = ({ data, size = 300 }) => {
                         key={i}
                         x={p.labelX}
                         y={p.labelY}
-                        fill="#94a3b8"
+                        fill="var(--color-text-muted)"
                         fontSize="10"
                         textAnchor="middle"
                         dominantBaseline="middle"

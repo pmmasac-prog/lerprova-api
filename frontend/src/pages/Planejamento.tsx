@@ -42,10 +42,10 @@ interface Aula {
 }
 
 const PERCEPCOES = [
-    { key: 'engajados', label: '🔥 Engajados', color: '#10b981' },
-    { key: 'duvida', label: '🤔 Muita Dúvida', color: '#f59e0b' },
-    { key: 'tempo', label: '⏳ Faltou Tempo', color: '#ef4444' },
-    { key: 'lab', label: '🧪 Prática Lab', color: '#3b82f6' },
+    { key: 'engajados', label: '🔥 Engajados', color: 'var(--color-success)' },
+    { key: 'duvida', label: '🤔 Muita Dúvida', color: 'var(--color-warning)' },
+    { key: 'tempo', label: '⏳ Faltou Tempo', color: 'var(--color-danger)' },
+    { key: 'lab', label: '🧪 Prática Lab', color: 'var(--color-primary)' },
 ] as const;
 
 type PercepcaoKey = (typeof PERCEPCOES)[number]['key'];

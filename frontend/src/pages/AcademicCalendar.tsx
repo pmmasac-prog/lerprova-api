@@ -22,17 +22,17 @@ interface CalendarEvent {
 }
 
 const EVENT_TYPES: Record<string, { label: string; emoji: string; color: string; bgColor: string }> = {
-  'holiday': { label: 'Feriado', emoji: '🏖️', color: '#ef4444', bgColor: '#7f1d1d' },
-  'planning': { label: 'Planejamento', emoji: '📋', color: '#f59e0b', bgColor: '#78350f' },
-  'meeting': { label: 'Reunião', emoji: '👥', color: '#8b5cf6', bgColor: '#4c1d95' },
-  'administrative': { label: 'Administrativo', emoji: '⚙️', color: '#ec4899', bgColor: '#831843' },
-  'vacation': { label: 'Férias', emoji: '✈️', color: '#06b6d4', bgColor: '#164e63' },
+  'holiday': { label: 'Feriado', emoji: '🏖️', color: 'var(--color-danger)', bgColor: '#7f1d1d' },
+  'planning': { label: 'Planejamento', emoji: '📋', color: 'var(--color-warning)', bgColor: '#78350f' },
+  'meeting': { label: 'Reunião', emoji: '👥', color: 'var(--color-purple)', bgColor: '#4c1d95' },
+  'administrative': { label: 'Administrativo', emoji: '⚙️', color: 'var(--color-pink)', bgColor: '#831843' },
+  'vacation': { label: 'Férias', emoji: '✈️', color: 'var(--color-cyan)', bgColor: '#164e63' },
   'assessment': { label: 'SEAMA - Diagnóstica', emoji: '🧪', color: '#f97316', bgColor: '#7c2d12' },
-  'assessment_other': { label: 'Avaliação', emoji: '📝', color: '#3b82f6', bgColor: '#1e3a8a' },
-  'pending_test': { label: 'Testes de Pendência', emoji: '⏳', color: '#a78bfa', bgColor: '#4c1d95' },
-  'term_milestone': { label: 'Marco Acadêmico', emoji: '🎯', color: '#10b981', bgColor: '#064e3b' },
-  'commemorative': { label: 'Comemorativo', emoji: '🎉', color: '#8b5cf6', bgColor: '#4c1d95' },
-  'make_up_class': { label: 'Reposição', emoji: '🔄', color: '#6366f1', bgColor: '#312e81' }
+  'assessment_other': { label: 'Avaliação', emoji: '📝', color: 'var(--color-primary)', bgColor: 'var(--bg-secondary)' },
+  'pending_test': { label: 'Testes de Pendência', emoji: '⏳', color: 'var(--color-purple)', bgColor: '#4c1d95' },
+  'term_milestone': { label: 'Marco Acadêmico', emoji: '🎯', color: 'var(--color-success)', bgColor: '#064e3b' },
+  'commemorative': { label: 'Comemorativo', emoji: '🎉', color: 'var(--color-purple)', bgColor: '#4c1d95' },
+  'make_up_class': { label: 'Reposição', emoji: '🔄', color: 'var(--color-indigo)', bgColor: '#312e81' }
 };
 
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -190,7 +190,7 @@ export const AcademicCalendar: React.FC = () => {
   if (loading) {
     return (
       <div className="admin-container">
-        <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
+        <div style={{ padding: '60px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
           <Calendar size={40} style={{ marginBottom: '20px', opacity: 0.5 }} />
           <p>Carregando calendário acadêmico...</p>
         </div>
@@ -217,7 +217,7 @@ export const AcademicCalendar: React.FC = () => {
             onClick={openCreate}
             style={{
               padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
-              background: '#10b981', border: 'none',
+              background: 'var(--color-success)', border: 'none',
               color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold'
             }}
           >
@@ -227,9 +227,9 @@ export const AcademicCalendar: React.FC = () => {
             onClick={() => setViewMode('month')}
             style={{
               padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
-              background: viewMode === 'month' ? '#1e40af' : '#0f172a',
-              border: viewMode === 'month' ? '2px solid #3b82f6' : '1px solid #374151',
-              color: '#f3f4f6', display: 'flex', alignItems: 'center', gap: '6px'
+              background: viewMode === 'month' ? '#1e40af' : 'var(--bg-primary)',
+              border: viewMode === 'month' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
+              color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '6px'
             }}
           >
             <Grid size={16} /> Mês
@@ -238,9 +238,9 @@ export const AcademicCalendar: React.FC = () => {
             onClick={() => setViewMode('list')}
             style={{
               padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
-              background: viewMode === 'list' ? '#1e40af' : '#0f172a',
-              border: viewMode === 'list' ? '2px solid #3b82f6' : '1px solid #374151',
-              color: '#f3f4f6', display: 'flex', alignItems: 'center', gap: '6px'
+              background: viewMode === 'list' ? '#1e40af' : 'var(--bg-primary)',
+              border: viewMode === 'list' ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
+              color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '6px'
             }}
           >
             <List size={16} /> Períodos
@@ -253,13 +253,13 @@ export const AcademicCalendar: React.FC = () => {
         <div className="admin-card" style={{ marginTop: '20px' }}>
           {/* Month navigation */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <button onClick={() => navigateMonth(-1)} style={{ background: 'transparent', border: '1px solid #374151', color: '#94a3b8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
+            <button onClick={() => navigateMonth(-1)} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--color-text-muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
               <ChevronLeft size={18} />
             </button>
-            <h2 style={{ color: '#f1f5f9', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <h2 style={{ color: 'var(--color-text)', fontSize: '1.2rem', fontWeight: 'bold' }}>
               {MONTH_NAMES[currentMonth]} {currentYear}
             </h2>
-            <button onClick={() => navigateMonth(1)} style={{ background: 'transparent', border: '1px solid #374151', color: '#94a3b8', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
+            <button onClick={() => navigateMonth(1)} style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--color-text-muted)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
               <ChevronRight size={18} />
             </button>
           </div>
@@ -267,7 +267,7 @@ export const AcademicCalendar: React.FC = () => {
           {/* Weekday headers */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
             {WEEKDAY_NAMES.map(d => (
-              <div key={d} style={{ textAlign: 'center', color: '#64748b', fontSize: '0.75rem', fontWeight: 'bold', padding: '6px 0' }}>
+              <div key={d} style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.75rem', fontWeight: 'bold', padding: '6px 0' }}>
                 {d}
               </div>
             ))}
@@ -289,21 +289,21 @@ export const AcademicCalendar: React.FC = () => {
                   style={{
                     minHeight: '80px',
                     padding: '4px',
-                    background: isToday ? 'rgba(16, 185, 129, 0.15)' : isWeekend ? 'rgba(100,116,139,0.05)' : '#0f172a',
-                    border: isToday ? '2px solid #10b981' : '1px solid #1e293b',
+                    background: isToday ? 'rgba(16, 185, 129, 0.15)' : isWeekend ? 'rgba(100,116,139,0.05)' : 'var(--bg-primary)',
+                    border: isToday ? '2px solid var(--color-success)' : '1px solid var(--border-color)',
                     borderRadius: '6px',
                     position: 'relative',
                   }}
                 >
                   <span style={{
                     fontSize: '0.8rem', fontWeight: isToday ? 'bold' : 'normal',
-                    color: isToday ? '#10b981' : isWeekend ? '#475569' : '#94a3b8',
+                    color: isToday ? 'var(--color-success)' : isWeekend ? 'var(--color-text-secondary)' : 'var(--color-text-muted)',
                   }}>
                     {day}
                   </span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
                     {dayEvents.slice(0, 3).map(ev => {
-                      const et = EVENT_TYPES[ev.type] || { emoji: '📌', color: '#94a3b8', label: '' };
+                      const et = EVENT_TYPES[ev.type] || { emoji: '📌', color: 'var(--color-text-muted)', label: '' };
                       return (
                         <div
                           key={ev.id}
@@ -326,7 +326,7 @@ export const AcademicCalendar: React.FC = () => {
                       );
                     })}
                     {dayEvents.length > 3 && (
-                      <span style={{ fontSize: '0.55rem', color: '#64748b' }}>+{dayEvents.length - 3} mais</span>
+                      <span style={{ fontSize: '0.55rem', color: 'var(--color-text-muted)' }}>+{dayEvents.length - 3} mais</span>
                     )}
                   </div>
                 </div>
@@ -356,12 +356,12 @@ export const AcademicCalendar: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <h3 className="admin-card-title" style={{ margin: 0, fontSize: '1.1rem', color: isCurrent ? '#10b981' : 'var(--admin-gold)' }}>
+                      <h3 className="admin-card-title" style={{ margin: 0, fontSize: '1.1rem', color: isCurrent ? 'var(--color-success)' : 'var(--admin-gold)' }}>
                         {period.name}
                       </h3>
-                      {isCurrent && <span style={{ background: '#10b981', color: '#0f172a', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>ATUAL</span>}
+                      {isCurrent && <span style={{ background: 'var(--color-success)', color: 'var(--bg-primary)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>ATUAL</span>}
                     </div>
-                    <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '5px 0 0 0' }}>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: '5px 0 0 0' }}>
                       {new Date(period.start_date + 'T12:00:00').toLocaleDateString('pt-BR')} → {new Date(period.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </p>
                   </div>
@@ -371,7 +371,7 @@ export const AcademicCalendar: React.FC = () => {
                   onClick={() => setExpandedPeriod(isExpanded ? '' : period.id)}
                   style={{
                     width: '100%', padding: '10px', background: 'transparent',
-                    border: '1px solid #374151', color: '#94a3b8', borderRadius: '6px',
+                    border: '1px solid var(--border-color)', color: 'var(--color-text-muted)', borderRadius: '6px',
                     cursor: 'pointer', display: 'flex', justifyContent: 'center',
                     alignItems: 'center', gap: '8px', fontSize: '0.9rem', marginTop: '12px',
                   }}
@@ -383,34 +383,34 @@ export const AcademicCalendar: React.FC = () => {
                 {isExpanded && (
                   <div style={{ maxHeight: '600px', overflowY: 'auto', marginTop: '12px' }}>
                     {periodEvents.length === 0 ? (
-                      <p style={{ textAlign: 'center', padding: '20px', color: '#4b5563', fontSize: '0.9rem' }}>Nenhum evento neste período</p>
+                      <p style={{ textAlign: 'center', padding: '20px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Nenhum evento neste período</p>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {periodEvents.map(event => {
-                          const et = EVENT_TYPES[event.type] || { label: 'Outro', emoji: '📌', color: '#94a3b8', bgColor: '#1e293b' };
+                          const et = EVENT_TYPES[event.type] || { label: 'Outro', emoji: '📌', color: 'var(--color-text-muted)', bgColor: 'var(--border-color)' };
                           return (
                             <div
                               key={event.id}
                               style={{ padding: '12px', borderRadius: '8px', background: et.bgColor, border: `1px solid ${et.color}`, position: 'relative' }}
                             >
                               <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
-                                <button onClick={() => openEdit(event)} title="Editar" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#94a3b8', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
+                                <button onClick={() => openEdit(event)} title="Editar" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--color-text-muted)', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
                                   <Edit2 size={14} />
                                 </button>
-                                <button onClick={() => setDeleteConfirm(event)} title="Remover" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', color: '#ef4444', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
+                                <button onClick={() => setDeleteConfirm(event)} title="Remover" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', color: 'var(--color-danger)', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
                                   <Trash2 size={14} />
                                 </button>
                               </div>
                               <p style={{ color: et.color, fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 3px 0' }}>
                                 {et.emoji} {et.label}
                               </p>
-                              <p style={{ color: '#f3f4f6', fontSize: '0.9rem', fontWeight: '600', margin: 0 }}>{event.title}</p>
-                              <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '3px 0 0 0' }}>
+                              <p style={{ color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: '600', margin: 0 }}>{event.title}</p>
+                              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', margin: '3px 0 0 0' }}>
                                 {new Date(event.start_date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                 {event.end_date !== event.start_date && ` - ${new Date(event.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}`}
                               </p>
                               {event.description && (
-                                <p style={{ color: '#cbd5e1', fontSize: '0.8rem', margin: '5px 0 0 0', fontStyle: 'italic' }}>{event.description}</p>
+                                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem', margin: '5px 0 0 0', fontStyle: 'italic' }}>{event.description}</p>
                               )}
                             </div>
                           );
@@ -426,25 +426,25 @@ export const AcademicCalendar: React.FC = () => {
       )}
 
       {/* RESUMO GERAL */}
-      <div className="admin-card" style={{ marginTop: '20px', background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)', border: '1px solid var(--admin-emerald)' }}>
+      <div className="admin-card" style={{ marginTop: '20px', background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%)', border: '1px solid var(--admin-emerald)' }}>
         <h3 className="admin-card-title" style={{ color: 'var(--admin-gold)', display: 'flex', gap: '8px', alignItems: 'center' }}>
           📊 Resumo do Ano Letivo {currentYear}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginTop: '15px' }}>
-          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid #10b981' }}>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Períodos</p>
-            <p style={{ color: '#10b981', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>{periods.length}</p>
+          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid var(--color-success)' }}>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Períodos</p>
+            <p style={{ color: 'var(--color-success)', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>{periods.length}</p>
           </div>
-          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '8px', border: '1px solid #a855f7' }}>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Total de Eventos</p>
-            <p style={{ color: '#a855f7', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>{events.length}</p>
+          <div style={{ textAlign: 'center', padding: '15px', background: 'rgba(168, 85, 247, 0.1)', borderRadius: '8px', border: '1px solid var(--color-purple)' }}>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Total de Eventos</p>
+            <p style={{ color: 'var(--color-purple)', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>{events.length}</p>
           </div>
           {Object.entries(EVENT_TYPES).map(([key, { label, emoji, color }]) => {
             const count = events.filter(e => e.type === key).length;
             if (count === 0) return null;
             return (
               <div key={key} style={{ textAlign: 'center', padding: '15px', background: `${color}11`, borderRadius: '8px', border: `1px solid ${color}` }}>
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{emoji} {label}</p>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{emoji} {label}</p>
                 <p style={{ color, fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>{count}</p>
               </div>
             );
@@ -455,28 +455,28 @@ export const AcademicCalendar: React.FC = () => {
       {/* ===== MODAL CRIAR/EDITAR ===== */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', width: '95%', maxWidth: '500px', border: '1px solid #374151' }}>
+          <div style={{ background: 'var(--border-color)', borderRadius: '12px', padding: '24px', width: '95%', maxWidth: '500px', border: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ color: '#f1f5f9', margin: 0, fontSize: '1.1rem' }}>
+              <h3 style={{ color: 'var(--color-text)', margin: 0, fontSize: '1.1rem' }}>
                 {editingEvent ? '✏️ Editar Evento' : '➕ Novo Evento'}
               </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label htmlFor="ev-title" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Título *</label>
+                <label htmlFor="ev-title" style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Título *</label>
                 <input id="ev-title" name="title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--color-text)', fontSize: '0.9rem', boxSizing: 'border-box' }}
                   placeholder="Nome do evento" />
               </div>
 
               <div>
-                <label htmlFor="ev-type" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Tipo *</label>
+                <label htmlFor="ev-type" style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Tipo *</label>
                 <select id="ev-type" name="event_type_id" value={formData.event_type_id} onChange={e => setFormData({ ...formData, event_type_id: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }}>
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--color-text)', fontSize: '0.9rem', boxSizing: 'border-box' }}>
                   {Object.entries(EVENT_TYPES).map(([key, { label, emoji }]) => (
                     <option key={key} value={key}>{emoji} {label}</option>
                   ))}
@@ -485,25 +485,25 @@ export const AcademicCalendar: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label htmlFor="ev-start" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Data Início *</label>
+                  <label htmlFor="ev-start" style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Data Início *</label>
                   <input id="ev-start" name="start_date" type="date" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--color-text)', fontSize: '0.9rem', boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <label htmlFor="ev-end" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Data Fim *</label>
+                  <label htmlFor="ev-end" style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Data Fim *</label>
                   <input id="ev-end" name="end_date" type="date" value={formData.end_date} onChange={e => setFormData({ ...formData, end_date: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--color-text)', fontSize: '0.9rem', boxSizing: 'border-box' }} />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="ev-desc" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Descrição</label>
+                <label htmlFor="ev-desc" style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Descrição</label>
                 <textarea id="ev-desc" name="description" rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #374151', background: '#0f172a', color: '#f3f4f6', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--color-text)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
                   placeholder="Descrição opcional" />
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-muted)', fontSize: '0.85rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={formData.is_school_day} onChange={e => setFormData({ ...formData, is_school_day: e.target.checked })} />
                 Dia letivo
               </label>
@@ -511,13 +511,13 @@ export const AcademicCalendar: React.FC = () => {
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowModal(false)}
-                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #374151', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}>
+                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
                 Cancelar
               </button>
               <button onClick={handleSave} disabled={saving || !formData.title || !formData.start_date || !formData.end_date}
                 style={{
                   padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                  background: saving ? '#374151' : '#10b981', color: '#fff', fontWeight: 'bold',
+                  background: saving ? 'var(--border-color)' : 'var(--color-success)', color: '#fff', fontWeight: 'bold',
                   display: 'flex', alignItems: 'center', gap: '6px', opacity: (!formData.title || !formData.start_date || !formData.end_date) ? 0.5 : 1
                 }}>
                 <Save size={16} /> {saving ? 'Salvando...' : editingEvent ? 'Atualizar' : 'Criar'}
@@ -530,20 +530,20 @@ export const AcademicCalendar: React.FC = () => {
       {/* ===== CONFIRMAÇÃO DE EXCLUSÃO ===== */}
       {deleteConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', width: '90%', maxWidth: '400px', border: '1px solid #ef4444', textAlign: 'center' }}>
-            <Trash2 size={36} color="#ef4444" style={{ marginBottom: '12px' }} />
-            <h3 style={{ color: '#f1f5f9', margin: '0 0 8px 0' }}>Remover Evento?</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0 0 20px 0' }}>
-              <strong style={{ color: '#f1f5f9' }}>{deleteConfirm.title}</strong><br />
+          <div style={{ background: 'var(--border-color)', borderRadius: '12px', padding: '24px', width: '90%', maxWidth: '400px', border: '1px solid var(--color-danger)', textAlign: 'center' }}>
+            <Trash2 size={36} color="var(--color-danger)" style={{ marginBottom: '12px' }} />
+            <h3 style={{ color: 'var(--color-text)', margin: '0 0 8px 0' }}>Remover Evento?</h3>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', margin: '0 0 20px 0' }}>
+              <strong style={{ color: 'var(--color-text)' }}>{deleteConfirm.title}</strong><br />
               Esta ação não pode ser desfeita.
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button onClick={() => setDeleteConfirm(null)}
-                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #374151', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}>
+                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
                 Cancelar
               </button>
               <button onClick={() => handleDelete(deleteConfirm)}
-                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
+                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: 'var(--color-danger)', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
                 Remover
               </button>
             </div>
@@ -556,7 +556,7 @@ export const AcademicCalendar: React.FC = () => {
         <div style={{
           position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
           padding: '12px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem',
-          background: toast.type === 'success' ? '#10b981' : '#ef4444', color: '#fff',
+          background: toast.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)', color: '#fff',
           boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
         }}>
           {toast.msg}
