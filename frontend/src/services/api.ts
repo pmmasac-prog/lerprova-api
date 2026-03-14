@@ -152,7 +152,7 @@ export const api = {
         });
     },
 
-    async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno?: string[], nota?: number }) {
+    async addResultadoManual(data: { aluno_id: number, gabarito_id: number, respostas_aluno?: string[], nota?: number, registrar_presenca?: boolean }) {
         return request(`${API_URL}/resultados`, {
             method: 'POST',
             headers: getAuthHeaders(),

@@ -306,3 +306,92 @@
     background: var(--bg-primary);
     color: var(--color-text);
 }
+
+/* New: Add Aluno and Presence Toggle */
+.btn-add-aluno-manual {
+    padding: 6px 14px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary)33;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add-aluno-manual:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+.add-aluno-inline {
+    background: var(--bg-primary);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--color-primary)33;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.presence-toggle-wrapper {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 12px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.presence-toggle-wrapper:hover {
+    border-color: var(--color-success)33;
+}
+
+.presence-toggle {
+    width: 44px;
+    height: 24px;
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+}
+
+.presence-toggle.active {
+    background: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.presence-toggle-handle {
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.presence-toggle.active .presence-toggle-handle {
+    left: 22px;
+}
+
+.presence-toggle-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+}

@@ -25,6 +25,7 @@ class ResultadoCreate(BaseModel):
     respostas_aluno: Optional[List[str]] = None
     nota: Optional[float] = None
     acertos: Optional[int] = None
+    registrar_presenca: Optional[bool] = False
 
 @router.get("/resultados")
 async def get_resultados(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -192,6 +193,35 @@ async def create_resultado_manual(data: ResultadoCreate, user: users_db.User = D
             data_correcao=datetime.utcnow()
         )
         db.add(novo_resultado)
+        
+        # Registrar presença se solicitado
+        if data.registrar_presenca:
+            today_str = datetime.now().strftime("%Y-%m-%d")
+            # Verifica se já existe presença
+            # Primeiro, precisamos saber qual a turma do aluno para este gabarito
+            # Como o ManualEntry agora envia a turma_id (ou podemos inferir do gabarito)
+            # Para simplificar, buscamos as turmas ligadas a este gabarito onde o aluno está
+            turmas_aluno = db.query(models.Turma).filter(
+                models.Turma.gabaritos.any(models.Gabarito.id == data.gabarito_id),
+                models.Turma.alunos.any(models.Aluno.id == data.aluno_id)
+            ).all()
+            
+            for t in turmas_aluno:
+                exists = db.query(models.Frequencia).filter(
+                    models.Frequencia.turma_id == t.id,
+                    models.Frequencia.aluno_id == data.aluno_id,
+                    models.Frequencia.data == today_str
+                ).first()
+                if not exists:
+                    nova_freq = models.Frequencia(
+                        turma_id=t.id,
+                        aluno_id=data.aluno_id,
+                        data=today_str,
+                        presente=True,
+                        observacao="Registrado via lançamento manual"
+                    )
+                    db.add(nova_freq)
+
         db.commit()
         db.refresh(novo_resultado)
         return {"message": "Resultado registrado com sucesso", "id": novo_resultado.id, "nota": nota}

@@ -19,6 +19,9 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, tu
     const [manualNota, setManualNota] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [availableTurmas, setAvailableTurmas] = useState<any[]>([]);
+    const [registrarPresenca, setRegistrarPresenca] = useState(true);
+    const [showAddAluno, setShowAddAluno] = useState(false);
+    const [newAlunoNome, setNewAlunoNome] = useState('');
 
     useEffect(() => {
         loadData();
@@ -77,6 +80,27 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, tu
         setStep(2);
     };
 
+    const handleAddAluno = async () => {
+        if (!newAlunoNome || !selectedTurmaId) return;
+        setLoading(true);
+        try {
+            const novo = await api.addAluno({
+                nome: newAlunoNome,
+                turma_id: selectedTurmaId,
+                codigo: Math.floor(1000 + Math.random() * 9000).toString() // Código temporário
+            });
+            await loadAlunos(selectedTurmaId);
+            setShowAddAluno(false);
+            setNewAlunoNome('');
+            handleSelectAluno(novo.id);
+        } catch (err) {
+            console.error('Erro ao adicionar aluno:', err);
+            alert('Erro ao adicionar aluno.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSave = async () => {
         if (selectedAlunoId === null || manualNota === '') {
             alert('Por favor, informe a nota.');
@@ -94,7 +118,8 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, tu
                 const payload = {
                     aluno_id: selectedAlunoId,
                     gabarito_id: gabarito.id,
-                    nota: val
+                    nota: val,
+                    registrar_presenca: registrarPresenca
                 };
                 await api.addResultadoManual(payload);
             }
@@ -171,6 +196,37 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, tu
                         </div>
                     ) : step === 1 ? (
                         <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <div className="manual-entry-subtitle">Selecione o Aluno</div>
+                                <button 
+                                    className="btn-add-aluno-manual"
+                                    onClick={() => setShowAddAluno(true)}
+                                >
+                                    + Aluno
+                                </button>
+                            </div>
+
+                            {showAddAluno && (
+                                <div className="add-aluno-inline">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Nome do Aluno"
+                                        value={newAlunoNome}
+                                        onChange={(e) => setNewAlunoNome(e.target.value)}
+                                        className="nota-large-field"
+                                        style={{ fontSize: '1rem', padding: '10px' }}
+                                    />
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button className="btn-save-manual" onClick={handleAddAluno} disabled={loading}>
+                                            Salvar
+                                        </button>
+                                        <button className="btn-back-manual" onClick={() => setShowAddAluno(false)}>
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="manual-student-list">
                                 {alunos.map((a) => {
                                     const resultado = resultados.find(r => r.aluno_id === a.id);
@@ -227,6 +283,15 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, tu
                                     onChange={(e) => setManualNota(e.target.value)}
                                 />
                                 <p className="nota-help-text">Insira a nota final de 0 a 10</p>
+                            </div>
+
+                            <div className="presence-toggle-wrapper" onClick={() => setRegistrarPresenca(!registrarPresenca)}>
+                                <div className={`presence-toggle ${registrarPresenca ? 'active' : ''}`}>
+                                    <div className="presence-toggle-handle"></div>
+                                </div>
+                                <div className="presence-toggle-label">
+                                    Registrar presença para hoje
+                                </div>
                             </div>
                         </div>
                     )}
