@@ -118,11 +118,19 @@ async def get_resultados_by_gabarito(gabarito_id: int, user: users_db.User = Dep
              raise HTTPException(status_code=403, detail="Acesso negado a este gabarito")
 
     resultados = db.query(models.Resultado).filter(models.Resultado.gabarito_id == gabarito_id).all()
+    from utils.answers import parse_json_list
     resp = []
     for r in resultados:
-        r_dict = r.__dict__.copy()
-        if r.aluno:
-            r_dict["nome"] = r.aluno.nome
+        r_dict = {
+            "id": r.id,
+            "aluno_id": r.aluno_id,
+            "gabarito_id": r.gabarito_id,
+            "acertos": r.acertos,
+            "nota": r.nota,
+            "respostas_aluno": parse_json_list(r.respostas_aluno, "respostas_aluno"),
+            "data_correcao": r.data_correcao.strftime("%Y-%m-%d %H:%M:%S") if r.data_correcao else None,
+            "nome": r.aluno.nome if r.aluno else "N/A"
+        }
         if "_sa_instance_state" in r_dict:
             del r_dict["_sa_instance_state"]
         resp.append(r_dict)
@@ -150,10 +158,8 @@ async def create_resultado_manual(data: ResultadoCreate, user: users_db.User = D
         else:
             acertos = int((nota / 10) * total)
     elif data.respostas_aluno is not None:
-        try:
-            corretas = json.loads(gabarito.respostas_corretas) if gabarito.respostas_corretas else []
-        except:
-            corretas = []
+        from utils.answers import parse_json_list
+        corretas = parse_json_list(gabarito.respostas_corretas, "respostas_corretas")
         
         detectadas = data.respostas_aluno
         acertos = 0

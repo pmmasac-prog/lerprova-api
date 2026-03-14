@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, CheckCircle2, Info, ArrowLeft } from 'lucide-react';
 import { api } from '../../../services/api';
+import { parseRespostas } from '../../../services/utils';
 import './EditResultadoModal.css';
 
 interface EditResultadoModalProps {
@@ -19,8 +20,8 @@ export const EditResultadoModal: React.FC<EditResultadoModalProps> = ({ resultad
 
     useEffect(() => {
         try {
-            setAnswers(JSON.parse(resultado.respostas_aluno || '[]'));
-            setCorrectAnswers(JSON.parse(gabarito.respostas_corretas || '[]'));
+            setAnswers(parseRespostas(resultado.respostas_aluno));
+            setCorrectAnswers(parseRespostas(gabarito.respostas_corretas));
         } catch (e) {
             console.error('Erro ao processar dados:', e);
         }

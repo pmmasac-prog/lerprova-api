@@ -10,13 +10,15 @@ interface ManualEntryModalProps {
     onSuccess: () => void;
 }
 
-export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, onClose, onSuccess }) => {
-    const [step, setStep] = useState(1);
+export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, turmas, onClose, onSuccess }) => {
+    const [step, setStep] = useState(0); // 0: Select Turma (if multiple), 1: Select Aluno, 2: Enter Nota
     const [alunos, setAlunos] = useState<any[]>([]);
     const [resultados, setResultados] = useState<any[]>([]);
+    const [selectedTurmaId, setSelectedTurmaId] = useState<number | null>(null);
     const [selectedAlunoId, setSelectedAlunoId] = useState<number | null>(null);
     const [manualNota, setManualNota] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const [availableTurmas, setAvailableTurmas] = useState<any[]>([]);
 
     useEffect(() => {
         loadData();
@@ -26,24 +28,46 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
         try {
             setLoading(true);
             const tIds = gabarito.turma_ids || (gabarito.turma_id ? [gabarito.turma_id] : []);
+            
+            // Map available turmas from the IDs and the 'turmas' prop
+            const linkedTurmas = turmas.filter(t => tIds.includes(t.id));
+            setAvailableTurmas(linkedTurmas);
 
-            const [alunosArrays, resultsData] = await Promise.all([
-                Promise.all(tIds.map((tId: number) => api.getAlunosByTurma(tId))),
-                api.getResultadosByGabarito(gabarito.id)
-            ]);
+            // If only one turma, skip step 0
+            if (linkedTurmas.length === 1) {
+                const singleTurmaId = linkedTurmas[0].id;
+                setSelectedTurmaId(singleTurmaId);
+                await loadAlunos(singleTurmaId);
+                setStep(1);
+            } else if (linkedTurmas.length > 1) {
+                setStep(0);
+            }
 
-            const allAlunos = alunosArrays.flat();
-            const uniqueAlunos = allAlunos.filter((a, index, self) =>
-                index === self.findIndex((t) => t.id === a.id)
-            );
-
-            setAlunos(uniqueAlunos.sort((a, b) => a.nome.localeCompare(b.nome)));
+            const resultsData = await api.getResultadosByGabarito(gabarito.id);
             setResultados(resultsData);
         } catch (err) {
             console.error('Erro ao carregar dados:', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadAlunos = async (turmaId: number) => {
+        try {
+            setLoading(true);
+            const alunosData = await api.getAlunosByTurma(turmaId);
+            setAlunos(alunosData.sort((a: any, b: any) => a.nome.localeCompare(b.nome)));
+        } catch (err) {
+            console.error('Erro ao carregar alunos:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSelectTurma = async (id: number) => {
+        setSelectedTurmaId(id);
+        await loadAlunos(id);
+        setStep(1);
     };
 
     const handleSelectAluno = (id: number) => {
@@ -95,6 +119,15 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
             <div className="manual-entry-container" onClick={(e) => e.stopPropagation()}>
                 <div className="manual-entry-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        {(step === 1 && availableTurmas.length > 1) && (
+                            <button
+                                className="btn-back-manual"
+                                style={{ padding: '8px', width: 'auto' }}
+                                onClick={() => setStep(0)}
+                            >
+                                <ArrowLeft size={18} />
+                            </button>
+                        )}
                         {step === 2 && (
                             <button
                                 className="btn-back-manual"
@@ -105,14 +138,38 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({ gabarito, on
                             </button>
                         )}
                         <div>
-                            <h2 className="manual-entry-title">Lançamento de Nota</h2>
-                            <p className="manual-entry-subtitle">{gabarito.titulo || gabarito.assunto} • {gabarito.num_questoes} q.</p>
+                            <h2 className="manual-entry-title">
+                                {step === 0 ? 'Selecionar Turma' : 'Lançamento de Nota'}
+                            </h2>
+                            <p className="manual-entry-subtitle">
+                                {gabarito.titulo || gabarito.assunto}
+                                {selectedTurmaId && ` • ${availableTurmas.find(t => t.id === selectedTurmaId)?.nome}`}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="manual-entry-body" style={{ padding: step === 1 ? '24px' : '32px' }}>
-                    {step === 1 ? (
+                <div className="manual-entry-body" style={{ padding: step === 2 ? '32px' : '24px' }}>
+                    {step === 0 ? (
+                        <div className="manual-turma-list">
+                            {availableTurmas.map((t) => (
+                                <div
+                                    key={t.id}
+                                    onClick={() => handleSelectTurma(t.id)}
+                                    className="manual-turma-item"
+                                >
+                                    <div className="manual-turma-icon">
+                                        <ChevronRight size={18} />
+                                    </div>
+                                    <div className="manual-turma-info">
+                                        <div className="manual-turma-name">{t.nome}</div>
+                                        <div className="manual-turma-discipline">{t.disciplina || 'Geral'}</div>
+                                    </div>
+                                    <ChevronRight size={16} color="var(--color-text-muted)" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : step === 1 ? (
                         <>
                             <div className="manual-student-list">
                                 {alunos.map((a) => {

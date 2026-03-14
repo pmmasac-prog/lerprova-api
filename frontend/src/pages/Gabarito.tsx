@@ -5,6 +5,7 @@ import { useReactToPrint } from 'react-to-print';
 import { GabaritoTemplate } from './Gabarito/components/GabaritoTemplate';
 import { ScannerModal } from './Gabarito/components/ScannerModal';
 import { ManualEntryModal } from './Gabarito/components/ManualEntryModal';
+import { parseRespostas } from '../services/utils';
 import './Gabarito.css';
 
 interface Turma {
@@ -211,10 +212,8 @@ export const Gabarito: React.FC = () => {
         setData(g.data);
         setNumQuestions(g.num_questoes);
 
-        // respostas_corretas já é uma lista após a reestruturação do backend
-        const parsedRespostas: string[] = Array.isArray(g.respostas_corretas)
-            ? g.respostas_corretas
-            : JSON.parse(g.respostas_corretas as unknown as string); // fallback de segurança
+        // respostas_corretas pode vir como lista, JSON string ou comma-separated string
+        const parsedRespostas = parseRespostas(g.respostas_corretas);
 
         const answersObj: Record<number, string> = {};
         parsedRespostas.forEach((ans: string, i: number) => {
