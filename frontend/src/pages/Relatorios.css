@@ -622,9 +622,9 @@
 }
 
 .attendance-badge {
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 0.8rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: 700;
 }
 
@@ -701,12 +701,12 @@
 .matrix-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 .matrix-table th,
 .matrix-table td {
-    padding: 10px 12px;
+    padding: 4px 10px;
     text-align: center;
     border-bottom: 1px solid var(--border-color);
 }

@@ -60,7 +60,7 @@ export const RankingTurma: React.FC<RankingTurmaProps> = (props) => {
                 {loading ? (
                     <p className="empty-text">Carregando...</p>
                 ) : resultados.length > 0 ? (
-                    <div className="matrix-scroll" style={{ marginTop: 10 }}>
+                    <div className="matrix-scroll" style={{ marginTop: 6 }}>
                         <table className="matrix-table">
                             <thead>
                                 <tr>
@@ -86,7 +86,7 @@ export const RankingTurma: React.FC<RankingTurmaProps> = (props) => {
                                         <tr key={r.id}>
                                             <td className="matrix-fixed-col" style={{ textAlign: 'center', opacity: 0.5 }}>{idx + 1}</td>
                                             <td className="matrix-fixed-col matrix-name">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     <div className="aluno-avatar-mini">
                                                         {String(r.nome || '')
                                                             .trim()

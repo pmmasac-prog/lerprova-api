@@ -16,7 +16,7 @@ export const RankingGlobal: React.FC<RankingGlobalProps> = (props) => {
             {loading ? (
                 <p className="empty-text">Carregando...</p>
             ) : resultados.length > 0 ? (
-                <div className="matrix-scroll" style={{ marginTop: 10 }}>
+                <div className="matrix-scroll" style={{ marginTop: 6 }}>
                     <table className="matrix-table">
                         <thead>
                             <tr>
