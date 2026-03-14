@@ -265,3 +265,54 @@ def registrar_frequencia_aluno(turma_id: int, aluno_id: int, presente: bool, jus
     finally:
          db.close()
     return ""
+
+def resumo_geral_sistema(current_user=None) -> str:
+    """Ferramenta que retorna um dumo profundo de todos os dados do sistema visíveis ao usuário."""
+    db = SessionLocal()
+    try:
+        role = _get_role(current_user)
+        
+        if role == "professor" or role == "admin":
+            # Pega dados do professor
+            turmas_query = db.query(models.Turma).filter(models.Turma.user_id == current_user.id)
+            total_turmas = turmas_query.count()
+            
+            # Count details
+            turmas = turmas_query.all()
+            total_alunos = sum(len(t.alunos) for t in turmas)
+            total_planos = sum(len(t.planos) for t in turmas)
+            total_gabaritos = sum(len(t.gabaritos) for t in turmas)
+            
+            detalhes_turmas = []
+            for t in turmas:
+                detalhes_turmas.append(
+                    f"Turma '{t.nome}' (Disciplina: {t.disciplina}): {len(t.alunos)} alunos, "
+                    f"{len(t.planos)} planejamentos, {len(t.gabaritos)} avaliações."
+                )
+                
+            resumo = (
+                f"Resumo Geral (Professor {current_user.nome}):\n"
+                f"- Total de Turmas: {total_turmas}\n"
+                f"- Total de Alunos Vinculados: {total_alunos}\n"
+                f"- Total de Planejamentos (Sequências): {total_planos}\n"
+                f"- Total de Avaliações/Gabaritos: {total_gabaritos}\n\n"
+                f"Detalhamento por turma:\n" + "\n".join(detalhes_turmas)
+            )
+            return resumo
+            
+        elif role == "student":
+            return (
+                f"Resumo do Aluno {current_user.nome}:\n"
+                f"Matriculado através do código {getattr(current_user, 'codigo', '')}. "
+                f"Você deve consultar especificamente suas notas e frequências usando as ferramentas apropriadas "
+                "para cada turma que pertence."
+            )
+            
+        return "Role desconhecido."
+    except Exception as e:
+        logger.error(f"Erro em resumo_geral_sistema: {e}")
+        return f"Falha ao gerar o resumo geral: {e}"
+    finally:
+        db.close()
+    return ""
+

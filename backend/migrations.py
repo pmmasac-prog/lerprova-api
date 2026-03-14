@@ -1,6 +1,9 @@
 from sqlalchemy import text, inspect, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 import logging
+import models
+from database import engine, SessionLocal
+from models import pwd_context
 
 logger = logging.getLogger("lerprova-api")
 
@@ -136,9 +139,7 @@ def run_migrations(engine):
                 logger.info("Adicionando coluna 'hashed_password' em 'alunos'...")
                 conn.execute(text("ALTER TABLE alunos ADD COLUMN hashed_password VARCHAR NULL"))
                 
-                # Definir senha padrão '123456' para todos os alunos existentes
                 # Hash de '123456' via passlib.context (bcrypt)
-                from models import pwd_context
                 default_hash = pwd_context.hash("123456")
                 conn.execute(text(f"UPDATE alunos SET hashed_password = '{default_hash}' WHERE hashed_password IS NULL"))
                 logger.info("Senha padrão '123456' definida para alunos existentes.")
@@ -200,3 +201,6 @@ def run_migrations(engine):
     logger.info("Bootstrap do banco de dados concluído com sucesso.")
     return True
 
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    run_migrations(engine)

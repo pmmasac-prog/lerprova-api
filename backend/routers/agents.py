@@ -13,7 +13,7 @@ import models
 from agents.agent_tools import (
     listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno,
     consultar_notas, listar_avaliacoes, listar_planejamentos,
-    criar_planejamento, registrar_frequencia_aluno
+    criar_planejamento, registrar_frequencia_aluno, resumo_geral_sistema
 )
 
 router = APIRouter(
@@ -24,28 +24,34 @@ router = APIRouter(
 logger = logging.getLogger("lerprova-api.agents")
 
 def get_system_prompt(user) -> str:
-    """Gera um prompt de sistema dinâmico baseado no usuário autenticado."""
+    """Gera um prompt de sistema dinâmico baseado no usuário autenticado com acesso profundo analítico."""
     # student role check
     role = getattr(user, "role", "student" if hasattr(user, "codigo") else "professor")
     base_prompt = (
-        f"Você é um assistente virtual inteligente integrado ao sistema 'LerProva'.\n"
-        f"Você está falando com '{user.nome}' que tem o cargo de '{role}'.\n"
-        "Sua missão é ajudar respondendo perguntas "
-        "usando as ferramentas disponíveis para consultar ou alterar dados reais do sistema.\n"
+        f"Você é um assistente virtual de inteligência avançada integrado ao sistema educacional 'LerProva'.\n"
+        f"Você está interagindo com '{user.nome}', que possui o perfil de '{role}'.\n"
+        "Sua missão não é apenas responder perguntas, mas produzir *materiais detalhados, relatórios densos e "
+        "planos educacionais elaborados* que agreguem alto valor prático.\n"
+        "Você tem ACESSO À INTERNET via Google Search. USE A INTERNET PROATIVAMENTE sempre que o usuário "
+        "pedir para criar materiais, buscar novidades, obter fatos externos, currículos ou exemplos práticos.\n"
     )
     
     if role == "professor" or role == "admin":
         base_prompt += (
             "Como professor/admin, você tem acesso às suas turmas, alunos, frequências, avaliações e planejamentos.\n"
-            "Sempre que o professor pedir para criar ou registrar algo (ex: planejamento ou chamada), você PODE e DEVE usar a respectiva action tool se tiver os dados necessários.\n"
+            "Quando o professor pedir para criar um plano (criar_planejamento) ou registrar algo, faça isso. "
+            "Se for solicitado que você faça um resumo detalhado/análise global/tudo que tem no sistema, chame "
+            "a ferramenta 'resumo_geral_sistema' PRIMEIRO para entender o contexto, e então crie um texto longo, "
+            "estruturado com Markdown, trazendo as percepções dos dados.\n"
         )
     elif role == "student":
         base_prompt += (
-            "Como aluno, você só tem acesso aos SEUS próprios dados (notas, frequências, faltas) e dados públicos das turmas que você faz parte.\n"
+            "Como aluno, você só tem acesso aos SEUS próprios dados (notas, frequências, faltas) e dados públicos das turmas.\n"
+            "Se lhe for pedido para gerar resumos de estudos ou buscar conteúdo, use a ferramenta de busca do Google para trazer as melhores informações recentes."
             "Recuse educadamente caso o aluno peça informações de outros alunos ou dados restritos de professores.\n"
         )
         
-    base_prompt += "Seja sempre educado, responda em português do Brasil e mantenha respostas concisas mas completas."
+    base_prompt += "Seja profundo nas respostas quando solicitado material. Use Markdown com listas, tabelas e cabeçalhos. Responda em português do Brasil."
     return base_prompt
 
 # ── Declaração das ferramentas para o Gemini ──────────────────────────────────
@@ -144,6 +150,11 @@ TOOLS_DECLARATION = types.Tool(
                 required=["turma_id", "aluno_id", "presente"]
             )
         ),
+        types.FunctionDeclaration(
+            name="resumo_geral_sistema",
+            description="Lê rapidamente todas as estatísticas gerais do perfil (total de turmas, alunos, avaliações, planos). Use quando o usuário pedir análises globais do tipo 'o que tem no meu sistema' ou resumos amplos.",
+            parameters=types.Schema(type=types.Type.OBJECT, properties={})
+        ),
     ]
 )
 
@@ -156,7 +167,8 @@ TOOL_MAP = {
     "listar_avaliacoes": listar_avaliacoes,
     "listar_planejamentos": listar_planejamentos,
     "criar_planejamento": criar_planejamento,
-    "registrar_frequencia_aluno": registrar_frequencia_aluno
+    "registrar_frequencia_aluno": registrar_frequencia_aluno,
+    "resumo_geral_sistema": resumo_geral_sistema
 }
 
 # Modelos em ordem de preferência para fallback
@@ -213,7 +225,7 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                     contents=contents,
                     config=types.GenerateContentConfig(
                         system_instruction=get_system_prompt(current_user),
-                        tools=[TOOLS_DECLARATION],
+                        tools=[TOOLS_DECLARATION, {"google_search": {}}],
                     )
                 )
 
@@ -240,7 +252,8 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                     args = dict(fc.args) if fc.args else {}
                     logger.info(f"Executando ferramenta: {fc.name}({args}) via RBAC de {current_user.nome}")
                     result = execute_tool_call(fc.name, args, current_user)
-                    logger.info(f"Resultado de {fc.name}: {result[:100]}")
+                    result_str = str(result)
+                    logger.info(f"Resultado de {fc.name}: {result_str[:100]}")
                     tool_results.append(
                         types.Part(
                             function_response=types.FunctionResponse(
@@ -255,9 +268,9 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
             continue
 
         except Exception as e:
-            error_msg = str(e)
+            error_msg = f"{e}"
             last_error = e
-            logger.warning(f"Falha no modelo {model_id}: {error_msg[:150]}")
+            logger.warning(f"Falha no modelo {model_id}: {error_msg[0:150]}")
 
             if "API_KEY" in error_msg or "PERMISSION_DENIED" in error_msg:
                 break
