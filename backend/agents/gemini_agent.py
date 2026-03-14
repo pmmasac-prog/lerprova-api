@@ -16,7 +16,7 @@ def get_lerprova_assistant():
         
     return Agent(
         model=Gemini(
-            id="gemini-1.5-flash",
+            id="gemini-1.5-flash-latest",
             api_key=api_key
         ),
         tools=[listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno],
