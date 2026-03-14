@@ -16,8 +16,8 @@ def get_lerprova_assistant():
         
     return Agent(
         model=Gemini(
-            id="gemini-1.5-flash-002",
-            client_params={"http_options": {"api_version": "v1"}}
+            id="gemini-1.5-flash",
+            api_key=api_key
         ),
         tools=[listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno],
         description="Você é um assistente virtual inteligente integrado ao sistema 'LerProva'. "
