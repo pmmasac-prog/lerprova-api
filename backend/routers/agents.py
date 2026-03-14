@@ -32,8 +32,8 @@ def get_system_prompt(user) -> str:
         f"Você está interagindo com '{user.nome}', que possui o perfil de '{role}'.\n"
         "Sua missão não é apenas responder perguntas, mas produzir *materiais detalhados, relatórios densos e "
         "planos educacionais elaborados* que agreguem alto valor prático.\n"
-        "Você tem ACESSO À INTERNET via Google Search. USE A INTERNET PROATIVAMENTE sempre que o usuário "
-        "pedir para criar materiais, buscar novidades, obter fatos externos, currículos ou exemplos práticos.\n"
+        "USE AS FERRAMENTAS PROATIVAMENTE sempre que o usuário "
+        "pedir para criar materiais, buscar dados do sistema ou obter exemplos práticos.\n"
     )
     
     if role == "professor" or role == "admin":
@@ -47,7 +47,7 @@ def get_system_prompt(user) -> str:
     elif role == "student":
         base_prompt += (
             "Como aluno, você só tem acesso aos SEUS próprios dados (notas, frequências, faltas) e dados públicos das turmas.\n"
-            "Se lhe for pedido para gerar resumos de estudos ou buscar conteúdo, use a ferramenta de busca do Google para trazer as melhores informações recentes."
+            "Se lhe for pedido para gerar resumos de estudos, utilize seu conhecimento interno para trazer as melhores informações."
             "Recuse educadamente caso o aluno peça informações de outros alunos ou dados restritos de professores.\n"
         )
         
@@ -173,10 +173,8 @@ TOOL_MAP = {
 
 # Modelos em ordem de preferência para fallback
 MODELS_TO_TRY = [
-    "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
 ]
 
 class ChatRequest(BaseModel):
@@ -225,7 +223,7 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                     contents=contents,
                     config=types.GenerateContentConfig(
                         system_instruction=get_system_prompt(current_user),
-                        tools=[TOOLS_DECLARATION, {"google_search": {}}],
+                        tools=[TOOLS_DECLARATION],
                     )
                 )
 
@@ -234,14 +232,16 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                     break
 
                 # Verifica se há chamadas de função a executar
-                tool_calls = [p for p in candidate.content.parts if hasattr(p, "function_call") and p.function_call]
+                tool_calls = []
+                if candidate and candidate.content and candidate.content.parts:
+                    tool_calls = [p for p in candidate.content.parts if hasattr(p, "function_call") and getattr(p, "function_call", None)] # type: ignore
 
                 if not tool_calls:
                     # Sem tool calls — pega o texto final
                     text = response.text
                     if text:
                         logger.info(f"Sucesso com modelo: {model_id}")
-                        return ChatResponse(response=text)
+                        return ChatResponse(response=text) # type: ignore
                     break
 
                 # Executa as ferramentas e adiciona os resultados à conversa
@@ -253,7 +253,7 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                     logger.info(f"Executando ferramenta: {fc.name}({args}) via RBAC de {current_user.nome}")
                     result = execute_tool_call(fc.name, args, current_user)
                     result_str = str(result)
-                    logger.info(f"Resultado de {fc.name}: {result_str[:100]}")
+                    logger.info(f"Resultado de {fc.name}: {result_str[0:50]}") # type: ignore
                     tool_results.append(
                         types.Part(
                             function_response=types.FunctionResponse(
@@ -270,7 +270,7 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
         except Exception as e:
             error_msg = f"{e}"
             last_error = e
-            logger.warning(f"Falha no modelo {model_id}: {error_msg[0:150]}")
+            logger.warning(f"Falha no modelo {model_id}: {error_msg[0:100]}") # type: ignore
 
             if "API_KEY" in error_msg or "PERMISSION_DENIED" in error_msg:
                 break
