@@ -6,7 +6,15 @@ import os
 import json
 from google import genai
 from google.genai import types
-from agents.agent_tools import listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from dependencies import get_current_user
+import models
+from agents.agent_tools import (
+    listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno,
+    consultar_notas, listar_avaliacoes, listar_planejamentos,
+    criar_planejamento, registrar_frequencia_aluno
+)
 
 router = APIRouter(
     prefix="/api/agents",
@@ -15,14 +23,30 @@ router = APIRouter(
 
 logger = logging.getLogger("lerprova-api.agents")
 
-# ── System Prompt ──────────────────────────────────────────────────────────────
-SYSTEM_PROMPT = (
-    "Você é um assistente virtual inteligente integrado ao sistema 'LerProva'. "
-    "Sua missão é ajudar professores e administradores escolares respondendo perguntas "
-    "sobre turmas, alunos, frequência e provas, usando as ferramentas disponíveis para "
-    "consultar dados reais do sistema. "
-    "Seja sempre educado, responda em português do Brasil e mantenha respostas concisas."
-)
+def get_system_prompt(user) -> str:
+    """Gera um prompt de sistema dinâmico baseado no usuário autenticado."""
+    # student role check
+    role = getattr(user, "role", "student" if hasattr(user, "codigo") else "professor")
+    base_prompt = (
+        f"Você é um assistente virtual inteligente integrado ao sistema 'LerProva'.\n"
+        f"Você está falando com '{user.nome}' que tem o cargo de '{role}'.\n"
+        "Sua missão é ajudar respondendo perguntas "
+        "usando as ferramentas disponíveis para consultar ou alterar dados reais do sistema.\n"
+    )
+    
+    if role == "professor" or role == "admin":
+        base_prompt += (
+            "Como professor/admin, você tem acesso às suas turmas, alunos, frequências, avaliações e planejamentos.\n"
+            "Sempre que o professor pedir para criar ou registrar algo (ex: planejamento ou chamada), você PODE e DEVE usar a respectiva action tool se tiver os dados necessários.\n"
+        )
+    elif role == "student":
+        base_prompt += (
+            "Como aluno, você só tem acesso aos SEUS próprios dados (notas, frequências, faltas) e dados públicos das turmas que você faz parte.\n"
+            "Recuse educadamente caso o aluno peça informações de outros alunos ou dados restritos de professores.\n"
+        )
+        
+    base_prompt += "Seja sempre educado, responda em português do Brasil e mantenha respostas concisas mas completas."
+    return base_prompt
 
 # ── Declaração das ferramentas para o Gemini ──────────────────────────────────
 TOOLS_DECLARATION = types.Tool(
@@ -60,6 +84,66 @@ TOOLS_DECLARATION = types.Tool(
                 required=["nome_aluno"]
             )
         ),
+        types.FunctionDeclaration(
+            name="consultar_notas",
+            description="Consulta as notas das avaliações. Para professores, lista as notas da turma. Para alunos, lista apenas suas notas nessa turma.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma.")
+                },
+                required=["turma_id"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="listar_avaliacoes",
+            description="Lista os gabaritos/avaliações cadastrados para uma turma específica.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma.")
+                },
+                required=["turma_id"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="listar_planejamentos",
+            description="Lista os planejamentos (sequências didáticas) cadastrados para uma turma.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma.")
+                },
+                required=["turma_id"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="criar_planejamento",
+            description="Ação: Cria um NOVO planejamento escolar para o professor em uma turma. Requer título e data inicial.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma."),
+                    "titulo": types.Schema(type=types.Type.STRING, description="Título do planejamento. Ex: 'Frações e Decimais'"),
+                    "data_inicio": types.Schema(type=types.Type.STRING, description="Data prevista de início (YYYY-MM-DD)")
+                },
+                required=["turma_id", "titulo", "data_inicio"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="registrar_frequencia_aluno",
+            description="Ação: Registra ou altera a presença/falta de um aluno específico em uma turma.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma."),
+                    "aluno_id": types.Schema(type=types.Type.INTEGER, description="ID numérico do aluno."),
+                    "presente": types.Schema(type=types.Type.BOOLEAN, description="True para presente, False para falta."),
+                    "justificativa": types.Schema(type=types.Type.STRING, description="(Opcional) Justificativa enviada para faltas.")
+                },
+                required=["turma_id", "aluno_id", "presente"]
+            )
+        ),
     ]
 )
 
@@ -68,6 +152,11 @@ TOOL_MAP = {
     "listar_turmas": listar_turmas,
     "listar_alunos_da_turma": listar_alunos_da_turma,
     "resumo_frequencia_aluno": resumo_frequencia_aluno,
+    "consultar_notas": consultar_notas,
+    "listar_avaliacoes": listar_avaliacoes,
+    "listar_planejamentos": listar_planejamentos,
+    "criar_planejamento": criar_planejamento,
+    "registrar_frequencia_aluno": registrar_frequencia_aluno
 }
 
 # Modelos em ordem de preferência para fallback
@@ -85,23 +174,22 @@ class ChatResponse(BaseModel):
     response: str
 
 
-def execute_tool_call(name: str, args: dict) -> str:
-    """Executa uma função de ferramenta e retorna o resultado como string."""
+def execute_tool_call(name: str, args: dict, current_user) -> str:
+    """Executa uma função de ferramenta repassando o usuário ativo para auditoria/RBAC."""
     try:
         fn = TOOL_MAP.get(name)
         if not fn:
             return f"Ferramenta '{name}' não encontrada."
-        return fn(**args)
+        # Injeta o usuário logado para controle de permissão
+        return fn(current_user=current_user, **args)
     except Exception as e:
         logger.error(f"Erro ao executar ferramenta '{name}': {e}")
         return f"Erro ao executar '{name}': {str(e)}"
-
-
+    
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_agent(request: ChatRequest):
+async def chat_with_agent(request: ChatRequest, current_user = Depends(get_current_user)):
     """
-    Envia uma mensagem para o assistente de IA com suporte a ferramentas de banco de dados.
-    Implementa fallback entre modelos Gemini para garantir disponibilidade.
+    Envia uma mensagem para o assistente de IA com suporte a ferramentas de banco de dados e RBAC integrado.
     """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -124,7 +212,7 @@ async def chat_with_agent(request: ChatRequest):
                     model=model_id,
                     contents=contents,
                     config=types.GenerateContentConfig(
-                        system_instruction=SYSTEM_PROMPT,
+                        system_instruction=get_system_prompt(current_user),
                         tools=[TOOLS_DECLARATION],
                     )
                 )
@@ -150,8 +238,8 @@ async def chat_with_agent(request: ChatRequest):
                 for part in tool_calls:
                     fc = part.function_call
                     args = dict(fc.args) if fc.args else {}
-                    logger.info(f"Executando ferramenta: {fc.name}({args})")
-                    result = execute_tool_call(fc.name, args)
+                    logger.info(f"Executando ferramenta: {fc.name}({args}) via RBAC de {current_user.nome}")
+                    result = execute_tool_call(fc.name, args, current_user)
                     logger.info(f"Resultado de {fc.name}: {result[:100]}")
                     tool_results.append(
                         types.Part(

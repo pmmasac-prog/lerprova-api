@@ -1,20 +1,29 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from database import SessionLocal
 import models
 import logging
 
 logger = logging.getLogger(__name__)
 
-def listar_turmas() -> str:
-    """
-    Retorna uma lista resumida de todas as turmas cadastradas no banco de dados.
-    Use esta ferramenta quando o usuário perguntar sobre as turmas disponíveis no sistema.
-    """
+def _get_role(user):
+    return getattr(user, "role", "student" if hasattr(user, "codigo") else "professor")
+
+def listar_turmas(current_user=None) -> str:
+    """Retorna uma lista resumida das turmas, vazando no RBAC."""
     db = SessionLocal()
     try:
-        turmas = db.query(models.Turma).all()
+        role = _get_role(current_user)
+        query = db.query(models.Turma)
+        
+        if role == "professor":
+            query = query.filter(models.Turma.user_id == current_user.id)
+        elif role == "student":
+            query = query.filter(models.Turma.alunos.any(id=current_user.id))
+            
+        turmas = query.all()
         if not turmas:
-            return "Nenhuma turma encontrada no sistema."
+            return "Nenhuma turma encontrada para o seu perfil."
         
         result = []
         for t in turmas:
@@ -26,19 +35,21 @@ def listar_turmas() -> str:
         return "Desculpe, ocorreu um erro ao buscar as turmas."
     finally:
         db.close()
+    return ""
 
-def listar_alunos_da_turma(turma_id: int) -> str:
-    """
-    Retorna a lista de alunos matriculados em uma turma específica.
-    Argumentos:
-        turma_id (int): O ID da turma para buscar os alunos.
-    Use esta ferramenta quando o usuário quiser saber quem são os alunos de uma determinada turma.
-    """
+def listar_alunos_da_turma(turma_id: int, current_user=None) -> str:
+    """Retorna a lista de alunos de uma turma, se o usuário tiver permissão."""
     db = SessionLocal()
     try:
         turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
         if not turma:
             return f"Turma com ID {turma_id} não foi encontrada."
+            
+        role = _get_role(current_user)
+        if role == "professor" and turma.user_id != current_user.id:
+            return "Acesso negado: você não é o professor desta turma."
+        if role == "student":
+            return "Acesso negado: alunos não têm permissão para listar a base de colegas."
         
         if not turma.alunos:
             return f"A turma '{turma.nome}' não possui alunos matriculados."
@@ -54,17 +65,22 @@ def listar_alunos_da_turma(turma_id: int) -> str:
         return "Desculpe, ocorreu um erro ao buscar os alunos."
     finally:
         db.close()
+    return ""
 
-def resumo_frequencia_aluno(nome_aluno: str) -> str:
-    """
-    Busca o resumo de presença e frequência de um aluno pelo nome (ou parte do nome).
-    Argumentos:
-        nome_aluno (str): O nome ou parte do nome do aluno.
-    Use esta ferramenta para responder perguntas sobre as faltas ou frequência de um aluno.
-    """
+def resumo_frequencia_aluno(nome_aluno: str, current_user=None) -> str:
+    """Busca o resumo de presença e frequência de um aluno."""
     db = SessionLocal()
     try:
-        aluno = db.query(models.Aluno).filter(models.Aluno.nome.ilike(f"%{nome_aluno}%")).first()
+        role = _get_role(current_user)
+        
+        # Estudantes só podem consultar o próprio nome
+        if role == "student":
+            if nome_aluno.lower() not in current_user.nome.lower() and current_user.nome.lower() not in nome_aluno.lower():
+                return "Acesso negado: você só tem permissão para consultar sua própria frequência."
+            aluno = current_user
+        else:
+            aluno = db.query(models.Aluno).filter(models.Aluno.nome.ilike(f"%{nome_aluno}%")).first()
+            
         if not aluno:
             return f"Nenhum aluno encontrado com o nome contendo '{nome_aluno}'."
         
@@ -86,3 +102,165 @@ def resumo_frequencia_aluno(nome_aluno: str) -> str:
         return "Desculpe, ocorreu um erro ao calcular a frequência."
     finally:
         db.close()
+    return ""
+
+def consultar_notas(turma_id: int, current_user=None) -> str:
+    """Retorna notas. Alunos veem só a sua, professores veem da turma."""
+    db = SessionLocal()
+    try:
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+        if not turma:
+            return f"Turma {turma_id} não encontrada."
+            
+        role = _get_role(current_user)
+        
+        if role == "professor" and turma.user_id != current_user.id:
+            return "Acesso negado: Você não leciona nesta turma."
+        
+        if role == "student":
+            if current_user not in turma.alunos:
+                return "Acesso negado: Você não está nesta turma."
+            resultados = db.query(models.Resultado).join(models.Gabarito).filter(
+                models.Resultado.aluno_id == current_user.id,
+                models.Gabarito.turmas.any(id=turma_id)
+            ).all()
+            if not resultados:
+                return "Você ainda não possui notas lançadas."
+            
+            res = [f"Suas notas na turma {turma.nome}:"]
+            for r in resultados:
+                res.append(f"- {r.gabarito.titulo}: Nota {r.nota} ({r.acertos}/{r.gabarito.num_questoes} acertos)")
+            return "\n".join(res)
+            
+        else:
+            resultados = db.query(models.Resultado).join(models.Gabarito).filter(
+                models.Gabarito.turmas.any(id=turma_id)
+            ).all()
+            if not resultados:
+                return "Nenhuma nota lançada nesta turma."
+                
+            res = [f"Notas da turma {turma.nome}:"]
+            for r in resultados:
+                res.append(f"- {r.aluno.nome} | {r.gabarito.titulo}: Nota {r.nota}")
+            return "\n".join(res)
+            
+    except Exception as e:
+        logger.error(f"Erro em consultar_notas: {e}")
+        return "Erro ao buscar notas."
+    finally:
+        db.close()
+    return ""
+
+def listar_avaliacoes(turma_id: int, current_user=None) -> str:
+    """Lista avaliações (gabaritos) aplicados na turma."""
+    db = SessionLocal()
+    try:
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+        if not turma:
+            return f"Turma {turma_id} não encontrada."
+            
+        role = _get_role(current_user)
+        if role == "student" and current_user not in turma.alunos:
+             return "Acesso negado."
+        if role == "professor" and turma.user_id != current_user.id:
+             return "Acesso negado."
+             
+        if not turma.gabaritos:
+            return "Nenhuma avaliação planejada."
+            
+        res = ["Avaliações:"]
+        for g in turma.gabaritos:
+            res.append(f"- [ID: {g.id}] {g.titulo} ({g.num_questoes} questões, Date: {g.data_prova})")
+        return "\n".join(res)
+    finally:
+        db.close()
+    return ""
+
+def listar_planejamentos(turma_id: int, current_user=None) -> str:
+    """Lista planejamentos didáticos."""
+    db = SessionLocal()
+    try:
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+        if not turma: return f"Turma não existe."
+        
+        planos = db.query(models.Plano).filter(models.Plano.turma_id == turma_id).all()
+        if not planos: return "Ainda não existem sequências didáticas / planejamentos para esta turma."
+        
+        res = ["Planejamentos:"]
+        for p in planos:
+            aulas = len(p.aulas)
+            res.append(f"- [ID: {p.id}] {p.titulo} (Início: {p.data_inicio}) - {aulas} aulas programadas.")
+        return "\n".join(res)
+    finally:
+        db.close()
+    return ""
+
+def criar_planejamento(turma_id: int, titulo: str, data_inicio: str, current_user=None) -> str:
+    """Ação: Cria um planejamento."""
+    db = SessionLocal()
+    try:
+        role = _get_role(current_user)
+        if role != "professor":
+            return "Apenas professores podem criar planejamentos."
+            
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+        if not turma or turma.user_id != current_user.id:
+            return "Turma inválida ou você não possui permissão."
+            
+        novo = models.Plano(
+            turma_id=turma_id,
+            user_id=current_user.id,
+            titulo=titulo,
+            data_inicio=data_inicio,
+            disciplina=turma.disciplina,
+            dias_semana=turma.dias_semana
+        )
+        db.add(novo)
+        db.commit()
+        return f"Planejamento '{titulo}' criado com sucesso para data {data_inicio}."
+    except Exception as e:
+        db.rollback()
+        return f"Erro ao criar: {str(e)}"
+    finally:
+        db.close()
+    return ""
+
+def registrar_frequencia_aluno(turma_id: int, aluno_id: int, presente: bool, justificativa: str = "", current_user=None) -> str:
+    """Ação: Loga frequência de um aluno no dia atual."""
+    from datetime import date
+    db = SessionLocal()
+    try:
+        role = _get_role(current_user)
+        if role != "professor":
+            return "Apenas professores podem registrar frequência."
+            
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == current_user.id).first()
+        if not turma: return "Turma inválida."
+        
+        hoje_str = date.today().isoformat()
+        
+        # update ou create
+        freq = db.query(models.Frequencia).filter(
+            models.Frequencia.turma_id == turma_id,
+            models.Frequencia.aluno_id == aluno_id,
+            models.Frequencia.data == hoje_str
+        ).first()
+        
+        if freq:
+            freq.presente = presente
+            freq.justificativa = justificativa
+        else:
+            freq = models.Frequencia(
+                turma_id=turma_id, aluno_id=aluno_id, data=hoje_str, 
+                presente=presente, justificativa=justificativa
+            )
+            db.add(freq)
+            
+        db.commit()
+        status = "Presente" if presente else "Falta"
+        return f"Registro salvo: Aluno {aluno_id} marcado como {status} hoje."
+    except Exception as e:
+         db.rollback()
+         return f"Erro: {str(e)}"
+    finally:
+         db.close()
