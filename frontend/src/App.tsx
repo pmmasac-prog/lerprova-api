@@ -55,6 +55,14 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Layout para páginas que possuem o TabNavigation (Barra do topo)
+const MainLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="tab-layout">
+    {children}
+    <TabNavigation />
+  </div>
+);
+
 const HomeRedirect = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
@@ -73,12 +81,12 @@ function App() {
           <Route path="/" element={token ? <HomeRedirect /> : <Navigate to="/login" replace />} />
 
           {/* Professor Routes */}
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /><TabNavigation /></PrivateRoute>} />
-          <Route path="/dashboard/turmas" element={<PrivateRoute><Turmas /><TabNavigation /></PrivateRoute>} />
-          <Route path="/dashboard/turma/:id" element={<PrivateRoute><TurmaDetail /><TabNavigation /></PrivateRoute>} />
-          <Route path="/dashboard/relatorios" element={<PrivateRoute><TabNavigation /><Relatorios /></PrivateRoute>} />
-          <Route path="/dashboard/gabarito" element={<PrivateRoute><TabNavigation /><Gabarito /></PrivateRoute>} />
-          <Route path="/dashboard/planejamento" element={<PrivateRoute><TabNavigation /><Planejamento /></PrivateRoute>} />
+          <Route path="/dashboard" element={<PrivateRoute><MainLayout><Dashboard /></MainLayout></PrivateRoute>} />
+          <Route path="/dashboard/turmas" element={<PrivateRoute><MainLayout><Turmas /></MainLayout></PrivateRoute>} />
+          <Route path="/dashboard/turma/:id" element={<PrivateRoute><MainLayout><TurmaDetail /></MainLayout></PrivateRoute>} />
+          <Route path="/dashboard/relatorios" element={<PrivateRoute><MainLayout><Relatorios /></MainLayout></PrivateRoute>} />
+          <Route path="/dashboard/gabarito" element={<PrivateRoute><MainLayout><Gabarito /></MainLayout></PrivateRoute>} />
+          <Route path="/dashboard/planejamento" element={<PrivateRoute><MainLayout><Planejamento /></MainLayout></PrivateRoute>} />
           <Route path="/dashboard/debug" element={<PrivateRoute><Debug /></PrivateRoute>} />
 
           {/* Admin Routes */}
