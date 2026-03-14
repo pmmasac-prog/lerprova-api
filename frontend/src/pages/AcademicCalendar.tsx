@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List, Grid, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
 import { api } from '../services/api';
+import './AcademicCalendar.css';
 
 interface Period {
   id: string;
@@ -21,18 +22,18 @@ interface CalendarEvent {
   is_school_day?: boolean;
 }
 
-const EVENT_TYPES: Record<string, { label: string; emoji: string; color: string; bgColor: string }> = {
-  'holiday': { label: 'Feriado', emoji: '🏖️', color: 'var(--color-danger)', bgColor: '#7f1d1d' },
-  'planning': { label: 'Planejamento', emoji: '📋', color: 'var(--color-warning)', bgColor: '#78350f' },
-  'meeting': { label: 'Reunião', emoji: '👥', color: 'var(--color-purple)', bgColor: '#4c1d95' },
-  'administrative': { label: 'Administrativo', emoji: '⚙️', color: 'var(--color-pink)', bgColor: '#831843' },
-  'vacation': { label: 'Férias', emoji: '✈️', color: 'var(--color-cyan)', bgColor: '#164e63' },
-  'assessment': { label: 'SEAMA - Diagnóstica', emoji: '🧪', color: '#f97316', bgColor: '#7c2d12' },
-  'assessment_other': { label: 'Avaliação', emoji: '📝', color: 'var(--color-primary)', bgColor: 'var(--bg-secondary)' },
-  'pending_test': { label: 'Testes de Pendência', emoji: '⏳', color: 'var(--color-purple)', bgColor: '#4c1d95' },
-  'term_milestone': { label: 'Marco Acadêmico', emoji: '🎯', color: 'var(--color-success)', bgColor: '#064e3b' },
-  'commemorative': { label: 'Comemorativo', emoji: '🎉', color: 'var(--color-purple)', bgColor: '#4c1d95' },
-  'make_up_class': { label: 'Reposição', emoji: '🔄', color: 'var(--color-indigo)', bgColor: '#312e81' }
+const EVENT_TYPES: Record<string, { label: string; emoji: string; className: string }> = {
+  'holiday': { label: 'Feriado', emoji: '🏖️', className: 'event-holiday' },
+  'planning': { label: 'Planejamento', emoji: '📋', className: 'event-planning' },
+  'meeting': { label: 'Reunião', emoji: '👥', className: 'event-meeting' },
+  'administrative': { label: 'Administrativo', emoji: '⚙️', className: 'event-administrative' },
+  'vacation': { label: 'Férias', emoji: '✈️', className: 'event-vacation' },
+  'assessment': { label: 'SEAMA - Diagnóstica', emoji: '🧪', className: 'event-assessment' },
+  'assessment_other': { label: 'Avaliação', emoji: '📝', className: 'event-assessment_other' },
+  'pending_test': { label: 'Testes de Pendência', emoji: '⏳', className: 'event-meeting' },
+  'term_milestone': { label: 'Marco Acadêmico', emoji: '🎯', className: 'event-term_milestone' },
+  'commemorative': { label: 'Comemorativo', emoji: '🎉', className: 'event-meeting' },
+  'make_up_class': { label: 'Reposição', emoji: '🔄', className: 'event-assessment_other' }
 };
 
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -303,23 +304,13 @@ export const AcademicCalendar: React.FC = () => {
                   </span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
                     {dayEvents.slice(0, 3).map(ev => {
-                      const et = EVENT_TYPES[ev.type] || { emoji: '📌', color: 'var(--color-text-muted)', label: '' };
+                      const et = EVENT_TYPES[ev.type] || { emoji: '📌', className: '', label: '' };
                       return (
                         <div
                           key={ev.id}
                           title={`${et.label}: ${ev.title}`}
                           onClick={() => openEdit(ev)}
-                          style={{
-                            fontSize: '0.6rem',
-                            padding: '1px 3px',
-                            borderRadius: '3px',
-                            background: `${et.color}22`,
-                            color: et.color,
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis',
-                            cursor: 'pointer',
-                          }}
+                          className={`calendar-event ${et.className}`}
                         >
                           {et.emoji} {ev.title}
                         </div>
@@ -387,30 +378,30 @@ export const AcademicCalendar: React.FC = () => {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {periodEvents.map(event => {
-                          const et = EVENT_TYPES[event.type] || { label: 'Outro', emoji: '📌', color: 'var(--color-text-muted)', bgColor: 'var(--border-color)' };
+                          const et = EVENT_TYPES[event.type] || { label: 'Outro', emoji: '📌', className: 'event-assessment_other' };
                           return (
                             <div
                               key={event.id}
-                              style={{ padding: '12px', borderRadius: '8px', background: et.bgColor, border: `1px solid ${et.color}`, position: 'relative' }}
+                              className={`period-event-card ${et.className}`}
                             >
                               <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
-                                <button onClick={() => openEdit(event)} title="Editar" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--color-text-muted)', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
+                                <button onClick={() => openEdit(event)} title="Editar" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'inherit', padding: '4px', borderRadius: '4px', cursor: 'pointer', opacity: 0.7 }}>
                                   <Edit2 size={14} />
                                 </button>
                                 <button onClick={() => setDeleteConfirm(event)} title="Remover" style={{ background: 'rgba(239,68,68,0.15)', border: 'none', color: 'var(--color-danger)', padding: '4px', borderRadius: '4px', cursor: 'pointer' }}>
                                   <Trash2 size={14} />
                                 </button>
                               </div>
-                              <p style={{ color: et.color, fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 3px 0' }}>
+                              <p style={{ color: 'inherit', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 3px 0' }}>
                                 {et.emoji} {et.label}
                               </p>
-                              <p style={{ color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: '600', margin: 0 }}>{event.title}</p>
-                              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', margin: '3px 0 0 0' }}>
+                              <p style={{ color: 'var(--color-text)', fontSize: '1rem', fontWeight: '700', margin: 0 }}>{event.title}</p>
+                              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', margin: '3px 0 0 0' }}>
                                 {new Date(event.start_date + 'T12:00:00').toLocaleDateString('pt-BR')}
                                 {event.end_date !== event.start_date && ` - ${new Date(event.end_date + 'T12:00:00').toLocaleDateString('pt-BR')}`}
                               </p>
                               {event.description && (
-                                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem', margin: '5px 0 0 0', fontStyle: 'italic' }}>{event.description}</p>
+                                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', margin: '8px 0 0 0', fontStyle: 'italic', borderTop: '1px solid currentColor', paddingTop: '8px', opacity: 0.8 }}>{event.description}</p>
                               )}
                             </div>
                           );
@@ -439,9 +430,18 @@ export const AcademicCalendar: React.FC = () => {
             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Total de Eventos</p>
             <p style={{ color: 'var(--color-purple)', fontSize: '1.8rem', fontWeight: 'bold', margin: '5px 0 0 0' }}>{events.length}</p>
           </div>
-          {Object.entries(EVENT_TYPES).map(([key, { label, emoji, color }]) => {
+          {Object.entries(EVENT_TYPES).map(([key, { label, emoji }]) => {
             const count = events.filter(e => e.type === key).length;
             if (count === 0) return null;
+            // Fallback colors for summary cards
+            const colors: Record<string, string> = {
+              'holiday': 'var(--color-danger)',
+              'planning': 'var(--color-warning)',
+              'meeting': '#a855f7',
+              'term_milestone': 'var(--color-success)',
+              'assessment': '#f97316'
+            };
+            const color = colors[key] || 'var(--color-primary)';
             return (
               <div key={key} style={{ textAlign: 'center', padding: '15px', background: `${color}11`, borderRadius: '8px', border: `1px solid ${color}` }}>
                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{emoji} {label}</p>
