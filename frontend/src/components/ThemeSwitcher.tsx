@@ -21,13 +21,13 @@ export const ThemeSwitcher: React.FC = () => {
       default: return 'Tema';
     }
   };
-
   return (
     <button
       onClick={toggleTheme}
+      className="theme-switcher-btn"
       style={{
         position: 'fixed',
-        bottom: '80px',
+        bottom: window.innerWidth < 640 ? '156px' : '80px',
         right: '20px',
         width: '50px',
         height: '50px',
@@ -44,13 +44,13 @@ export const ThemeSwitcher: React.FC = () => {
         zIndex: 9999,
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
-      title={`Mudar Tema (Atual: ${getThemeName()})`}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.1) rotate(15deg)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
       }}
+      title={`Mudar Tema (Atual: ${getThemeName()})`}
     >
       {getThemeIcon()}
     </button>
