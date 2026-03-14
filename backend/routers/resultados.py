@@ -9,6 +9,7 @@ from typing import List, Optional
 from datetime import datetime
 import json
 import logging
+from utils.answers import parse_json_list
 
 router = APIRouter(tags=["resultados"])
 logger = logging.getLogger("lerprova-api")
@@ -118,7 +119,6 @@ async def get_resultados_by_gabarito(gabarito_id: int, user: users_db.User = Dep
              raise HTTPException(status_code=403, detail="Acesso negado a este gabarito")
 
     resultados = db.query(models.Resultado).filter(models.Resultado.gabarito_id == gabarito_id).all()
-    from utils.answers import parse_json_list
     resp = []
     for r in resultados:
         r_dict = {
@@ -158,7 +158,6 @@ async def create_resultado_manual(data: ResultadoCreate, user: users_db.User = D
         else:
             acertos = int((nota / 10) * total)
     elif data.respostas_aluno is not None:
-        from utils.answers import parse_json_list
         corretas = parse_json_list(gabarito.respostas_corretas, "respostas_corretas")
         
         detectadas = data.respostas_aluno
