@@ -48,6 +48,8 @@ export const TurmaDetail: React.FC = () => {
     const [editingGabarito, setEditingGabarito] = useState<any | null>(null);
     const [editingAluno, setEditingAluno] = useState(false);
     const [editAlunoData, setEditAlunoData] = useState({ nome: '', codigo: '', nome_responsavel: '', telefone_responsavel: '', email_responsavel: '' });
+    const [showEditTurmaModal, setShowEditTurmaModal] = useState(false);
+    const [editTurmaData, setEditTurmaData] = useState({ nome: '', disciplina: '' });
 
     useEffect(() => {
         loadData();
@@ -311,6 +313,30 @@ export const TurmaDetail: React.FC = () => {
         }
     };
 
+    const handleEditTurma = () => {
+        if (!turma) return;
+        setEditTurmaData({
+            nome: turma.nome,
+            disciplina: turma.disciplina || ''
+        });
+        setShowEditTurmaModal(true);
+    };
+
+    const handleUpdateTurma = async () => {
+        if (!id || !editTurmaData.nome || !editTurmaData.disciplina) return;
+        try {
+            setLoading(true);
+            await api.updateTurma(parseInt(id), editTurmaData);
+            setShowEditTurmaModal(false);
+            await loadData();
+        } catch (error) {
+            console.error('Erro ao atualizar turma:', error);
+            alert('Erro ao atualizar turma');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="turma-detail-container">
@@ -372,6 +398,10 @@ export const TurmaDetail: React.FC = () => {
                     <button className="action-btn blue" onClick={() => navigate(`/dashboard/planejamento?turmaId=${id}`)}>
                         <BookOpen size={16} />
                         <span>Plano</span>
+                    </button>
+                    <button className="action-btn blue" onClick={handleEditTurma}>
+                        <Edit3 size={16} />
+                        <span>Editar</span>
                     </button>
                     <button className="action-btn add" onClick={() => setShowAddAlunoModal(true)}>
                         <User size={16} />
@@ -1011,6 +1041,48 @@ export const TurmaDetail: React.FC = () => {
                     }}
                 />
             )}
-        </div >
+
+
+            {/* Edit Turma Modal */}
+            {showEditTurmaModal && (
+                <div className="modal-overlay" onClick={() => setShowEditTurmaModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                            <button className="back-btn-modal" onClick={() => setShowEditTurmaModal(false)} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                                <ArrowLeft size={16} />
+                            </button>
+                            <h2 className="modal-title" style={{ margin: 0, color: 'var(--color-text)' }}>Editar Turma</h2>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="edit-turma-nome">Nome da Turma</label>
+                            <input
+                                id="edit-turma-nome"
+                                type="text"
+                                className="form-input"
+                                value={editTurmaData.nome}
+                                onChange={(e) => setEditTurmaData({ ...editTurmaData, nome: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="edit-turma-disciplina">Disciplina</label>
+                            <input
+                                id="edit-turma-disciplina"
+                                type="text"
+                                className="form-input"
+                                value={editTurmaData.disciplina}
+                                onChange={(e) => setEditTurmaData({ ...editTurmaData, disciplina: e.target.value })}
+                            />
+                        </div>
+
+                        <button className="btn-primary" onClick={handleUpdateTurma} disabled={loading}>
+                            <Save size={18} style={{ marginRight: '8px' }} />
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
