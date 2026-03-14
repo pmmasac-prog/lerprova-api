@@ -264,3 +264,4 @@ def registrar_frequencia_aluno(turma_id: int, aluno_id: int, presente: bool, jus
          return f"Erro: {str(e)}"
     finally:
          db.close()
+    return ""
