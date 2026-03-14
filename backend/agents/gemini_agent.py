@@ -9,14 +9,14 @@ load_dotenv()
 # We check if the API key is present
 api_key = os.getenv("GEMINI_API_KEY")
 
-# Create a basic Agno Agent configured to use Google's Gemini Flash model
-def get_lerprova_assistant():
+# Create a basic Agno Agent configured to use Google's Gemini models
+def get_lerprova_assistant(model_id: str = "gemini-1.5-flash"):
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not set in the environment variables.")
         
     return Agent(
         model=Gemini(
-            id="gemini-2.0-flash",
+            id=model_id,
             api_key=api_key
         ),
         tools=[listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno],
