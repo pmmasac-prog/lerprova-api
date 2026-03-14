@@ -257,17 +257,11 @@ export const Planejamento: React.FC = () => {
         <div className="planejamento-momento">
             <header className="zona-orientacao pm-container">
                 <div className="context-top">
-                    <div className="class-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="class-info">
                         {searchParams.get('turmaId') && (
                             <button
                                 onClick={() => navigate(-1)}
                                 className="btn-icon-subtle"
-                                style={{
-                                    width: '38px', height: '38px', borderRadius: '10px',
-                                    border: '1px solid var(--pm-border)', background: 'var(--pm-surface)',
-                                    color: 'var(--pm-muted)', display: 'flex', alignItems: 'center',
-                                    justifyContent: 'center', cursor: 'pointer', flexShrink: 0
-                                }}
                                 title="Voltar"
                             >
                                 <ArrowLeft size={18} />
@@ -298,7 +292,9 @@ export const Planejamento: React.FC = () => {
                 </div>
 
                 <div className="sequences-container">
-                    <h2 className="section-label-light">SEQUÊNCIAS DIDÁTICAS</h2>
+                    <h2 className="section-label-light">
+                        <BookOpen size={16} /> SEQUÊNCIAS DIDÁTICAS
+                    </h2>
                     <div className="sequences-grid">
                         {planos.map(p => (
                             <div
@@ -415,9 +411,9 @@ export const Planejamento: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-plan-state">
-                        <CheckCircle2 size={48} color="var(--success-color)" />
-                        <h3>Tudo em dia!</h3>
-                        <p>Crie um novo planejamento para continuar evoluindo com esta turma.</p>
+                        <CheckCircle2 size={48} color="var(--color-success)" style={{ marginBottom: '16px' }} />
+                        <h3 style={{ color: 'var(--color-text)', fontSize: '1.4rem' }}>Tudo em dia!</h3>
+                        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '24px' }}>Crie um novo planejamento para continuar evoluindo com esta turma.</p>
                         <button type="button" className="btn-create-floating" onClick={() => setShowNewPlanoModal(true)}>
                             <Plus size={20} /> Novo Planejamento
                         </button>
