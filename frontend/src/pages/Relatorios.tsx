@@ -173,7 +173,11 @@ export const Relatorios: React.FC = () => {
           </div>
           <h1 className="relatorios-title">Relatórios</h1>
         </div>
-        <button className="refresh-btn" onClick={loadData}>Atualizar</button>
+        <div className="flex items-center gap-2">
+          <button className="refresh-btn" onClick={loadData}>Atualizar</button>
+          <button className="export-btn export-btn-dark" onClick={onExportCSV}><Download size={16} /><span>CSV</span></button>
+          <button className="export-btn export-btn-blue" onClick={onExportPDF}><FileText size={16} /><span>PDF</span></button>
+        </div>
       </div>
 
       <div className="tab-bar">
@@ -235,10 +239,7 @@ export const Relatorios: React.FC = () => {
         )}
       </div>
 
-      <div className="relatorios-footer">
-        <button className="export-btn export-btn-dark" onClick={onExportCSV}><Download size={16} /><span>CSV</span></button>
-        <button className="export-btn export-btn-blue" onClick={onExportPDF}><FileText size={16} /><span>PDF</span></button>
-      </div>
+
 
       {editingResultado && editingGabarito && (
         <EditResultadoModal
