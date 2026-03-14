@@ -644,18 +644,6 @@ export const api = {
         });
     },
 
-    async getCentroAcoes(dataInicio: string, dataFim: string, turmaId?: number) {
-        return request(`${API_URL}/admin/reports/centro-acoes`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                data_inicio: dataInicio,
-                data_fim: dataFim,
-                turma_id: turmaId
-            })
-        });
-    },
-
     // --- PROCESSAMENTO OMR AVANÇADO (3 endpoints) ---
     omr: {
         async process(imageBase64: string, gabaritoId?: number, alunoId?: number, turmaId?: number) {

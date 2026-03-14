@@ -22,6 +22,7 @@ import { ChamadaNFC } from './pages/ChamadaNFC';
 import { BillingScreen } from './screens/BillingScreen';
 import { GenerateReportScreen } from './screens/GenerateReportScreen';
 import { BatchSyncComponent } from './components/BatchSyncComponent';
+import { ChatWidget } from './components/ChatWidget';
 
 // Wrapper para extrair params da URL
 const GenerateReportScreenWrapper = () => {
@@ -102,6 +103,9 @@ function App() {
         {/* Redirecionamento legado */}
         <Route path="/dashboard/admin" element={<Navigate to="/admin" replace />} />
       </Routes>
+
+      {/* Assistente de IA global (visível apenas para usuários logados) */}
+      {token && <ChatWidget />}
     </Router >
   );
 }

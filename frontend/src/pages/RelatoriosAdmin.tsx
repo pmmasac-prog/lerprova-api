@@ -102,22 +102,6 @@ interface DashboardData {
     pendencias_comunicacao: number;
     periodo: { inicio: string; fim: string };
 }
-
-interface AlunoCentroAcoes {
-    aluno_id: number;
-    aluno_nome: string;
-    aluno_codigo: string;
-    turma: string;
-    frequencia_atual: number;
-    faltas_consecutivas: number;
-    status_consolidado: string;
-    grau_urgencia: number;
-    motivos: string[];
-    responsavel: string | null;
-    telefone: string | null;
-    idade: number | null;
-}
-
 interface TurmaGerencial {
     turma_id: number;
     turma_nome: string;
@@ -333,7 +317,6 @@ export const RelatoriosAdmin: React.FC = () => {
     const [alunosRisco, setAlunosRisco] = useState<AlunoRisco[]>([]);
     const [menoresComunicacao, setMenoresComunicacao] = useState<MenorComunicacao[]>([]);
     const [turmasGerencial, setTurmasGerencial] = useState<TurmaGerencial[]>([]);
-    const [centroAcoes, setCentroAcoes] = useState<AlunoCentroAcoes[]>([]);
 
     // Filters
     const [periodo, setPeriodo] = useState({
@@ -342,7 +325,6 @@ export const RelatoriosAdmin: React.FC = () => {
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [filterNivel, setFilterNivel] = useState<string>('');
-    const [filtroAcoesSecundario, setFiltroAcoesSecundario] = useState<string>('');
 
     // Expanded sections
     const [expandedAluno, setExpandedAluno] = useState<number | null>(null);
@@ -362,7 +344,6 @@ export const RelatoriosAdmin: React.FC = () => {
 
     const tabs = [
         { id: 'dashboard', label: 'Painel', icon: BarChart3 },
-        { id: 'centro_acoes', label: 'Centro de Ações', icon: AlertCircle },
         { id: 'infrequencia', label: 'Infrequência', icon: Calendar },
         { id: 'consecutivas', label: 'Faltas Consecutivas', icon: AlertTriangle },
         { id: 'risco', label: 'Risco de Evasão', icon: TrendingDown },
@@ -459,19 +440,6 @@ export const RelatoriosAdmin: React.FC = () => {
         }
     }, [periodo, showToast]);
 
-    const loadCentroAcoes = useCallback(async () => {
-        try {
-            setLoading(true);
-            const data = await api.getCentroAcoes(periodo.inicio, periodo.fim);
-            setCentroAcoes(data.alunos_alertas || []);
-        } catch (err) {
-            console.error('Erro ao carregar centro de ações:', err);
-            showToast('Erro ao carregar centro de ações');
-        } finally {
-            setLoading(false);
-        }
-    }, [periodo, showToast]);
-
     // ==================== MODAL DE DETALHES DO ALUNO ====================
 
     const abrirModalAluno = async (aluno: { id: number; nome: string; codigo: string; turma: string }) => {
@@ -546,13 +514,12 @@ export const RelatoriosAdmin: React.FC = () => {
 
     useEffect(() => {
         if (activeTab === 'dashboard') loadDashboard();
-        else if (activeTab === 'centro_acoes') loadCentroAcoes();
         else if (activeTab === 'infrequencia') loadInfrequencia();
         else if (activeTab === 'consecutivas') loadFaltasConsecutivas();
         else if (activeTab === 'risco') loadRiscoEvasao();
         else if (activeTab === 'menores') loadMenoresComunicacao();
         else if (activeTab === 'gerencial') loadGerencial();
-    }, [activeTab, loadDashboard, loadCentroAcoes, loadInfrequencia, loadFaltasConsecutivas, loadRiscoEvasao, loadMenoresComunicacao, loadGerencial]);
+    }, [activeTab, loadDashboard, loadInfrequencia, loadFaltasConsecutivas, loadRiscoEvasao, loadMenoresComunicacao, loadGerencial]);
 
     // ==================== RENDER FUNCTIONS ====================
 
@@ -1172,145 +1139,6 @@ export const RelatoriosAdmin: React.FC = () => {
         );
     };
 
-    const renderCentroAcoes = () => {
-        const filtered = centroAcoes
-            .filter(a => !searchTerm || a.aluno_nome.toLowerCase().includes(searchTerm.toLowerCase()))
-            .filter(a => {
-                if (!filtroAcoesSecundario) return true;
-                if (filtroAcoesSecundario === 'critico') return a.grau_urgencia >= 3;
-                if (filtroAcoesSecundario === 'consecutivas') return a.faltas_consecutivas >= 3;
-                if (filtroAcoesSecundario === 'conselho') return a.grau_urgencia === 4;
-                return true;
-            });
-
-        return (
-            <div className="report-section">
-                {/* Header/Filters Otimizados */}
-                <div className="filters-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', background: 'var(--admin-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--admin-border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', minWidth: '250px' }}>
-                        <Search size={18} color="var(--admin-text-muted)" />
-                        <input
-                            type="text"
-                            placeholder="Buscar aluno na central..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            style={{ width: '100%', background: 'transparent', border: 'none', color: '#f1f5f9', outline: 'none' }}
-                        />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button className={`btn-filter ${filtroAcoesSecundario === '' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('')} style={{ background: filtroAcoesSecundario === '' ? 'var(--admin-emerald)' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
-                            Todos os Alertas
-                        </button>
-                        <button className={`btn-filter ${filtroAcoesSecundario === 'critico' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('critico')} style={{ background: filtroAcoesSecundario === 'critico' ? '#ef4444' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
-                            🔥 Risco Crítico
-                        </button>
-                        <button className={`btn-filter ${filtroAcoesSecundario === 'consecutivas' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('consecutivas')} style={{ background: filtroAcoesSecundario === 'consecutivas' ? '#f97316' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
-                            ⚠️ 3+ Faltas
-                        </button>
-                        <button className={`btn-filter ${filtroAcoesSecundario === 'conselho' ? 'active' : ''}`} onClick={() => setFiltroAcoesSecundario('conselho')} style={{ background: filtroAcoesSecundario === 'conselho' ? '#7f1d1d' : 'var(--admin-bg)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px' }}>
-                            ⚖️ Conselho Tutelar
-                        </button>
-                    </div>
-
-                    <div className="filter-group" style={{ marginLeft: 'auto', gap: '8px' }}>
-                        <input type="date" value={periodo.inicio} onChange={e => setPeriodo(p => ({ ...p, inicio: e.target.value }))} style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', color: '#fff', padding: '4px 8px', borderRadius: '6px' }} />
-                        <span style={{ color: 'var(--admin-text-muted)' }}>até</span>
-                        <input type="date" value={periodo.fim} onChange={e => setPeriodo(p => ({ ...p, fim: e.target.value }))} style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', color: '#fff', padding: '4px 8px', borderRadius: '6px' }} />
-                        <button onClick={loadCentroAcoes} style={{ background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', color: '#fff', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Filter size={14} /> Atualizar
-                        </button>
-                    </div>
-                </div>
-
-                {/* Table Unificada */}
-                <div className="report-table-container" style={{ marginTop: '20px' }}>
-                    <table className="report-table">
-                        <thead>
-                            <tr>
-                                <th>Aluno(a) em Alerta</th>
-                                <th>Turma</th>
-                                <th>Freq Atual (%)</th>
-                                <th>Status Consolidado</th>
-                                <th>Motivos Principais</th>
-                                <th>Ação Direta</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filtered.map(aluno => (
-                                <tr key={`ca-${aluno.aluno_id}`} style={{ borderLeft: `4px solid ${aluno.grau_urgencia >= 3 ? '#ef4444' : aluno.grau_urgencia === 2 ? '#f97316' : '#eab308'}` }}>
-                                    <td>
-                                        <div className="aluno-cell" onClick={() => abrirModalAluno({ id: aluno.aluno_id, nome: aluno.aluno_nome, codigo: aluno.aluno_codigo, turma: aluno.turma })} style={{ cursor: 'pointer' }}>
-                                            <span className="aluno-nome" style={{ color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                {aluno.grau_urgencia === 4 && <AlertTriangle size={14} color="#ef4444" />}
-                                                {aluno.aluno_nome}
-                                            </span>
-                                            <span className="aluno-codigo" style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>{aluno.aluno_codigo}</span>
-                                        </div>
-                                    </td>
-                                    <td style={{ color: '#cbd5e1' }}>{aluno.turma}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ flex: 1, height: '6px', background: 'var(--admin-bg)', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${aluno.frequencia_atual}%`, height: '100%', background: aluno.frequencia_atual < 75 ? '#ef4444' : aluno.frequencia_atual < 85 ? '#f97316' : '#22c55e' }} />
-                                            </div>
-                                            <span style={{ fontSize: '12px', fontWeight: 600, color: aluno.frequencia_atual < 75 ? '#fca5a5' : '#e2e8f0', minWidth: '40px' }}>
-                                                {aluno.frequencia_atual}%
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span style={{
-                                            padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase',
-                                            background: aluno.grau_urgencia === 4 ? '#7f1d1d' : aluno.grau_urgencia === 3 ? 'rgba(239,68,68,0.2)' : 'rgba(249,115,22,0.2)',
-                                            color: aluno.grau_urgencia === 4 ? '#fca5a5' : aluno.grau_urgencia === 3 ? '#ef4444' : '#f97316',
-                                            border: `1px solid ${aluno.grau_urgencia === 4 ? '#ef4444' : 'transparent'}`
-                                        }}>
-                                            {aluno.status_consolidado}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            {aluno.motivos.map((m, idx) => (
-                                                <span key={idx} style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--admin-text-muted)' }} /> {m}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {aluno.telefone ? (
-                                            <a
-                                                href={`https://wa.me/55${aluno.telefone.replace(/\D/g, '')}?text=${encodeURIComponent(`Aviso LERPROVA: O aluno ${aluno.aluno_nome} (${aluno.turma}) está com os seguintes alertas no sistema: ${aluno.motivos.join(', ')}. Por favor comparecer à escola.`)}`}
-                                                target="_blank" rel="noopener noreferrer"
-                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#059669', color: '#fff', padding: '6px 12px', borderRadius: '6px', textDecoration: 'none', fontSize: '12px', fontWeight: 600, transition: '0.2s' }}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <MessageCircle size={14} /> Contatar Via WhatsApp
-                                            </a>
-                                        ) : (
-                                            <span style={{ fontSize: '12px', color: 'var(--admin-text-muted)', fontStyle: 'italic' }}>
-                                                Sem telefone
-                                            </span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {filtered.length === 0 && !loading && (
-                        <div className="empty-state success" style={{ padding: '40px', textAlign: 'center' }}>
-                            <CheckCircle size={48} color="#22c55e" style={{ marginBottom: '16px' }} />
-                            <h3 style={{ color: '#fff', marginBottom: '8px' }}>Nenhum Aluno em Alerta!</h3>
-                            <p style={{ color: 'var(--admin-text-muted)' }}>Excelente! A tabela centralizada não encontrou pendências nas categorias filtradas.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
     // ==================== MAIN RENDER ====================
 
     return (
@@ -1355,7 +1183,6 @@ export const RelatoriosAdmin: React.FC = () => {
                 {loading && <div className="loading-overlay"><RefreshCw size={32} className="spinning" /></div>}
 
                 {activeTab === 'dashboard' && renderDashboard()}
-                {activeTab === 'centro_acoes' && renderCentroAcoes()}
                 {activeTab === 'infrequencia' && renderInfrequencia()}
                 {activeTab === 'consecutivas' && renderFaltasConsecutivas()}
                 {activeTab === 'risco' && renderRiscoEvasao()}
