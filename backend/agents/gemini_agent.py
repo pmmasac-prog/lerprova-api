@@ -15,7 +15,7 @@ def get_lerprova_assistant():
         raise ValueError("GEMINI_API_KEY is not set in the environment variables.")
         
     return Agent(
-        model=Gemini(id="gemini-2.0-flash"),
+        model=Gemini(id="gemini-1.5-flash"),
         tools=[listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno],
         description="Você é um assistente virtual inteligente integrado ao sistema 'LerProva'. "
                     "Sua missão é ajudar professores e administradores escolares respondendo perguntas "
