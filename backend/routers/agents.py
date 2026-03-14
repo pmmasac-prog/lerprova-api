@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import logging
+import traceback
 from agents.gemini_agent import get_lerprova_assistant
 
 router = APIRouter(
@@ -34,4 +35,5 @@ async def chat_with_agent(request: ChatRequest):
          raise HTTPException(status_code=500, detail=str(ve))
     except Exception as e:
         logger.error(f"Erro ao comunicar com o Agent: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail="Erro interno ao processar a requisição com a IA.")
