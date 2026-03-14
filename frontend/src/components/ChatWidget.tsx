@@ -52,7 +52,8 @@ export function ChatWidget() {
 
     try {
       // Usando URL relativa baseada na API configurada no projeto
-      const response = await fetch('http://localhost:8000/api/agents/chat', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/agents/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +67,7 @@ export function ChatWidget() {
       }
 
       const data = await response.json();
-      
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
