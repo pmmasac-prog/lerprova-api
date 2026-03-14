@@ -474,7 +474,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    z-index: 1000;
+    z-index: 3000;
     animation: fadeIn 0.3s ease-out;
 }
 
