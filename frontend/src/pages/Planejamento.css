@@ -60,7 +60,7 @@
     color: var(--color-text);
     position: relative;
     overflow-x: hidden;
-    padding-bottom: calc(var(--pm-footer-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .pm-container {
@@ -696,55 +696,39 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-primary) 18%, transparent);
 }
 
-/* ZONA 4: Rodapé fixo */
-.zona-conclusao {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 70px;
-    /* Acima da TabNavigation */
-    padding: 14px var(--pm-pad);
-    background: linear-gradient(0deg, rgba(15, 23, 42, .92) 55%, rgba(15, 23, 42, 0) 100%);
-    z-index: 100;
-    /* Menor que TabNavigation (1000), mas visível se não houver conflito */
-    backdrop-filter: blur(10px);
-}
-
-/* Reajuste se z-index conflitar: se TabNavigation é 1000, 
-   zona-conclusao deve ser 1001 se quisermos que sobreponha, 
-   ou bottom: 70px resolve se quisermos que fique encostado no topo da barra. */
-.zona-conclusao {
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-    z-index: 1100;
-}
-
-.btn-concluir-momento {
-    width: 100%;
-    min-height: var(--pm-tap);
-    padding: 14px 14px;
-    border-radius: var(--pm-radius-lg);
-    background: var(--pm-primary);
-    color: #071321;
-    font-weight: 950;
-    font-size: 1rem;
+/* Action Buttons */
+.btn-concluir-mini {
+    margin-left: auto;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.85rem;
     border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 16px 36px rgba(59, 130, 246, .28);
-    transition: transform .15s ease, opacity .15s ease;
+    box-shadow: 0 4px 12px var(--color-primary-transparent);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
 }
 
-.btn-concluir-momento:active {
-    transform: scale(.985);
+.btn-concluir-mini:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px var(--color-primary-transparent);
+    background: color-mix(in srgb, var(--color-primary) 90%, #fff);
 }
 
-.btn-concluir-momento:disabled {
-    opacity: .62;
+.btn-concluir-mini:active {
+    transform: translateY(1px);
+}
+
+.btn-concluir-mini:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
-}
-
-.btn-concluir-momento:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-primary) 18%, transparent);
+    transform: none;
 }
 
 /* Modal Pedagógico (se estiver sendo usado no app) */
@@ -824,11 +808,6 @@
 
     .zona-decisao,
     .zona-sequencia {
-        padding-left: 22px;
-        padding-right: 22px;
-    }
-
-    .zona-conclusao {
         padding-left: 22px;
         padding-right: 22px;
     }

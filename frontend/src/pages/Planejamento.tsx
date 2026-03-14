@@ -281,6 +281,18 @@ export const Planejamento: React.FC = () => {
                             ))}
                         </select>
                         <div className="date-pill">HOJE, {dataHoje}</div>
+                        {aulaHoje && (
+                            <button
+                                type="button"
+                                className="btn-concluir-mini"
+                                onClick={handleConcluirAula}
+                                disabled={saving}
+                                aria-busy={saving}
+                            >
+                                <CheckCircle2 size={16} />
+                                {saving ? 'Salvando...' : 'Concluir Registro'}
+                            </button>
+                        )}
                     </div>
 
                     {cobertura && cobertura.total_habilidades > 0 && (
@@ -445,22 +457,6 @@ export const Planejamento: React.FC = () => {
                 )}
             </section>
 
-            <footer className="zona-conclusao">
-                <div className="pm-container">
-                    {aulaHoje && (
-                        <button
-                            type="button"
-                            className="btn-concluir-momento"
-                            onClick={handleConcluirAula}
-                            disabled={saving}
-                            aria-busy={saving}
-                        >
-                            {saving ? 'SALVANDO...' : 'CONCLUIR REGISTRO'}
-                        </button>
-                    )}
-                </div>
-            </footer>
-
             {showNewPlanoModal && selectedTurmaId && selectedTurmaId > 0 && (
                 <PlanejamentoStudio
                     onClose={() => {
@@ -472,10 +468,10 @@ export const Planejamento: React.FC = () => {
                         setShowNewPlanoModal(false);
                         setIsEditing(false);
                         setEditingPlanoData(null);
-                        loadPlanos(selectedTurmaId);
+                        loadPlanos(selectedTurmaId!);
                         if (selectedPlanoId) loadPlanoDetails(selectedPlanoId);
                     }}
-                    turmaId={selectedTurmaId}
+                    turmaId={selectedTurmaId as number}
                     turmaNome={currentTurma?.nome || ''}
                     disciplinaPre={currentTurma?.disciplina || ''}
                     diasSemanaPre={(() => {
@@ -488,9 +484,9 @@ export const Planejamento: React.FC = () => {
                     })()}
                     planoId={isEditing && editingPlanoData ? editingPlanoData.id : undefined}
                     initialData={isEditing && editingPlanoData ? {
-                        titulo: editingPlanoData.titulo,
-                        data_inicio: editingPlanoData.data_inicio,
-                        dias_semana: editingPlanoData.dias_semana || [],
+                        titulo: editingPlanoData!.titulo,
+                        data_inicio: editingPlanoData!.data_inicio,
+                        dias_semana: editingPlanoData!.dias_semana || [],
                         aulas: aulas.map(a => ({
                             titulo: a.titulo,
                             objetivo: a.objetivo || '',
@@ -510,7 +506,7 @@ export const Planejamento: React.FC = () => {
                             <button className="btn-icon-subtle" onClick={() => setShowVincularModal(false)}><X size={18} /></button>
                         </div>
                         <p className="modal-vincular-desc">
-                            A sequência <strong>"{currentPlano.titulo}"</strong> será duplicada para a turma selecionada.
+                            A sequência <strong>"{currentPlano?.titulo}"</strong> será duplicada para a turma selecionada.
                             As datas serão recalculadas conforme os dias de aula da nova turma.
                         </p>
                         <div className="modal-vincular-fields">
@@ -564,3 +560,5 @@ export const Planejamento: React.FC = () => {
         </div>
     );
 };
+
+export default Planejamento;
