@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import logging
 from agents.gemini_agent import get_lerprova_assistant
-from agno.agent import RunResponse
 
 router = APIRouter(
     prefix="/api/agents",
@@ -25,8 +24,8 @@ async def chat_with_agent(request: ChatRequest):
     try:
         agent = get_lerprova_assistant()
         
-        # O agente retorna um RunResponse com o conteúdo textual
-        run_response: RunResponse = agent.run(request.prompt)
+        # O agente retorna um objeto RunResponse com o conteúdo textual
+        run_response = agent.run(request.prompt)
         
         return ChatResponse(response=run_response.content)
         
