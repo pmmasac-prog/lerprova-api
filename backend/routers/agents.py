@@ -4,6 +4,7 @@ import logging
 import traceback
 import os
 import json
+import time
 from google import genai
 from google.genai import types
 from fastapi import Depends
@@ -174,7 +175,10 @@ TOOL_MAP = {
 # Modelos em ordem de preferência para fallback
 MODELS_TO_TRY = [
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    "gemini-2.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-pro",
+    "gemini-pro-latest",
 ]
 
 class ChatRequest(BaseModel):
@@ -268,12 +272,21 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
             continue
 
         except Exception as e:
-            error_msg = f"{e}"
+            error_msg = str(e)
             last_error = e
-            logger.warning(f"Falha no modelo {model_id}: {error_msg[0:100]}") # type: ignore
+            logger.warning(f"Falha no modelo {model_id}: {error_msg[0:150]}") # type: ignore
 
             if "API_KEY" in error_msg or "PERMISSION_DENIED" in error_msg:
                 break
+            
+            # Se for 404 (NOT_FOUND), não adianta esperar, tenta o próximo modelo imediatamente
+            if "404" in error_msg or "NOT_FOUND" in error_msg:
+                logger.info(f"Modelo {model_id} não encontrado. Tentando próximo...")
+                continue
+
+            # Para outros erros (como 429), aplicar backoff de 2 segundos
+            logger.info(f"Aguardando 2s antes da próxima tentativa após erro em {model_id}...")
+            time.sleep(2)
             continue
 
     # Todos os modelos falharam
