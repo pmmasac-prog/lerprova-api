@@ -61,6 +61,7 @@ app.include_router(dashboard.router)
 app.include_router(notifications.router)
 app.include_router(reports_admin.router)
 app.include_router(agents.router)
+app.include_router(calendar.router)
 
 @app.get("/health")
 async def health_check():
