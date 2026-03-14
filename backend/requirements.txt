@@ -12,3 +12,5 @@ passlib[bcrypt]==1.7.4
 bcrypt==3.2.0
 pyzbar>=0.1.9
 psycopg2-binary>=2.9.0
+agno>=2.5.0
+google-genai>=0.5.0
