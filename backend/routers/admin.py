@@ -654,7 +654,8 @@ async def search_alunos(q: str, admin_user = Depends(verify_admin), db: Session 
 async def system_overview(admin_user=Depends(verify_admin), db: Session = Depends(get_db)):
     """Visão geral do sistema para o painel admin"""
     total_users = db.query(func.count(models.User.id)).scalar()
-    total_turmas = db.query(func.count(models.Turma.id)).scalar()
+    # Apenas turmas ativas (com alunos) para alinhar com o relatório gerencial
+    total_turmas = db.query(models.Turma).join(models.aluno_turma).distinct().count()
     total_alunos = db.query(func.count(models.Aluno.id)).scalar()
     total_gabaritos = db.query(func.count(models.Gabarito.id)).scalar()
     total_resultados = db.query(func.count(models.Resultado.id)).scalar()
