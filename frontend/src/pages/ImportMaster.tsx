@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, AlertCircle, FileText, Code as CodeIcon, School, Calendar, Users } from 'lucide-react';
+import { CheckCircle, AlertCircle, FileText, School, Calendar, Users, Download, Upload } from 'lucide-react';
 import { api } from '../services/api';
 
 export const ImportMaster: React.FC = () => {
@@ -8,6 +8,35 @@ export const ImportMaster: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ message: string, turmas_criadas?: number, alunos_processados?: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const downloadCSVTemplate = () => {
+        const headers = "Turma;Nome do Aluno;Matricula;Responsavel;Telefone;Email;Nascimento";
+        const row = "7 A;Joao Silva;202401;Maria Silva;11999998888;maria@exemplo.com;2012-05-15";
+        const csvContent = "\uFEFF" + headers + "\n" + row; // BOM for Excel
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "modelo_importacao_salas.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result as string;
+            setInputText(text);
+            setError(null);
+        };
+        reader.onerror = () => setError("Erro ao ler o arquivo.");
+        reader.readAsText(file);
+    };
 
     const parseCSV = (csv: string) => {
         const lines = csv.split('\n').filter(line => line.trim() !== '');
@@ -116,38 +145,63 @@ export const ImportMaster: React.FC = () => {
             </header>
 
             <div className="admin-card" style={{ marginTop: '20px' }}>
-                <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+                <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <div className="btn-primary" style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'default' }}>
+                        <FileText size={18} /> Importação CSV (Padrão)
+                    </div>
+                    
                     <button
-                        className={`btn-${mode === 'csv' ? 'primary' : 'secondary'}`}
-                        onClick={() => { setMode('csv'); setInputText(''); setError(null); }}
-                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+                        className="btn-ghost"
+                        onClick={downloadCSVTemplate}
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--admin-gold)', marginLeft: '10px' }}
                     >
-                        <FileText size={18} /> Importar CSV
+                        <Download size={18} /> Baixar Modelo CSV
                     </button>
+
+                    <div style={{ flex: 1 }} />
+
                     <button
-                        className={`btn-${mode === 'json' ? 'primary' : 'secondary'}`}
-                        onClick={() => { setMode('json'); setInputText(''); setError(null); }}
-                        style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+                        className={`btn-secondary`}
+                        onClick={() => { setMode(mode === 'master' ? 'csv' : 'master'); setInputText(''); setError(null); }}
+                        style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px', opacity: 0.7 }}
                     >
-                        <CodeIcon size={18} /> JSON Salas
-                    </button>
-                    <button
-                        className={`btn-${mode === 'master' ? 'emerald' : 'secondary'}`}
-                        onClick={() => { setMode('master'); setInputText(''); setError(null); }}
-                        style={{ display: 'flex', gap: '8px', alignItems: 'center', background: mode === 'master' ? 'var(--admin-emerald)' : '' }}
-                    >
-                        <School size={18} /> Estrutura Escolar (2026)
+                        {mode === 'master' ? <FileText size={14} /> : <School size={14} />} 
+                        {mode === 'master' ? 'Voltar para Salas' : 'Importação Estrutural (JSON)'}
                     </button>
                 </div>
 
                 <div style={{ display: 'flex', gap: '20px' }}>
                     <div style={{ flex: 1 }}>
-                        <h3 className="admin-card-title">Inserir Conteúdo</h3>
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '10px' }}>
-                            {mode === 'csv' && "Formato: Turma;Nome do Aluno;Matrícula;Responsável;Telefone (últimos 2 opcionais)"}
-                            {mode === 'json' && "Formato: [{ 'nome': 'Sala X', 'alunos': [...] }]"}
-                            {mode === 'master' && "Formato: JSON Estrutural (Escolas, Anos Letivos, Períodos, Eventos)"}
-                        </p>
+                        <h3 className="admin-card-title">Conteúdo da Importação</h3>
+                        <div style={{ marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', margin: 0 }}>
+                                {mode === 'csv' && "Formato esperado: Turma;Nome do Aluno;Matrícula;Responsável;Telefone;Email;Nascimento"}
+                                {mode === 'master' && "Formato: JSON Estrutural (Escolas, Anos Letivos, Períodos, Eventos)"}
+                            </p>
+                            
+                            {mode === 'csv' && (
+                                <div style={{ 
+                                    border: '2px dashed var(--border-color)', 
+                                    padding: '20px', 
+                                    borderRadius: '8px', 
+                                    textAlign: 'center',
+                                    background: 'rgba(255,255,255,0.02)'
+                                }}>
+                                    <input
+                                        type="file"
+                                        id="csv-upload"
+                                        accept=".csv"
+                                        onChange={handleFileUpload}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <label htmlFor="csv-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                        <Upload size={24} color="var(--color-primary)" />
+                                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>Selecionar Arquivo CSV</span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>O conteúdo aparecerá na caixa abaixo</span>
+                                    </label>
+                                </div>
+                            )}
+                        </div>
                         <textarea
                             style={{
                                 width: '100%',
