@@ -335,7 +335,32 @@ export const TurmaDetail: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }
+
+    const handleWipeTurma = async () => {
+        if (!id) return;
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const isAdmin = currentUser.role === 'admin';
+        if (!isAdmin) {
+            alert('Apenas administradores podem realizar esta ação.');
+            return;
+        }
+        const confirm1 = confirm(`AVISO CRÍTICO: Você está prestes a excluir a turma "${turma?.nome}" E TODOS OS SEUS ${alunos.length} ALUNOS permanentemente.`);
+        if (!confirm1) return;
+        const confirm2 = confirm("ESTA AÇÃO NÃO PODE SER DESFEITA. Todos os resultados de provas, frequências e dados dos alunos serão APAGADOS PARA SEMPRE. Tem certeza absoluta?");
+        if (!confirm2) return;
+        try {
+            setLoading(true);
+            await api.wipeTurma(parseInt(id));
+            alert('Turma e alunos excluídos com sucesso.');
+            navigate('/dashboard/turmas');
+        } catch (error) {
+            console.error('Erro ao realizar WIPE:', error);
+            alert('Erro ao excluir turma e alunos.');
+        } finally {
+            setLoading(false);
+        }
+    };;
 
     if (loading) {
         return (
@@ -407,6 +432,12 @@ export const TurmaDetail: React.FC = () => {
                         <User size={16} />
                         <span>Aluno+</span>
                     </button>
+                    {JSON.parse(localStorage.getItem('user') || '{}').role === 'admin' && (
+                        <button className="action-btn danger" onClick={handleWipeTurma} title="Apagar Turma e Alunos de uma vez">
+                            <Trash2 size={16} />
+                            <span>Apagar Tudo</span>
+                        </button>
+                    )}
 
                 </div>
             </div>

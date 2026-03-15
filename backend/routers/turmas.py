@@ -137,6 +137,42 @@ async def delete_turma(turma_id: int, user: users_db.User = Depends(get_current_
         logger.error(f"Erro ao excluir turma {turma_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao excluir turma: {str(e)}")
 
+@router.delete("/{turma_id}/wipe")
+async def wipe_turma(turma_id: int, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Exclui uma turma e TODOS os seus alunos permanentemente."""
+    # Apenas admin ou o dono da turma podem dar wipe
+    query = db.query(models.Turma).filter(models.Turma.id == turma_id)
+    if user.role != "admin":
+        query = query.filter(models.Turma.user_id == user.id)
+        
+    turma = query.first()
+    if not turma:
+        raise HTTPException(status_code=404, detail="Turma não encontrada ou acesso negado")
+
+    try:
+        # 1. Identificar alunos que pertencem APENAS a esta turma (ou dar wipe em todos os vinculados?)
+        # O pedido diz "apagar alunos e turma de uma vez só". 
+        # Geralmente alunos podem estar em múltiplas turmas. 
+        # No entanto, a lógica aqui deve ser: apagar todos os alunos que estão nesta turma.
+        
+        alunos_vinculados = list(turma.alunos)
+        
+        for aluno in alunos_vinculados:
+            # Se deletarmos o aluno, os resultados e frequências vinculados a ele somem (cascade no model)
+            db.delete(aluno)
+        
+        # 2. Deletar a turma
+        db.delete(turma)
+        
+        db.commit()
+        logger.info(f"WIPE realizado na turma {turma_id} pelo usuário {user.email}. {len(alunos_vinculados)} alunos removidos.")
+        return {"message": f"Turma e {len(alunos_vinculados)} alunos excluídos com sucesso"}
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Erro ao realizar WIPE na turma {turma_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao realizar WIPE: {str(e)}")
+
 class IncorporateRequest(BaseModel):
     master_turma_id: int
     disciplina: str

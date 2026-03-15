@@ -93,6 +93,13 @@ export const api = {
         });
     },
 
+    async wipeTurma(id: number) {
+        return request(`${API_URL}/turmas/${id}/wipe`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+    },
+
     async getMasterTurmas() {
         return request(`${API_URL}/turmas/master`, {
             headers: getAuthHeaders()
