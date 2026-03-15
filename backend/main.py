@@ -71,20 +71,26 @@ async def health_check():
 async def root():
     return {"message": "LERPROVA Pro API - Modularizada e Ativa", "version": "1.3.1"}
 
-# Configuração de CORS
+# Configuração de CORS — LGPD: restringir origens permitidas
+allowed_origins = os.getenv("CORS_ORIGINS", "https://lerprova.vercel.app,http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in allowed_origins],
     allow_methods=["*"],
-    allow_headers=["Content-Type", "Authorization"],  # Explicit allow para Auth header
-    allow_credentials=True,  # Allow credentials para que Auth header funcione
+    allow_headers=["Content-Type", "Authorization"],
+    allow_credentials=True,
 )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     try:
-        body = await request.body()
-        logger.error(f"VALERRO 422: {exc.errors()} | PATH: {request.url.path} | BODY: {body.decode()}")
+        # LGPD: Não logar body de endpoints de autenticação (contém senhas)
+        path = request.url.path
+        if "/auth/" in path or "/login" in path:
+            logger.error(f"VALERRO 422: {exc.errors()} | PATH: {path} | BODY: [REDACTED - auth endpoint]")
+        else:
+            body = await request.body()
+            logger.error(f"VALERRO 422: {exc.errors()} | PATH: {path} | BODY: {body.decode()}")
     except:
         logger.error(f"VALERRO 422: {exc.errors()} (Body unreadable)")
     return JSONResponse(
@@ -108,18 +114,20 @@ async def global_exception_handler(request: Request, exc: Exception):
             return [clean_json(i) for i in obj]
         return str(obj) if not isinstance(obj, (str, int, float, bool, type(None))) else obj
 
+    # LGPD: Não expor stacktrace ao cliente — apenas logar internamente
     response_content = {
-        "detail": "Erro interno no servidor", 
-        "error_message": clean_json(str(exc)),
-        "trace": clean_json(trace)
+        "detail": "Erro interno no servidor",
+        "error_message": clean_json(str(exc))
     }
     
     response = JSONResponse(
         status_code=500,
         content=response_content
     )
-    # CORS
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    # CORS headers para erros
+    origin = request.headers.get("origin", "")
+    if origin in [o.strip() for o in os.getenv("CORS_ORIGINS", "https://lerprova.vercel.app,http://localhost:5173,http://localhost:3000").split(",")]:
+        response.headers["Access-Control-Allow-Origin"] = origin
     return response
 
 @app.middleware("http")

@@ -5,13 +5,21 @@ import os
 import logging
 logger = logging.getLogger("lerprova-api")
 
-# Segredo para assinar os tokens (DEVE ser mantido seguro via Env Var)
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "pro_secret_key_lerprova_2026")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 horas
+# LGPD/Segurança: JWT_SECRET_KEY DEVE ser definido via variável de ambiente
+_env_secret = os.getenv("JWT_SECRET_KEY")
+if not _env_secret:
+    import secrets
+    _env_secret = secrets.token_hex(32)
+    logger.critical("⚠️  JWT_SECRET_KEY não definido! Usando chave gerada aleatoriamente. "
+                    "Todos os tokens serão invalidados ao reiniciar. "
+                    "Defina JWT_SECRET_KEY como variável de ambiente em produção!")
 
-# Log de diagnóstico na carga (mascarado)
-logger.info(f"JWT_CONFIG: Algorithm={ALGORITHM} SecretKeyPrefix={SECRET_KEY[:4]}... len={len(SECRET_KEY)}")
+SECRET_KEY = _env_secret
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 horas
+
+# Log de diagnóstico (mascarado)
+logger.info(f"JWT_CONFIG: Algorithm={ALGORITHM} SecretKeyLen={len(SECRET_KEY)}")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
