@@ -334,6 +334,25 @@ export const RelatoriosAdmin: React.FC = () => {
     const [editAlunoData, setEditAlunoData] = useState({ nome_responsavel: '', telefone_responsavel: '', email_responsavel: '' });
     const [loadingModal, setLoadingModal] = useState(false);
 
+    // Modal de situação (cards clicáveis)
+    const [situacaoModal, setSituacaoModal] = useState<{ tipo: string; label: string } | null>(null);
+    const [situacaoAlunos, setSituacaoAlunos] = useState<any[]>([]);
+    const [loadingSituacao, setLoadingSituacao] = useState(false);
+
+    const abrirSituacaoModal = async (tipo: string, label: string) => {
+        setSituacaoModal({ tipo, label });
+        setLoadingSituacao(true);
+        try {
+            const data = await api.request(`/admin/reports/dashboard/alunos?situacao=${tipo}`);
+            setSituacaoAlunos(data.alunos || []);
+        } catch (err) {
+            console.error('Erro ao carregar alunos:', err);
+            setSituacaoAlunos([]);
+        } finally {
+            setLoadingSituacao(false);
+        }
+    };
+
     const showToast = useCallback((msg: string) => {
         setToast(msg);
         setTimeout(() => setToast(null), 3000);
@@ -581,31 +600,31 @@ export const RelatoriosAdmin: React.FC = () => {
                 <div className="dashboard-card">
                     <h3><Activity size={18} /> Situação dos Alunos</h3>
                     <div className="situation-grid">
-                        <div className="situation-item">
+                        <div className="situation-item" style={{ cursor: 'pointer' }} onClick={() => abrirSituacaoModal('ativo', 'Ativos')}>
                             <span className="situation-value" style={{ color: 'var(--color-success)' }}>
                                 {dashboard.situacao_alunos.ativos}
                             </span>
                             <span className="situation-label">Ativos</span>
                         </div>
-                        <div className="situation-item">
+                        <div className="situation-item" style={{ cursor: 'pointer' }} onClick={() => abrirSituacaoModal('infrequente', 'Infrequentes')}>
                             <span className="situation-value" style={{ color: 'var(--color-warning)' }}>
                                 {dashboard.situacao_alunos.infrequentes}
                             </span>
                             <span className="situation-label">Infrequentes</span>
                         </div>
-                        <div className="situation-item">
+                        <div className="situation-item" style={{ cursor: 'pointer' }} onClick={() => abrirSituacaoModal('em_risco', 'Em Risco')}>
                             <span className="situation-value" style={{ color: 'var(--color-warning)' }}>
                                 {dashboard.situacao_alunos.em_risco}
                             </span>
                             <span className="situation-label">Em Risco</span>
                         </div>
-                        <div className="situation-item">
+                        <div className="situation-item" style={{ cursor: 'pointer' }} onClick={() => abrirSituacaoModal('abandono_presumido', 'Abandono Presumido')}>
                             <span className="situation-value" style={{ color: 'var(--color-danger)' }}>
                                 {dashboard.situacao_alunos.abandono_presumido}
                             </span>
                             <span className="situation-label">Abandono Presumido</span>
                         </div>
-                        <div className="situation-item">
+                        <div className="situation-item" style={{ cursor: 'pointer' }} onClick={() => abrirSituacaoModal('evadido', 'Evadidos')}>
                             <span className="situation-value" style={{ color: '#9333ea' }}>
                                 {dashboard.situacao_alunos.evadidos}
                             </span>
@@ -621,6 +640,62 @@ export const RelatoriosAdmin: React.FC = () => {
                         Gerar Alertas Automáticos
                     </button>
                 </div>
+
+                {/* Modal de Situação */}
+                {situacaoModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                        <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '24px', width: '95%', maxWidth: '700px', maxHeight: '80vh', overflowY: 'auto', border: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <h3 style={{ margin: 0, color: 'var(--color-text)' }}>
+                                    {situacaoModal.label} ({situacaoAlunos.length})
+                                </h3>
+                                <button onClick={() => setSituacaoModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+                                    <X size={22} />
+                                </button>
+                            </div>
+
+                            {loadingSituacao ? (
+                                <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '24px' }}>Carregando...</p>
+                            ) : situacaoAlunos.length === 0 ? (
+                                <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '24px' }}>Nenhum aluno nesta situação.</p>
+                            ) : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                    <thead style={{ background: 'rgba(255,255,255,0.05)', position: 'sticky', top: 0 }}>
+                                        <tr>
+                                            <th style={{ padding: '10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Aluno</th>
+                                            <th style={{ padding: '10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Turma</th>
+                                            <th style={{ padding: '10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Freq.</th>
+                                            <th style={{ padding: '10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Responsável</th>
+                                            <th style={{ padding: '10px', textAlign: 'center', color: 'var(--color-text-muted)' }}>WhatsApp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {situacaoAlunos.map((a: any) => (
+                                            <tr key={a.aluno_id} style={{ borderTop: '1px solid var(--border-color)' }}>
+                                                <td style={{ padding: '10px' }}>
+                                                    <div style={{ color: 'var(--color-text)', fontWeight: 600 }}>{a.aluno_nome}</div>
+                                                    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{a.aluno_codigo}</div>
+                                                </td>
+                                                <td style={{ padding: '10px', color: 'var(--color-text-muted)' }}>{a.turma}</td>
+                                                <td style={{ padding: '10px', fontWeight: 700, color: (a.frequencia_percentual ?? 100) < 75 ? 'var(--color-danger)' : (a.frequencia_percentual ?? 100) < 85 ? 'var(--color-warning)' : 'var(--color-success)' }}>
+                                                    {a.frequencia_percentual != null ? `${a.frequencia_percentual}%` : '—'}
+                                                </td>
+                                                <td style={{ padding: '10px', color: 'var(--color-text-muted)' }}>{a.responsavel || '—'}</td>
+                                                <td style={{ padding: '10px', textAlign: 'center' }}>
+                                                    <WhatsAppButton
+                                                        telefone={a.telefone}
+                                                        tipo="infrequencia"
+                                                        dados={{ aluno_nome: a.aluno_nome, turma: a.turma, frequencia: a.frequencia_percentual }}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };

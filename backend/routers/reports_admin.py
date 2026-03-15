@@ -1,4 +1,4 @@
-"""
+=r3ey=2p2ç  5~ç.A.:tR.As"""
 Relatórios Avançados de Frequência e Evasão - LERPROVA
 ====================================================
 Módulo completo para gestão de frequência escolar com:
@@ -1490,7 +1490,7 @@ async def dashboard_frequencia(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """Dashboard resumido de frequência para a tela principal"""
+    """Dashboard resumido de frequência para a tela principal — CORRIGIDO com deduplicação"""
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     
@@ -1498,12 +1498,16 @@ async def dashboard_frequencia(
     hoje = datetime.now()
     inicio_mes = hoje.replace(day=1).strftime("%Y-%m-%d")
     hoje_str = hoje.strftime("%Y-%m-%d")
-    dias_letivos = get_dias_letivos(db, inicio_mes, hoje_str)
-    total_dias = len(dias_letivos)
     
-    total_alunos = db.query(models.Aluno).filter(
+    # Usar dias com frequência registrada (já exclui fins de semana)
+    dias_com_freq = get_dias_com_frequencia(db, inicio_mes, hoje_str)
+    total_dias = len(dias_com_freq)
+    
+    # Todos os alunos (exceto transferidos)
+    alunos = db.query(models.Aluno).filter(
         models.Aluno.situacao_matricula != "transferido"
-    ).count()
+    ).all()
+    total_alunos = len(alunos)
     
     # Alertas abertos
     alertas_abertos = db.query(models.AlertaFrequencia).filter(
@@ -1515,26 +1519,65 @@ async def dashboard_frequencia(
         models.AlertaFrequencia.nivel_risco == "critico"
     ).count()
     
-    # Situação dos alunos
-    situacao = db.query(
-        models.Aluno.situacao_matricula,
-        func.count(models.Aluno.id)
-    ).group_by(models.Aluno.situacao_matricula).all()
+    # ===== FREQUÊNCIA CORRIGIDA: deduplicar por aluno+data =====
+    situacao_counts = {"ativo": 0, "infrequente": 0, "em_risco": 0, "abandono_presumido": 0, "evadido": 0}
+    soma_freq = 0.0
+    alunos_com_freq = 0
     
-    situacao_dict = {s[0] or "ativo": s[1] for s in situacao}
-    
-    # Taxa de frequência média do mês
     if total_dias > 0 and total_alunos > 0:
-        total_presencas = db.query(models.Frequencia).filter(
-            models.Frequencia.data.in_(dias_letivos),
-            models.Frequencia.presente == True
-        ).count()
-        taxa_media = (total_presencas / (total_alunos * total_dias)) * 100
+        # Carregar TODAS as frequências do mês de uma vez (batch)
+        frequencias_batch = carregar_frequencias_batch(db, dias_com_freq)
+        primeiras_batch = carregar_primeiras_frequencias_batch(db, [a.id for a in alunos])
+        
+        for aluno in alunos:
+            primeira_freq = primeiras_batch.get(aluno.id)
+            if not primeira_freq:
+                situacao_counts["ativo"] += 1
+                continue
+            
+            dias_validos = [d for d in dias_com_freq if d >= primeira_freq]
+            if not dias_validos:
+                situacao_counts["ativo"] += 1
+                continue
+            
+            # Deduplicar por data para este aluno
+            freqs_aluno = frequencias_batch.get(aluno.id, [])
+            por_data = {}
+            for f in freqs_aluno:
+                if f.data not in por_data:
+                    por_data[f.data] = False
+                if f.presente:
+                    por_data[f.data] = True
+            
+            # Só contar dias válidos (que existem nos dias com frequência)
+            dias_presentes = sum(1 for d in dias_validos if por_data.get(d, False))
+            total_dias_aluno = len(dias_validos)
+            
+            freq_pct = (dias_presentes / total_dias_aluno * 100) if total_dias_aluno > 0 else 100
+            soma_freq += freq_pct
+            alunos_com_freq += 1
+            
+            # Classificar situação dinamicamente
+            if freq_pct >= 90:
+                situacao_counts["ativo"] += 1
+            elif freq_pct >= 85:
+                situacao_counts["ativo"] += 1  # atenção mas ainda ativo
+            elif freq_pct >= 75:
+                situacao_counts["infrequente"] += 1
+            elif freq_pct >= 50:
+                situacao_counts["em_risco"] += 1
+            elif freq_pct > 0:
+                situacao_counts["abandono_presumido"] += 1
+            else:
+                situacao_counts["evadido"] += 1
+        
+        taxa_media = (soma_freq / alunos_com_freq) if alunos_com_freq > 0 else 0
     else:
         taxa_media = 0
+        # Sem dados de frequência: todos ficam como ativos
+        situacao_counts["ativo"] = total_alunos
     
-    # Pendências de comunicação (menores sem contato)
-    # Simplificado para evitar queries complexas
+    # Pendências de comunicação
     pendencias = db.query(models.AlertaFrequencia).filter(
         models.AlertaFrequencia.status == "aberto",
         models.AlertaFrequencia.nivel_risco.in_(["critico", "alerta"])
@@ -1549,15 +1592,94 @@ async def dashboard_frequencia(
             "criticos": alertas_criticos
         },
         "situacao_alunos": {
-            "ativos": situacao_dict.get("ativo", 0),
-            "infrequentes": situacao_dict.get("infrequente", 0),
-            "em_risco": situacao_dict.get("em_risco", 0),
-            "abandono_presumido": situacao_dict.get("abandono_presumido", 0),
-            "evadidos": situacao_dict.get("evadido", 0)
+            "ativos": situacao_counts["ativo"],
+            "infrequentes": situacao_counts["infrequente"],
+            "em_risco": situacao_counts["em_risco"],
+            "abandono_presumido": situacao_counts["abandono_presumido"],
+            "evadidos": situacao_counts["evadido"]
         },
         "pendencias_comunicacao": pendencias,
         "periodo": {"inicio": inicio_mes, "fim": hoje_str}
     }
+
+
+@router.get("/dashboard/alunos")
+async def dashboard_alunos_por_situacao(
+    situacao: str = Query(..., description="ativo, infrequente, em_risco, abandono_presumido, evadido"),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Retorna a lista de alunos filtrada por situação calculada dinamicamente"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
+    
+    hoje = datetime.now()
+    inicio_mes = hoje.replace(day=1).strftime("%Y-%m-%d")
+    hoje_str = hoje.strftime("%Y-%m-%d")
+    
+    dias_com_freq = get_dias_com_frequencia(db, inicio_mes, hoje_str)
+    
+    alunos = db.query(models.Aluno).options(
+        joinedload(models.Aluno.turmas)
+    ).filter(
+        models.Aluno.situacao_matricula != "transferido"
+    ).all()
+    
+    if not dias_com_freq:
+        return {"alunos": [], "total": 0}
+    
+    frequencias_batch = carregar_frequencias_batch(db, dias_com_freq, [a.id for a in alunos])
+    primeiras_batch = carregar_primeiras_frequencias_batch(db, [a.id for a in alunos])
+    
+    resultado = []
+    
+    for aluno in alunos:
+        primeira_freq = primeiras_batch.get(aluno.id)
+        if not primeira_freq:
+            classificacao = "ativo"
+        else:
+            dias_validos = [d for d in dias_com_freq if d >= primeira_freq]
+            if not dias_validos:
+                classificacao = "ativo"
+            else:
+                freqs_aluno = frequencias_batch.get(aluno.id, [])
+                por_data = {}
+                for f in freqs_aluno:
+                    if f.data not in por_data:
+                        por_data[f.data] = False
+                    if f.presente:
+                        por_data[f.data] = True
+                
+                dias_presentes = sum(1 for d in dias_validos if por_data.get(d, False))
+                total_dias_aluno = len(dias_validos)
+                freq_pct = (dias_presentes / total_dias_aluno * 100) if total_dias_aluno > 0 else 100
+                
+                if freq_pct >= 85:
+                    classificacao = "ativo"
+                elif freq_pct >= 75:
+                    classificacao = "infrequente"
+                elif freq_pct >= 50:
+                    classificacao = "em_risco"
+                elif freq_pct > 0:
+                    classificacao = "abandono_presumido"
+                else:
+                    classificacao = "evadido"
+        
+        if classificacao == situacao:
+            turma_nomes = [t.nome for t in aluno.turmas] if aluno.turmas else []
+            resultado.append({
+                "aluno_id": aluno.id,
+                "aluno_nome": aluno.nome,
+                "aluno_codigo": aluno.codigo,
+                "turma": ", ".join(turma_nomes) if turma_nomes else "Sem turma",
+                "responsavel": aluno.nome_responsavel,
+                "telefone": aluno.telefone_responsavel,
+                "frequencia_percentual": round(freq_pct, 1) if primeira_freq else None
+            })
+    
+    resultado.sort(key=lambda x: x.get("frequencia_percentual") or 999)
+    
+    return {"alunos": resultado, "total": len(resultado)}
 
 
 # ==================== HISTÓRICO DETALHADO DE FREQUÊNCIA ====================
