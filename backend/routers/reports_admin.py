@@ -268,7 +268,8 @@ def get_primeira_frequencia(db: Session, aluno_id: int = None) -> str:
 
 
 def get_dias_com_frequencia(db: Session, data_inicio: str, data_fim: str) -> List[str]:
-    """Retorna lista de datas onde houve registro de frequência (dias que efetivamente tiveram aula)"""
+    """Retorna lista de datas onde houve registro de frequência (dias que efetivamente tiveram aula).
+    Fins de semana são automaticamente excluídos."""
     dias_registrados = db.query(
         func.distinct(models.Frequencia.data)
     ).filter(
@@ -276,7 +277,15 @@ def get_dias_com_frequencia(db: Session, data_inicio: str, data_fim: str) -> Lis
         models.Frequencia.data <= data_fim
     ).all()
     
-    return sorted([d[0] for d in dias_registrados if d[0]])
+    dias = sorted([d[0] for d in dias_registrados if d[0]])
+    
+    # Excluir sabados (5) e domingos (6) da contagem
+    dias_uteis = [
+        d for d in dias
+        if datetime.strptime(d, "%Y-%m-%d").weekday() < 5
+    ]
+    
+    return dias_uteis
 
 
 def calcular_idade(data_nascimento: str) -> int:

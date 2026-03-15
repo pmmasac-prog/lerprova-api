@@ -17,6 +17,15 @@ async def save_frequencia(data: dict, user: users_db.User = Depends(get_current_
     data_frequencia = data.get("data")
     alunos_lista = data.get("alunos", [])
 
+    # Bloquear registro em fins de semana
+    if data_frequencia:
+        dia_semana = datetime.datetime.strptime(data_frequencia, "%Y-%m-%d").weekday()
+        if dia_semana >= 5:  # 5=sabado, 6=domingo
+            raise HTTPException(
+                status_code=400,
+                detail=f"Não é permitido registrar frequência em fins de semana ({data_frequencia})."
+            )
+
     if user.role != "admin":
          turma = db.query(models.Turma).filter(models.Turma.id == turma_id, models.Turma.user_id == user.id).first()
          if not turma:
@@ -61,10 +70,12 @@ async def get_frequencia_aluno(aluno_id: int, user: users_db.User = Depends(get_
 
     freqs = query.all()
 
-    # Deduplicar por data: se o aluno tem registro em 2 turmas no mesmo dia,
-    # considera PRESENTE se esteve em ao menos uma delas
+    # Deduplicar por data e ignorar fins de semana
     por_data = {}
     for f in freqs:
+        dia_semana = datetime.datetime.strptime(f.data, "%Y-%m-%d").weekday()
+        if dia_semana >= 5:
+            continue  # Ignora sabado (5) e domingo (6)
         if f.data not in por_data:
             por_data[f.data] = False
         if f.presente:
@@ -106,10 +117,12 @@ async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, user: users_d
         models.Frequencia.aluno_id == aluno_id
     ).all()
     
-    # Dentro de uma turma especifica nao ha duplicidade por turma,
-    # mas deduplicamos por data caso haja registros duplicados
+    # Deduplicar por data e ignorar fins de semana
     por_data = {}
     for f in freqs:
+        dia_semana = datetime.datetime.strptime(f.data, "%Y-%m-%d").weekday()
+        if dia_semana >= 5:
+            continue  # Ignora sabado e domingo
         if f.data not in por_data:
             por_data[f.data] = {"presente": False, "registro": f}
         if f.presente:
