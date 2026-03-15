@@ -777,6 +777,23 @@ export const api = {
                 body: JSON.stringify(data)
             });
         },
+        async bulkImportEvents(events: any[]) {
+            let created = 0;
+            const errors: string[] = [];
+            for (const ev of events) {
+                try {
+                    await request(`${API_URL}/calendar/events`, {
+                        method: 'POST',
+                        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify(ev)
+                    });
+                    created++;
+                } catch (e: any) {
+                    errors.push(`${ev.title}: ${e.message || 'Erro'}`);
+                }
+            }
+            return { created, errors };
+        },
         async updateEvent(eventId: number, data: { title?: string; event_type_id?: string; start_date?: string; end_date?: string; description?: string; is_school_day?: boolean }) {
             return request(`${API_URL}/calendar/events/${eventId}`, {
                 method: 'PUT',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List, Grid, Plus, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, List, Grid, Plus, Edit2, Trash2, X, Save, Download, Upload, CheckCircle } from 'lucide-react';
 import { api } from '../services/api';
 import './AcademicCalendar.css';
 
@@ -56,6 +56,72 @@ export const AcademicCalendar: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<CalendarEvent | null>(null);
   const emptyForm = { title: '', event_type_id: 'holiday', start_date: '', end_date: '', description: '', is_school_day: false };
   const [formData, setFormData] = useState(emptyForm);
+
+  // ===== CSV IMPORT STATE =====
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [importResult, setImportResult] = useState<any>(null);
+  const [importing, setImporting] = useState(false);
+
+  const EVENT_TYPE_KEYS = Object.keys(EVENT_TYPES); // for validation
+
+  const downloadCalendarTemplate = () => {
+    const headers = "Titulo;Tipo;DataInicio;DataFim;DiaLetivo;Descricao";
+    const types = EVENT_TYPE_KEYS.join(' | ');
+    const row1 = "Feriado Nacional;holiday;2026-09-07;2026-09-07;false;Independência do Brasil";
+    const row2 = "Reunião Pedagógica;meeting;2026-02-03;2026-02-03;true;Reunião de planejamento";
+    const row3 = "Recesso Escolar;vacation;2026-07-13;2026-07-25;false;Recesso do 2º Semestre";
+    const csv = "\uFEFF" + ["# Tipos válidos: " + types, headers, row1, row2, row3].join("\n");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'modelo_importacao_calendario.csv';
+    a.click();
+  };
+
+  const handleCalendarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const lines = text.split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('#') && !l.startsWith('Titulo'));
+      const parsed = lines.map(line => {
+        const [title, event_type_id, start_date, end_date, is_school_day, description] = line.split(';');
+        const type = event_type_id?.trim().toLowerCase();
+        return {
+          title: title?.trim(),
+          event_type_id: EVENT_TYPE_KEYS.includes(type) ? type : 'holiday',
+          start_date: start_date?.trim(),
+          end_date: end_date?.trim() || start_date?.trim(),
+          is_school_day: is_school_day?.trim().toLowerCase() === 'true',
+          description: description?.trim() || '',
+        };
+      }).filter(ev => ev.title && ev.start_date);
+      setImportPreview(parsed);
+      setImportResult(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleCalendarImportSubmit = async () => {
+    if (!importPreview.length) return;
+    try {
+      setImporting(true);
+      const res = await api.calendar.bulkImportEvents(importPreview);
+      setImportResult(res);
+      setImportPreview([]);
+      await loadEvents();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setImporting(false);
+    }
+  };
+
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
@@ -214,6 +280,26 @@ export const AcademicCalendar: React.FC = () => {
           <p className="admin-subtitle">{events.length} eventos · {periods.length} períodos letivos</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={downloadCalendarTemplate}
+            style={{
+              padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
+              background: 'transparent', border: '1px solid var(--admin-gold)',
+              color: 'var(--admin-gold)', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold'
+            }}
+          >
+            <Download size={16} /> Modelo CSV
+          </button>
+          <button
+            onClick={() => { setShowImportModal(true); setImportPreview([]); setImportResult(null); }}
+            style={{
+              padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
+              background: 'transparent', border: '1px solid var(--border-color)',
+              color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '6px'
+            }}
+          >
+            <Upload size={16} /> Importar CSV
+          </button>
           <button
             onClick={openCreate}
             style={{
@@ -451,6 +537,94 @@ export const AcademicCalendar: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* ===== MODAL IMPORTAÇÃO CSV ===== */}
+      {showImportModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '28px', width: '95%', maxWidth: '680px', border: '1px solid var(--border-color)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ color: 'var(--color-text)', margin: 0, fontSize: '1.2rem' }}>📅 Importar Eventos via CSV</h3>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>Formato: Titulo;Tipo;DataInicio;DataFim;DiaLetivo;Descricao</p>
+              </div>
+              <button onClick={() => setShowImportModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                <X size={22} />
+              </button>
+            </div>
+
+            {!importResult ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ border: '2px dashed var(--border-color)', borderRadius: '10px', padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                  <input type="file" accept=".csv" id="cal-csv-upload" onChange={handleCalendarFileUpload} style={{ display: 'none' }} />
+                  <label htmlFor="cal-csv-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <Upload size={28} color="var(--color-primary)" />
+                    <span style={{ fontWeight: 'bold', color: 'var(--color-text)' }}>Selecionar Arquivo CSV</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Tipos: holiday, meeting, vacation, planning, assessment...</span>
+                  </label>
+                </div>
+
+                {importPreview.length > 0 && (
+                  <div>
+                    <p style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--color-text)' }}>{importPreview.length} evento(s) encontrado(s):</p>
+                    <div style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                        <thead style={{ background: 'rgba(255,255,255,0.05)', position: 'sticky', top: 0 }}>
+                          <tr>
+                            <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Título</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Tipo</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Data Início</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Data Fim</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'left', color: 'var(--color-text-muted)' }}>Letivo</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importPreview.map((ev, i) => {
+                            const et = EVENT_TYPES[ev.event_type_id] || { emoji: '📌', label: ev.event_type_id };
+                            return (
+                              <tr key={i} style={{ borderTop: '1px solid var(--border-color)' }}>
+                                <td style={{ padding: '8px 10px', color: 'var(--color-text)' }}>{ev.title}</td>
+                                <td style={{ padding: '8px 10px', color: 'var(--color-text-muted)' }}>{et.emoji} {et.label}</td>
+                                <td style={{ padding: '8px 10px', color: 'var(--color-text-muted)' }}>{ev.start_date}</td>
+                                <td style={{ padding: '8px 10px', color: 'var(--color-text-muted)' }}>{ev.end_date}</td>
+                                <td style={{ padding: '8px 10px' }}>{ev.is_school_day ? '✅' : '❌'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                      <button onClick={() => setShowImportModal(false)} style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer' }}>Cancelar</button>
+                      <button onClick={handleCalendarImportSubmit} disabled={importing}
+                        style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', background: 'var(--color-success)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {importing ? 'Importando...' : `Confirmar (${importPreview.length} eventos)`}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', padding: '12px 0' }}>
+                <CheckCircle size={48} color="var(--color-success)" />
+                <h3 style={{ margin: 0, color: 'var(--color-text)' }}>Importação Concluída!</h3>
+                <div style={{ display: 'flex', gap: '24px' }}>
+                  <div style={{ textAlign: 'center' }}><span style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--color-success)' }}>{importResult.created}</span><p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Criados</p></div>
+                  <div style={{ textAlign: 'center' }}><span style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--color-danger)' }}>{importResult.errors?.length || 0}</span><p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Erros</p></div>
+                </div>
+                {importResult.errors?.length > 0 && (
+                  <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '12px', width: '100%', textAlign: 'left' }}>
+                    <p style={{ fontWeight: 700, marginBottom: '6px', color: 'var(--color-danger)', fontSize: '0.9rem' }}>Erros:</p>
+                    <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
+                      {importResult.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}
+                    </ul>
+                  </div>
+                )}
+                <button onClick={() => setShowImportModal(false)} style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', background: 'var(--color-success)', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>Fechar</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ===== MODAL CRIAR/EDITAR ===== */}
       {showModal && (
