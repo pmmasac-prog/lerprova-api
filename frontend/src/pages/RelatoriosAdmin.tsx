@@ -4,7 +4,7 @@ import {
     TrendingDown, Calendar, Filter, RefreshCw,
     CheckCircle, XCircle, Clock, AlertCircle, FileText, Search,
     ChevronDown, ChevronUp, Percent, Activity, MessageCircle,
-    User, Edit3, Save, X
+    User, Edit3, Save, X, Trash2
 } from 'lucide-react';
 import { api } from '../services/api';
 import './RelatoriosAdmin.css';
@@ -504,6 +504,27 @@ export const RelatoriosAdmin: React.FC = () => {
         } catch (err) {
             console.error('Erro ao gerar alertas:', err);
             showToast('Erro ao gerar alertas');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleWipeTurma = async (turmaId: number, turmaNome: string) => {
+        const confirm1 = confirm(`AVISO CRÍTICO: Você está prestes a excluir a turma "${turmaNome}" E TODOS OS SEUS ALUNOS permanentemente.`);
+        if (!confirm1) return;
+
+        const confirm2 = confirm("ESTA AÇÃO NÃO PODE SER DESFEITA. Todos os resultados de provas, frequências e dados dos alunos serão APAGADOS PARA SEMPRE. Tem certeza absoluta?");
+        if (!confirm2) return;
+
+        try {
+            setLoading(true);
+            await api.request(`/turmas/${turmaId}/wipe`, { method: 'DELETE' });
+            showToast('Turma e alunos excluídos com sucesso');
+            loadGerencial();
+            loadDashboard();
+        } catch (error) {
+            console.error('Erro ao realizar WIPE:', error);
+            showToast('Erro ao excluir turma e alunos');
         } finally {
             setLoading(false);
         }
@@ -1128,6 +1149,26 @@ export const RelatoriosAdmin: React.FC = () => {
                                         </span>
                                     )}
                                 </div>
+                                <button 
+                                    className="icon-btn delete" 
+                                    onClick={() => handleWipeTurma(turma.turma_id, turma.turma_nome)}
+                                    title="Apagar Turma e Alunos"
+                                    style={{ 
+                                        color: 'var(--color-danger)', 
+                                        background: 'rgba(239, 68, 68, 0.1)',
+                                        border: 'none',
+                                        padding: '8px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        marginLeft: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <Trash2 size={16} />
+                                </button>
                             </div>
                         ))}
                     </div>
