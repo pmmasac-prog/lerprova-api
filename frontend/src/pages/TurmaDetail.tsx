@@ -360,7 +360,7 @@ export const TurmaDetail: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };;
+    };
 
     if (loading) {
         return (
