@@ -1,4 +1,4 @@
-=r3ey=2p2ç  5~ç.A.:tR.As"""
+"""
 Relatórios Avançados de Frequência e Evasão - LERPROVA
 ====================================================
 Módulo completo para gestão de frequência escolar com:
