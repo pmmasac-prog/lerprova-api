@@ -10,7 +10,7 @@ Módulo completo para gestão de frequência escolar com:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, subqueryload
 from sqlalchemy import func, and_, or_, desc
 from pydantic import BaseModel
 from typing import List, Optional
@@ -476,7 +476,7 @@ async def relatorio_infrequencia(
     
     dias_ordenados = sorted(dias_com_frequencia)
     
-    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
+    query = db.query(models.Aluno).options(subqueryload(models.Aluno.turmas))
     if request.turma_id:
         query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == request.turma_id)
     
@@ -608,7 +608,7 @@ async def relatorio_faltas_consecutivas(
     
     dias_ordenados = sorted(dias_com_frequencia, reverse=True)
     
-    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
+    query = db.query(models.Aluno).options(subqueryload(models.Aluno.turmas))
     if turma_id:
         query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == turma_id)
     
@@ -723,7 +723,7 @@ async def relatorio_risco_evasao(
     periodo_ant_inicio = (datetime.strptime(request.data_inicio, "%Y-%m-%d") - timedelta(days=duracao+1)).strftime("%Y-%m-%d")
     dias_freq_anterior = get_dias_com_frequencia(db, periodo_ant_inicio, periodo_ant_fim)
     
-    query = db.query(models.Aluno).options(joinedload(models.Aluno.turmas))
+    query = db.query(models.Aluno).options(subqueryload(models.Aluno.turmas))
     if request.turma_id:
         query = query.join(models.aluno_turma).filter(models.aluno_turma.c.turma_id == request.turma_id)
     
@@ -844,7 +844,7 @@ async def relatorio_evasao_abandono(
     inicio = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d")
     dias_letivos = get_dias_letivos(db, inicio, hoje)
     
-    alunos = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).all()
+    alunos = db.query(models.Aluno).options(subqueryload(models.Aluno.turmas)).all()
     
     categorias = {
         "ativo": [],
@@ -923,7 +923,7 @@ async def relatorio_menores_comunicacao(
     dias_ordenados = sorted(dias_letivos, reverse=True)
     
     # Buscar alunos (apenas menores de 18)
-    alunos = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).filter(
+    alunos = db.query(models.Aluno).options(subqueryload(models.Aluno.turmas)).filter(
         models.Aluno.situacao_matricula.in_(["ativo", "infrequente", "em_risco"])
     ).all()
     
@@ -1057,7 +1057,7 @@ async def relatorio_gerencial(
         return {"message": "Nenhum dia letivo no período"}
     
     # BATCH: Carregar todos os alunos com turmas
-    todos_alunos = db.query(models.Aluno).options(joinedload(models.Aluno.turmas)).all()
+    todos_alunos = db.query(models.Aluno).options(subqueryload(models.Aluno.turmas)).all()
     aluno_ids = [a.id for a in todos_alunos]
     
     # BATCH: Carregar todas as frequências do período de uma vez
@@ -1620,7 +1620,7 @@ async def dashboard_alunos_por_situacao(
     dias_com_freq = get_dias_com_frequencia(db, inicio_mes, hoje_str)
     
     alunos = db.query(models.Aluno).options(
-        joinedload(models.Aluno.turmas)
+        subqueryload(models.Aluno.turmas)
     ).filter(
         models.Aluno.situacao_matricula != "transferido"
     ).all()
