@@ -60,8 +60,18 @@ async def get_frequencia_aluno(aluno_id: int, user: users_db.User = Depends(get_
         query = query.join(models.Turma).filter(models.Turma.user_id == user.id)
 
     freqs = query.all()
-    total_aulas = len(freqs)
-    total_presencas = len([f for f in freqs if f.presente])
+
+    # Deduplicar por data: se o aluno tem registro em 2 turmas no mesmo dia,
+    # considera PRESENTE se esteve em ao menos uma delas
+    por_data = {}
+    for f in freqs:
+        if f.data not in por_data:
+            por_data[f.data] = False
+        if f.presente:
+            por_data[f.data] = True
+
+    total_aulas = len(por_data)
+    total_presencas = sum(1 for presente in por_data.values() if presente)
     
     percentage = 0
     if total_aulas > 0:
@@ -96,8 +106,17 @@ async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, user: users_d
         models.Frequencia.aluno_id == aluno_id
     ).all()
     
-    total_presencas = len([f for f in freqs if f.presente])
-    total_aulas = len(freqs)
+    # Dentro de uma turma especifica nao ha duplicidade por turma,
+    # mas deduplicamos por data caso haja registros duplicados
+    por_data = {}
+    for f in freqs:
+        if f.data not in por_data:
+            por_data[f.data] = {"presente": False, "registro": f}
+        if f.presente:
+            por_data[f.data]["presente"] = True
+
+    total_aulas = len(por_data)
+    total_presencas = sum(1 for d in por_data.values() if d["presente"])
     
     percentage = 0
     if total_aulas > 0:
@@ -110,7 +129,7 @@ async def get_frequencia_aluno_turma(turma_id: int, aluno_id: int, user: users_d
         "total_presencas": total_presencas,
         "percentual": f"{percentage}%",
         "historico": [
-            {"data": f.data, "presente": f.presente} for f in freqs
+            {"data": data, "presente": d["presente"]} for data, d in sorted(por_data.items())
         ]
     }
 

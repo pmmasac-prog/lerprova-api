@@ -503,9 +503,20 @@ async def relatorio_infrequencia(
         freqs_aluno = frequencias_batch.get(aluno.id, [])
         freqs_validas = [f for f in freqs_aluno if f.data in dias_validos]
         
-        dias_presentes = len([f for f in freqs_validas if f.presente])
+        # Deduplicar por data: aluno em múltiplas turmas no mesmo dia conta só 1x
+        # Regra: PRESENTE se esteve em ao menos uma turma naquele dia
+        por_data = {}
+        for f in freqs_validas:
+            if f.data not in por_data:
+                por_data[f.data] = {"presente": False, "falta_justificada": False}
+            if f.presente:
+                por_data[f.data]["presente"] = True
+            if getattr(f, "falta_justificada", False) and not f.presente:
+                por_data[f.data]["falta_justificada"] = True
+
+        dias_presentes = sum(1 for d in por_data.values() if d["presente"])
         dias_ausentes = total_dias_letivos - dias_presentes
-        faltas_justificadas = len([f for f in freqs_validas if not f.presente and f.falta_justificada])
+        faltas_justificadas = sum(1 for d in por_data.values() if not d["presente"] and d["falta_justificada"])
         faltas_nao_justificadas = dias_ausentes - faltas_justificadas
         
         frequencia_pct = (dias_presentes / total_dias_letivos * 100) if total_dias_letivos > 0 else 0
