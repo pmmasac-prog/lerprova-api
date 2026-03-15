@@ -70,6 +70,40 @@ async def delete_user(user_id: int, admin_user = Depends(verify_admin), db: Sess
     db.commit()
     return {"message": "Usuário removido com sucesso"}
 
+@router.post("/users/import")
+async def import_users(users: List[UserCreate], admin_user = Depends(verify_admin), db: Session = Depends(get_db)):
+    """Importação em massa de professores."""
+    created = 0
+    skipped = 0
+    errors = []
+
+    for u_data in users:
+        try:
+            # Validação obrigatória da escola
+            if not u_data.escola:
+                skipped += 1
+                errors.append(f"E-mail {u_data.email}: Escola não informada")
+                continue
+
+            existing = users_db.get_user_by_email(db, u_data.email)
+            if existing:
+                skipped += 1
+                errors.append(f"E-mail {u_data.email}: Já cadastrado")
+                continue
+            
+            users_db.create_user(db, u_data.dict())
+            created += 1
+        except Exception as e:
+            skipped += 1
+            errors.append(f"E-mail {u_data.email}: {str(e)}")
+
+    return {
+        "message": "Processamento concluído",
+        "criados": created,
+        "pulados": skipped,
+        "erros": errors
+    }
+
 
 @router.get("/turmas")
 async def list_all_turmas(admin_user = Depends(verify_admin), db: Session = Depends(get_db)):

@@ -414,6 +414,13 @@ export const api = {
                 body: JSON.stringify(data)
             });
         },
+        async importUsers(users: any[]) {
+            return request(`${API_URL}/admin/users/import`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(users)
+            });
+        },
         async getSystemOverview() {
             return request(`${API_URL}/admin/system-overview`, {
                 headers: getAuthHeaders()
