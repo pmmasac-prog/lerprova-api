@@ -137,25 +137,20 @@ class OMREngine:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             
             # 2.2 Normalização de Iluminação (Flat-Field Correction)
-            # Remove sombras e variações graduais de luz
-            dilated_img = cv2.dilate(gray, np.ones((7, 7), np.uint8))
-            bg_img = cv2.medianBlur(dilated_img, 21)
-            diff_img = cv2.absdiff(gray, bg_img)
-            norm_img = cv2.normalize(diff_img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-            
-            # 2.3 Aplicar CLAHE (Contrast Limited Adaptive Histogram Equalization) para detalhes locais
+            # 2.2 Pré-processamento Padronizado (Mesmo do Preview)
+            # Aplicar CLAHE para equilibrar contraste local sem apagar as âncoras
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-            gray_clahe = clahe.apply(norm_img)
+            gray_clahe = clahe.apply(gray)
             
             # 2.4 Aplicar Gaussian Blur para redução de ruído
             blurred = cv2.GaussianBlur(gray_clahe, (3, 3), 0)
             
-            # 2.5 Binarização Adaptativa
+            # 2.5 Binarização Adaptativa (Sincronizada com Preview)
             thresh = cv2.adaptiveThreshold(
                 blurred, 255, 
                 cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
                 cv2.THRESH_BINARY_INV, 
-                21, 5
+                31, 10
             )
             
             # ===== 3. DETECÇÃO ROBUSTA DE ÂNCORAS =====
