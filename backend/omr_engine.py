@@ -457,7 +457,9 @@ class OMREngine:
                 x, y, w, h = cv2.boundingRect(cnt)
                 cX, cY = x + w//2, y + h//2
                 
-            margin = 0.18
+            # Margem relaxada: as âncoras agora podem estar mais longe das bordas 
+            # já que cercam apenas o gabarito e não a folha toda.
+            margin = 0.35 
             valid = (
                 (cX < W*margin and cY < H*margin) or
                 (cX > W*(1-margin) and cY < H*margin) or
@@ -719,22 +721,23 @@ class OMREngine:
         
         results = []
         
-        # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
-        # Isso significa que ele preenche Linha 1: Q1, Q2 | Linha 2: Q3, Q4...
-        # Precisamos de um loop que percorra as linhas e depois as colunas dentro da linha
+        # O gerador do frontend (GabaritoTemplate) usa colunas verticais (blocos)
+        # Isso significa que ele preenche Bloco 1: Q1-Q7 | Bloco 2: Q8-Q14...
+        # Invertemos a ordem: Column -> Row
         q_idx = 0
+        num_cols_val = int(cast(Union[int, float], num_cols))
         num_rows_val = int(cast(Union[int, float], num_rows))
-        for row in range(num_rows_val):
-            y_center = (y_start_pct + (float(row) * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
+        num_q_val = int(cast(Union[int, float], num_questions))
+
+        for col in range(num_cols_val):
+            offsets_list = cast(List[float], x_offsets_pct)
+            col_offset_pct = offsets_list[col] if col < len(offsets_list) else 0.0
             
-            num_cols_val = int(cast(Union[int, float], num_cols))
-            for col in range(num_cols_val):
-                num_q_val = int(cast(Union[int, float], num_questions))
+            for row in range(num_rows_val):
                 if q_idx >= num_q_val:
                     break
-                    
-                offsets_list = cast(List[float], x_offsets_pct)
-                col_offset_pct = offsets_list[col] if col < len(offsets_list) else 0.0
+                
+                y_center = (y_start_pct + (float(row) * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
                 bubbles_data = []
                 
                 for j, x_pct_rel in enumerate(x_centers_pct):
