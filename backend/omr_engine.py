@@ -489,6 +489,13 @@ class OMREngine:
             best = max(pool, key=lambda x: x['score'])
             final_anchors.append((best['cx'], best['cy']))
 
+        # Tentar detectar marcador central (opcional, para correção de barril/coxim)
+        center_pool = [c for c in candidates if W*0.4 < c['cx'] < W*0.6 and H*0.4 < c['cy'] < H*0.6]
+        if center_pool:
+            best_center = max(center_pool, key=lambda x: x['score'])
+            # Por enquanto apenas logamos ou guardamos para futuras correções de 2ª ordem
+            logger.debug(f"Center marker detected at {best_center['cx']}, {best_center['cy']}")
+
         return final_anchors
 
     def detect_anchors_only(self, image_base64):
@@ -688,6 +695,26 @@ class OMREngine:
         return fill_ratio, bg_ratio
     
     
+    def _get_contrast_calibration(self, warped):
+        """
+        Amostra a barra de calibração lateral (deve estar em x=~4mm a 7mm)
+        para determinar o nível real de preto e branco e ajustar sensibilidade.
+        """
+        try:
+            H, W = warped.shape[:2]
+            # Barra está em ~4mm de 180mm total da largura do wrapper
+            x1 = int(W * (4.0/180.0))
+            x2 = int(W * (7.0/180.0))
+            roi_strip = warped[int(H*0.2):int(H*0.8), x1:x2]
+            gray_strip = cv2.cvtColor(roi_strip, cv2.COLOR_BGR2GRAY)
+            
+            min_val, max_val, _, _ = cv2.minMaxLoc(gray_strip)
+            # min_val representa o preto mais denso na imagem
+            # max_val representa o fundo branco próximo
+            return min_val, max_val
+        except:
+            return 0, 255
+
     def read_bubbles_by_density(self, warped, num_questions, layout_version="v1"):
         """
         Lê bolhas usando análise de densidade de pixels baseada no layout JSON.
@@ -708,18 +735,30 @@ class OMREngine:
         y_end_pct = float(layout_dict.get("y_end_pct", 0.88))
 
         num_cols = int(layout.get("num_columns", 1))
-        # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
-        # Isso significa que ele preenche Linha 1: Q1, Q2 | Linha 2: Q3, Q4...
-        num_rows = math.ceil(num_questions / num_cols)
+        num_rows_val = math.ceil(num_questions / num_cols)
         
-        y_step_pct = (y_end_pct - y_start_pct) / float(num_rows)
+        # O gerador industrial usa passo fixo de 11mm em um wrapper de 190mm
+        # y_step_pct = 11/190 ≈ 0.0579
+        # y_start_pct = (15mm base + 5.5mm center) / 190mm ≈ 0.1079
+        y_step_pct = float(layout.get("y_step_pct_fixed", 0.0579))
+        y_start_pct = float(layout.get("y_start_pct_fixed", 0.1079))
+        
         roi_size = int(self.target_width * float(layout.get("roi_size_pct_of_width", 0.028)))
-        x_offsets_pct = layout.get("x_offsets_pct", [0.0]) # Percentual de deslocamento de cada coluna
+        x_offsets_pct = layout.get("x_offsets_pct", [0.0])
         
+        # 1. Calibração de contraste via barra lateral
+        black_lv, white_lv = self._get_contrast_calibration(warped)
+        logger.debug(f"Contrast Calib: Black={black_lv}, White={white_lv}")
+
         # Binarizar a imagem retificada para leitura das bolhas
         gray_warped = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-        # Usamos threshold de Otsu para separar papel de caneta/lápis automaticamente
-        _, thresh = cv2.threshold(gray_warped, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        # Se detectamos um preto muito claro (ex: scanner/luz ruim), usamos threshold manual dinâmico
+        if black_lv > 70:
+            # Imagem está muito lavada, forçamos threshold mais agressivo
+            thresh_val = (black_lv + white_lv) // 2
+            _, thresh = cv2.threshold(gray_warped, thresh_val, 255, cv2.THRESH_BINARY_INV)
+        else:
+            _, thresh = cv2.threshold(gray_warped, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
         thresh_indexed = cast(Any, thresh)
         results: List[Dict[str, Any]] = []
@@ -740,7 +779,9 @@ class OMREngine:
                 if int(q_idx) >= int(num_q_val):
                     break
                 
-                y_center = (float(y_start_pct) + (float(row) * float(y_step_pct)) + (float(y_step_pct) / 2.0)) * float(self.target_height)
+                # Cálculo de Y usando passo fixo (Industrial)
+                y_center_f = (y_start_pct + (float(row) * y_step_pct)) * float(self.target_height)
+                y_center = float(y_center_f)
                 bubbles_data: List[Dict[str, Any]] = []
                 
                 for j, x_pct_rel in enumerate(x_centers_pct):
