@@ -207,7 +207,6 @@ class OMREngine:
             del gray
             del blurred
             del thresh
-            del norm_img
             del gray_clahe
             
             # ===== 4.1 VALIDAÇÃO PÓS-WARP =====
