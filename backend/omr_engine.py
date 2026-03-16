@@ -549,11 +549,15 @@ class OMREngine:
                 for (x, y) in anchors:
                     rel_anchors.append([round(x / W, 4), round(y / H, 4)])
                 
+                # Tentar decodificar QR Code para feedback de identidade (Instant Identity)
+                qr_data = self.decode_qr(image)
+                
                 return {
                     "success": True,
                     "anchors_found": 4,
                     "anchors": rel_anchors,
-                    "confidence": 0.95
+                    "confidence": 0.95,
+                    "qr_data": qr_data
                 }
             
             return {
