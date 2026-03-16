@@ -1,34 +1,34 @@
 {
     "version": "v1.1-a4-calibrated",
     "warped_size": {
-        "w": 1584,
-        "h": 1120
+        "w": 1120,
+        "h": 1584
     },
     "thresholds": {
         "marked": 0.18,
         "ambiguous": 0.08
     },
-    "roi_size_pct_of_width": 0.0152,
+    "roi_size_pct_of_width": 0.0214,
     "num_columns": 4,
     "num_questions": 26,
     "anchor_offsets_pct": {
-        "x": 0.0438,
-        "y": 0.0619
+        "x": 0.0619,
+        "y": 0.0438
     },
-    "y_step_pct_fixed": 0.0381,
-    "y_start_pct_fixed": 0.0952,
+    "y_step_pct_fixed": 0.0269,
+    "y_start_pct_fixed": 0.5724,
     "x_offsets_pct": [
-        0.0673,
-        0.2357,
-        0.4040,
-        0.5724
+        0.0952,
+        0.3333,
+        0.5714,
+        0.8095
     ],
     "x_centers_pct": [
         0.0,
-        0.0269,
-        0.0538,
-        0.0808,
-        0.1077
+        0.0381,
+        0.0762,
+        0.1143,
+        0.1524
     ],
     "options": [
         "A",
