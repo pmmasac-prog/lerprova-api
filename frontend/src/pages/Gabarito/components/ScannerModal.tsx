@@ -89,9 +89,8 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                     // @ts-ignore
                     advanced: [{ 
                         focusMode: 'continuous',
-                        // @ts-ignore
                         torch: flashMode === 'on'
-                    }],
+                    } as any],
                 },
                 audio: false,
             });
