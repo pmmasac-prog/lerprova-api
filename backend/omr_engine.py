@@ -429,7 +429,8 @@ class OMREngine:
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < (H * W * 0.0015) or area > (H * W * 0.03):
+            # Relaxar para radar/preview e evitar falsos negativos
+            if area < 100 or area > 5000: 
                 continue
             
             # Filtro de Forma: Circularidade ou Quadrado
@@ -477,11 +478,12 @@ class OMREngine:
                 
             # 2. Densidade Interna (Deve ser bem preto)
             # Criamos uma máscara local para o ROI da âncora
-            roi_mask = np.zeros(strict_thresh.shape, dtype=np.uint8)
+            roi_mask = np.zeros(thresh.shape, dtype=np.uint8)
             cv2.drawContours(roi_mask, [cnt], -1, 255, -1)
             mean_val = cv2.mean(gray, mask=roi_mask)[0]
-            # O fundo é ~200+, preto é <100. Se a média for >110, não é uma âncora sólida
-            if mean_val > 110:
+            # O fundo é ~200+, preto é <100.
+            # Relaxar para 125 no preview/geral para suportar borrões leves
+            if mean_val > 125:
                 continue
 
             # 3. Distância Euclidiana ao Canto Esperado (Score Bonus)
@@ -543,7 +545,8 @@ class OMREngine:
 
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-            thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+            # Sincronizar com (31, 10) que é o filtro industrial robusto contra sombras
+            thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 31, 10)
 
             anchors = self.detect_anchors_robust(thresh, gray)
             
