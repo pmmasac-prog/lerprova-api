@@ -6,146 +6,26 @@ import json
 from pathlib import Path
 import math
 import time
+import logging
+from typing import Any, Dict, List, Optional, Union
 
-class OMRLayout:
-    def __init__(self):
-        # Parâmetros fixos para o layout industrial
-        self.width = 2000
-        self.height = 2800
-        self.bubble_radius = 22
-        self.blocks = [
-            (1, 7),   # Q1-Q7
-            (8, 14),  # Q8-Q14
-            (15, 21), # Q15-Q21
-            (22, 26)  # Q22-Q26
-        ]
-        self.options = ["A", "B", "C", "D", "E"]
-        self.block_positions = [
-            (320, 400),   # (x, y) topo-esquerda de cada bloco
-            (320, 900),
-            (320, 1400),
-            (320, 1900)
-        ]
-        self.bubble_dx = 90  # Espaçamento horizontal
-        self.bubble_dy = 70  # Espaçamento vertical
+# Configuração de Logs e Diretórios de Debug
+DEBUG_LOG_DIR = Path(__file__).parent / "debug_logs"
+DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-    def get_bubble_centers(self):
-        centers = []
-        for b, (q_start, q_end) in enumerate(self.blocks):
-            x0, y0 = self.block_positions[b]
-            for i, q in enumerate(range(q_start, q_end+1)):
-                for j, opt in enumerate(self.options):
-                    cx = x0 + j*self.bubble_dx
-                    cy = y0 + i*self.bubble_dy
-                    centers.append((q, opt, cx, cy))
-        return centers
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-class OMREngine:
-    def __init__(self):
-        self.layout = OMRLayout()
-        self.target_size = (self.layout.width, self.layout.height)
-
-    def process_image(self, image_base64):
-        # 1. Decodifica imagem
-        img = self._decode_image(image_base64)
-        if img is None:
-            return {"success": False, "error": "Imagem inválida"}
-
-        # 2. Detecta âncoras (4 marcadores pretos)
-        anchors = self._find_anchors(img)
-        if len(anchors) != 4:
-            return {"success": False, "error": "Não foram encontrados 4 marcadores de referência"}
-
-        # 3. Corrige perspectiva
-        warped = self._warp(img, anchors)
-
-        # 4. Lê bolhas
-        answers = self._read_bubbles(warped)
-
-        # 5. Valida respostas
-        validated = self._validate_answers(answers)
-
-        # 6. Saída JSON
-        return {"success": True, "answers": validated}
-
-    def _decode_image(self, image_base64):
-        try:
-            img_data = base64.b64decode(image_base64.split(',')[-1])
-            nparr = np.frombuffer(img_data, np.uint8)
-            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            return img
-        except:
-            return None
-
-    def _find_anchors(self, img):
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5,5), 0)
-        _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        candidates = []
-        h, w = gray.shape
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            if area < 1000 or area > 30000:
-                continue
-            approx = cv2.approxPolyDP(cnt, 0.04*cv2.arcLength(cnt, True), True)
-            if len(approx) == 4 or len(approx) > 7:
-                M = cv2.moments(cnt)
-                if M["m00"] == 0:
-                    continue
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                candidates.append((cx, cy))
-        # Seleciona os 4 mais distantes entre si (cantos)
-        if len(candidates) < 4:
-            return []
-        # Ordena por quadrantes
-        corners = sorted(candidates, key=lambda c: (c[0]+c[1]*w))
-        tl = min(candidates, key=lambda c: c[0]+c[1])
-        tr = min(candidates, key=lambda c: (w-c[0])+c[1])
-        br = max(candidates, key=lambda c: c[0]+c[1])
-        bl = min(candidates, key=lambda c: c[0]+(h-c[1]))
-        return [tl, tr, br, bl]
-
-    def _warp(self, img, anchors):
-        pts1 = np.array(anchors, dtype="float32")
-        pts2 = np.array([[0,0],[self.layout.width-1,0],[self.layout.width-1,self.layout.height-1],[0,self.layout.height-1]], dtype="float32")
-        M = cv2.getPerspectiveTransform(pts1, pts2)
-        warped = cv2.warpPerspective(img, M, self.target_size)
-        return warped
-
-    def _read_bubbles(self, warped):
-        gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5,5), 0)
-        thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 21, 5)
-        centers = self.layout.get_bubble_centers()
-        results = {}
-        for q, opt, cx, cy in centers:
-            roi = thresh[int(cy-self.layout.bubble_radius):int(cy+self.layout.bubble_radius), int(cx-self.layout.bubble_radius):int(cx+self.layout.bubble_radius)]
-            if roi.shape[0] == 0 or roi.shape[1] == 0:
-                continue
-            mask = np.zeros_like(roi)
-            cv2.circle(mask, (self.layout.bubble_radius, self.layout.bubble_radius), self.layout.bubble_radius, 255, -1)
-            total = cv2.countNonZero(mask)
-            filled = cv2.countNonZero(cv2.bitwise_and(roi, mask))
-            fill_ratio = filled / total if total > 0 else 0
-            if q not in results:
-                results[q] = {}
-            results[q][opt] = fill_ratio
-        return results
-
-    def _validate_answers(self, answers):
-        output = {}
-        for q in sorted(answers.keys()):
-            marks = answers[q]
-            marked = [k for k,v in marks.items() if v > 0.35]
-            if len(marked) == 1:
-                output[str(q)] = marked[0]
-            elif len(marked) == 0:
-                output[str(q)] = None
-            else:
-                output[str(q)] = None  # Anulada
-        return output
+def _circularity(cnt):
+    """
+    Calcula a circularidade de um contorno.
+    1.0 = Círculo perfeito.
+    """
+    area = cv2.contourArea(cnt)
+    perimeter = cv2.arcLength(cnt, True)
+    if perimeter == 0:
+        return 0
+    return 4 * np.pi * area / (perimeter * perimeter)
 
 class OMREngine:
     def __init__(self, default_version=1):
@@ -183,12 +63,12 @@ class OMREngine:
             return default_layout
 
         try:
-            layout = json.loads(p.read_text(encoding="utf-8"))
+            layout_data = json.loads(p.read_text(encoding="utf-8"))
             # Fusing with default to ensure no missing keys
-            merged = {**default_layout, **layout}
+            merged: Dict[str, Any] = {**default_layout, **layout_data}
             
-            self.target_width = merged["warped_size"]["w"]
-            self.target_height = merged["warped_size"]["h"]
+            self.target_width = int(merged["warped_size"]["w"])
+            self.target_height = int(merged["warped_size"]["h"])
 
             self.layout_cache[version_str] = merged
             return merged
@@ -653,15 +533,16 @@ class OMREngine:
             return {"success": False, "error": str(e)}
 
     def _fallback_pick_anchors_by_nearest_corners(self, pts, W, H):
-        targets = [(0,0),(W,0),(W,H),(0,H)]
+        targets = [(0,0),(int(W),0),(int(W),int(H)),(0,int(H))]
         final = []
         used = set()
         for tx, ty in targets:
             best_i, best_d = -1, float("inf")
-            for i, (x,y) in enumerate(pts):
+            for i, p in enumerate(pts):
                 if i in used: 
                     continue
-                d = (x-tx)**2 + (y-ty)**2
+                x, y = float(p[0]), float(p[1])
+                d = (x - float(tx))**2 + (y - float(ty))**2
                 if d < best_d:
                     best_d, best_i = d, i
             if best_i >= 0:
@@ -807,16 +688,17 @@ class OMREngine:
         Lê bolhas usando análise de densidade de pixels baseada no layout JSON.
         """
         layout = self.load_layout(layout_version)
-        if not layout:
+        if not layout or not isinstance(layout, dict):
             return []
 
-        marked_thr = float(layout["thresholds"]["marked"])
-        amb_thr = float(layout["thresholds"]["ambiguous"])
+        thr = layout.get("thresholds", {})
+        marked_thr = float(thr.get("marked", 0.20))
+        amb_thr = float(thr.get("ambiguous", 0.10))
 
-        options = layout["options"]
-        x_centers_pct = layout["x_centers_pct"]
-        y_start_pct = float(layout["y_start_pct"])
-        y_end_pct = float(layout["y_end_pct"])
+        options = layout.get("options", ["A", "B", "C", "D", "E"])
+        x_centers_pct = layout.get("x_centers_pct", [0.245, 0.318, 0.392, 0.465, 0.538])
+        y_start_pct = float(layout.get("y_start_pct", 0.21))
+        y_end_pct = float(layout.get("y_end_pct", 0.88))
 
         num_cols = int(layout.get("num_columns", 1))
         # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
@@ -850,13 +732,13 @@ class OMREngine:
                 
                 for j, x_pct_rel in enumerate(x_centers_pct):
                     # Coordenada X absoluta = (Offset da Coluna + Posição Relativa da Bolha) * Largura
-                    x_center = (col_offset_pct + x_pct_rel) * self.target_width
+                    x_center = (float(col_offset_pct) + float(x_pct_rel)) * float(self.target_width)
                     
                     # Definir ROI
-                    x1 = max(0, int(x_center - roi_size/2))
-                    y1 = max(0, int(y_center - roi_size/2))
-                    x2 = min(self.target_width, x1 + roi_size)
-                    y2 = min(self.target_height, y1 + roi_size)
+                    x1 = max(0, int(x_center - float(roi_size)/2))
+                    y1 = max(0, int(y_center - float(roi_size)/2))
+                    x2 = min(int(self.target_width), x1 + int(roi_size))
+                    y2 = min(int(self.target_height), y1 + int(roi_size))
                     
                     roi = thresh[y1:y2, x1:x2]
                     
@@ -869,10 +751,10 @@ class OMREngine:
                     })
                 
                 results.append({
-                    'question': q_idx + 1,
+                    'question': int(q_idx) + 1,
                     'bubbles': bubbles_data
                 })
-                q_idx += 1
+                q_idx = int(q_idx) + 1
         
         return results
     
