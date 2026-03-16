@@ -441,9 +441,41 @@
     opacity: 0.9;
 }
 
-.audit-preview {
-    text-align: left;
+.audit-gallery {
     margin-bottom: 32px;
+    text-align: left;
+}
+
+.gallery-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.gallery-tab {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gallery-tab.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+.audit-preview {
+    border-radius: 16px;
+    border: 2px solid var(--border-color);
+    overflow: hidden;
+    background: #000;
 }
 
 .audit-preview label {
@@ -457,8 +489,7 @@
 
 .audit-preview img {
     width: 100%;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
+    display: block;
 }
 
 .result-actions {

@@ -31,6 +31,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
 
     const [anchors, setAnchors] = useState<AnchorPoint[]>([]);
     const [trackingScore, setTrackingScore] = useState(0);
+    const [activeTab, setActiveTab] = useState<'audit' | 'processed'>('audit');
 
     const trackingScoreRef = useRef(0);
     const pollingRef = useRef<number | null>(null);
@@ -367,9 +368,29 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                                 )}
 
                                 {result.audit_map && (
-                                    <div className="audit-preview">
-                                        <label>Mapa de Auditoria:</label>
-                                        <img src={result.audit_map} alt="Mapa de auditoria" />
+                                    <div className="audit-gallery">
+                                        <div className="gallery-tabs">
+                                            <button 
+                                                className={`gallery-tab ${activeTab === 'audit' ? 'active' : ''}`} 
+                                                onClick={() => setActiveTab('audit')}
+                                            >
+                                                Auditoria
+                                            </button>
+                                            <button 
+                                                className={`gallery-tab ${activeTab === 'processed' ? 'active' : ''}`} 
+                                                onClick={() => setActiveTab('processed')}
+                                            >
+                                                Retificada
+                                            </button>
+                                        </div>
+                                        <div className="gallery-content">
+                                            <div className="audit-preview">
+                                                <img 
+                                                    src={activeTab === 'audit' ? result.audit_map : result.processed_image} 
+                                                    alt={activeTab === 'audit' ? "Mapa de auditoria" : "Imagem retificada"} 
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
