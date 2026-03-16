@@ -1,6 +1,6 @@
 # OMR Engine reconstruído para layout industrial
-import cv2
-import numpy as np
+import cv2  # type: ignore
+import numpy as np  # type: ignore
 import base64
 import json
 from pathlib import Path
@@ -539,9 +539,11 @@ class OMREngine:
         targets = [(0,0),(int(W),0),(int(W),int(H)),(0,int(H))]
         final = []
         used = set()
+        # Casting pts to Any to allow robust indexing in older linter versions
+        pts_indexed = cast(Any, pts)
         for tx, ty in targets:
             best_i, best_d = -1, float("inf")
-            for i, p in enumerate(pts):
+            for i, p in enumerate(pts_indexed):
                 if i in used: 
                     continue
                 x, y = float(p[0]), float(p[1])
@@ -550,7 +552,7 @@ class OMREngine:
                     best_d, best_i = d, i
             if best_i >= 0:
                 used.add(best_i)
-                final.append(pts[best_i])
+                final.append(pts_indexed[best_i])
         return final
 
     def _corner_black_ratio(self, warped):
@@ -719,7 +721,8 @@ class OMREngine:
         # Usamos threshold de Otsu para separar papel de caneta/lápis automaticamente
         _, thresh = cv2.threshold(gray_warped, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
-        results = []
+        thresh_indexed = cast(Any, thresh)
+        results: List[Dict[str, Any]] = []
         
         # O gerador do frontend (GabaritoTemplate) usa colunas verticais (blocos)
         # Isso significa que ele preenche Bloco 1: Q1-Q7 | Bloco 2: Q8-Q14...
@@ -734,11 +737,11 @@ class OMREngine:
             col_offset_pct = offsets_list[col] if col < len(offsets_list) else 0.0
             
             for row in range(num_rows_val):
-                if q_idx >= num_q_val:
+                if int(q_idx) >= int(num_q_val):
                     break
                 
-                y_center = (y_start_pct + (float(row) * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
-                bubbles_data = []
+                y_center = (float(y_start_pct) + (float(row) * float(y_step_pct)) + (float(y_step_pct) / 2.0)) * float(self.target_height)
+                bubbles_data: List[Dict[str, Any]] = []
                 
                 for j, x_pct_rel in enumerate(x_centers_pct):
                     # Coordenada X absoluta = (Offset da Coluna + Posição Relativa da Bolha) * Largura
@@ -750,11 +753,14 @@ class OMREngine:
                     x2 = min(int(self.target_width), x1 + int(roi_size))
                     y2 = min(int(self.target_height), y1 + int(roi_size))
                     
-                    roi = thresh[y1:y2, x1:x2]
+                    # Cast thresh to Any to allow slicing without Unknown errors
+                    thresh_img = cast(Any, thresh)
+                    roi = thresh_img[y1:y2, x1:x2]
                     
                     fill_ratio, bg_ratio = self._masked_ratio(roi)
+                    option_val = str(cast(List[str], options)[j])
                     bubbles_data.append({
-                        'option': str(options[j]),
+                        'option': option_val,
                         'score': float(fill_ratio),
                         'bg_score': float(bg_ratio),
                         'coords': [int(x1), int(y1), int(x2), int(y2)]
@@ -782,9 +788,9 @@ class OMREngine:
         amb_thr = float(thr.get("ambiguous", 0.08))      # Abaixo disso, é sujeira ou nada (em branco)
         margin_thr = 0.06   # Diferença mínima entre Top 1 e Top 2 para não ser ambíguo
 
-        answers = []
-        confidence_scores = []
-        status_list = []
+        answers: List[Optional[str]] = []
+        confidence_scores: List[float] = []
+        status_list: List[str] = []
         status_counts = {"valid": 0, "blank": 0, "invalid": 0, "ambiguous": 0}
 
         for question_data in bubble_results:
