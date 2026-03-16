@@ -97,8 +97,6 @@ function App() {
           <Route path="/admin/turmas-master" element={<PrivateRoute><AdminLayout><ImportMaster /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/carteirinhas" element={<PrivateRoute><AdminLayout><StudentCardsPage /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/relatorios-frequencia" element={<PrivateRoute><AdminLayout><RelatoriosAdmin /></AdminLayout></PrivateRoute>} />
-          <Route path="/admin/licencas" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Gestão de Licenças</h1><p className="admin-subtitle">Em breve: Controle de planos Premium e expirações.</p></div></AdminLayout></PrivateRoute>} />
-          <Route path="/admin/config" element={<PrivateRoute><AdminLayout><div className="admin-container"><h1 className="admin-title">Configurações do Sistema</h1><p className="admin-subtitle">Em breve: Ajustes globais e logs de auditoria.</p></div></AdminLayout></PrivateRoute>} />
           <Route path="/admin/sincronizacao" element={<PrivateRoute><AdminLayout><BatchSyncComponent /></AdminLayout></PrivateRoute>} />
           <Route path="/admin/config-app" element={<PrivateRoute><AdminLayout><div><h1>Configurações do App</h1><ThemeSwitcher /></div></AdminLayout></PrivateRoute>} />
           <Route path="/admin/chamada-nfc" element={<PrivateRoute><ChamadaNFC /></PrivateRoute>} />

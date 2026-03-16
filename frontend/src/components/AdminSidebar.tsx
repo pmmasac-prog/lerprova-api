@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, ShieldAlert, LogOut, Settings, Award, School, Calendar, Contact, FileText, Wifi } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldAlert, LogOut, School, Calendar, Contact, FileText, Wifi } from 'lucide-react';
 import '../pages/Admin.css';
 
 export const AdminSidebar: React.FC = () => {
@@ -58,17 +58,6 @@ export const AdminSidebar: React.FC = () => {
                 <NavLink to="/admin/chamada-nfc" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
                     <Wifi size={18} />
                     <span>Chamada NFC</span>
-                </NavLink>
-
-                <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: '15px 0 5px 12px', letterSpacing: '1px' }}>Sistema</div>
-
-                <NavLink to="/admin/licencas" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <Award size={18} />
-                    <span>Licenças & Planos</span>
-                </NavLink>
-                <NavLink to="/admin/config" className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`} style={navItemStyle}>
-                    <Settings size={18} />
-                    <span>Configurações</span>
                 </NavLink>
             </nav>
 
