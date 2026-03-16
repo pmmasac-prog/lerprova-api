@@ -17,35 +17,33 @@
     page-break-after: always;
 }
 
-/* Marcadores Fiduciais */
+/* Marcadores Fiduciais (Quadrados Pretos Sólidos para OMR Industrial) */
 .fiducial {
     position: absolute;
-    width: 14mm;
-    height: 14mm;
-    background-color: #fff;
-    border: 3mm solid #000;
-    border-radius: 50%;
+    width: 12mm;
+    height: 12mm;
+    background-color: #000;
     box-sizing: border-box;
 }
 
 .tl {
-    top: 10mm;
-    left: 10mm;
+    top: 8mm;
+    left: 8mm;
 }
 
 .tr {
-    top: 10mm;
-    right: 10mm;
+    top: 8mm;
+    right: 8mm;
 }
 
 .bl {
-    bottom: 10mm;
-    left: 10mm;
+    bottom: 8mm;
+    left: 8mm;
 }
 
 .br {
-    bottom: 10mm;
-    right: 10mm;
+    bottom: 8mm;
+    right: 8mm;
 }
 
 .template-header {
@@ -54,36 +52,40 @@
     align-items: flex-start;
     border-bottom: 2px solid #000;
     padding-bottom: 5mm;
-    margin-bottom: 10mm;
-    height: 45mm;
+    margin-bottom: 8mm;
+    height: 48mm;
     box-sizing: border-box;
 }
 
 .template-title {
-    font-size: 18pt;
+    font-size: 20pt;
     font-weight: bold;
     margin: 0 0 5mm 0;
+    color: #000;
 }
 
 .exam-info {
-    max-height: 24mm;
+    max-height: 28mm;
     overflow: hidden;
 }
 
 .exam-info p {
-    margin: 1mm 0;
-    font-size: 11pt;
+    margin: 1.5mm 0;
+    font-size: 12pt;
 }
 
 .qr-container {
     padding: 2mm;
-    border: 1px solid #ddd;
+    background: #fff;
 }
 
 .student-area {
     display: flex;
     gap: 10mm;
-    margin-bottom: 10mm;
+    margin-bottom: 8mm;
+    background: #f9f9f9;
+    padding: 3mm;
+    border: 1px solid #ccc;
 }
 
 .student-field {
@@ -95,74 +97,96 @@
 }
 
 .student-area label {
-    font-size: 9pt;
+    font-size: 10pt;
     font-weight: bold;
     display: block;
-    margin-bottom: 1mm;
+    margin-bottom: 1.5mm;
+    color: #333;
 }
 
 .name-box,
 .code-box {
-    border: 1px solid #000;
-    height: 10mm;
+    border: 1.5px solid #000;
+    height: 11mm;
     display: flex;
     align-items: center;
-    padding: 0 3mm;
-    font-size: 14pt;
+    padding: 0 4mm;
+    font-size: 15pt;
+    font-weight: bold;
     background: #fff;
 }
 
 .instructions {
-    background: var(--color-text);
-    padding: 3mm;
-    border: 1px dashed var(--color-text-muted);
-    font-size: 9pt;
+    background: #eee;
+    padding: 4mm;
+    border: 2px solid #000;
+    font-size: 10pt;
+    font-weight: bold;
     text-align: center;
     margin-bottom: 10mm;
+    text-transform: uppercase;
 }
 
-.questions-grid-printable {
+/* Layout de 4 Blocos Industrial */
+.questions-grid-printable-industrial {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8mm 15mm;
-    margin-bottom: 10mm;
-    border: 1px solid #ccc;
-    padding: 10mm;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 2.5px solid #000;
+    margin-bottom: 15mm;
+    min-height: 120mm;
+}
+
+.question-block {
+    display: flex;
+    flex-direction: column;
+    padding: 5mm 3mm;
+}
+
+/* Linhas pontilhadas delimitando grupos (entre as colunas) */
+.question-block:not(:last-child) {
+    border-right: 2px dotted #000;
 }
 
 .template-question-row {
     display: flex;
     align-items: center;
-    padding: 2mm 0;
+    padding: 3.5mm 0;
+    border-bottom: 1px solid #eee;
+}
+
+.template-question-row:last-child {
+    border-bottom: none;
 }
 
 .q-num {
     font-weight: bold;
-    width: 10mm;
-    font-size: 11pt;
+    width: 9mm;
+    font-size: 12pt;
 }
 
 .q-options {
     display: flex;
-    gap: 4mm;
+    gap: 3.5mm;
 }
 
 .option-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1mm;
+    gap: 1.5mm;
 }
 
 .option-circle {
-    width: 7mm;
-    height: 7mm;
-    border: 1.5px solid #000;
+    width: 6.5mm;
+    height: 6.5mm;
+    border: 2px solid #000;
     border-radius: 50%;
+    background: #fff;
 }
 
 .option-label {
-    font-size: 8pt;
+    font-size: 9pt;
     font-weight: bold;
 }
 
