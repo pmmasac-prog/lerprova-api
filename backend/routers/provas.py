@@ -106,7 +106,13 @@ async def scan_anchors(req: ScanAnchorsRequest, current_user: users_db.User = De
 async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), current_user: users_db.User = Depends(get_current_user)):
     try:
         layout_version = req.layout_version or "v1.1-a4-calibrated"
-        result = omr.process_image(req.image, num_questions=req.num_questions, layout_version=layout_version)
+        result = omr.process_image(
+            req.image,
+            num_questions=req.num_questions,
+            layout_version=layout_version,
+            return_images=True,
+            return_audit=True
+        )
         
         # Só bloqueia hard se for erro estrutural ou falta de âncoras (quality = reject)
         if result.get("quality") == "reject" or not result.get("success"):
@@ -265,7 +271,9 @@ async def processar_prova(req: ProcessRequest, db: Session = Depends(get_db), cu
             "acertos": acertos,
             "nota": round(nota, 1),
             "resultado_id": resultado_id,
+            "perspective_warning": result.get("perspective_warning"),
             "processed_image": result.get("processed_image"),
+            "original_image": result.get("original_image"),
             "audit_map": result.get("audit_map")
         }
 
