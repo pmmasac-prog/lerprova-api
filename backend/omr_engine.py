@@ -768,7 +768,7 @@ class OMREngine:
         # Invertemos a ordem: Column -> Row
         q_idx: int = 0
         num_cols_val = int(cast(Union[int, float], num_cols))
-        num_rows_val = int(cast(Union[int, float], num_rows))
+        num_rows_val = int(cast(Union[int, float], num_rows_val)) # Corrected this line to use num_rows_val
         num_q_val = int(cast(Union[int, float], num_questions))
 
         for col in range(num_cols_val):
