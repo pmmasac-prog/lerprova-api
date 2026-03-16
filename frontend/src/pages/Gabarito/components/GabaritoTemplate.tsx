@@ -75,10 +75,12 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
                             {/* Barra de Calibração (Lado Esquerdo) */}
                             <div className="calibration-bar"></div>
 
-                            <main className="questions-grid-printable-industrial two-columns">
+                            <main className="questions-grid-printable-industrial four-columns">
                                 {[
-                                    { start: 0, end: Math.ceil(gabarito.num_questoes / 2) },
-                                    { start: Math.ceil(gabarito.num_questoes / 2), end: gabarito.num_questoes }
+                                    { start: 0, end: 7 },
+                                    { start: 7, end: 14 },
+                                    { start: 14, end: 21 },
+                                    { start: 21, end: gabarito.num_questoes }
                                 ].map((block, bIdx) => {
                                     const questionsInBlock = Array.from({ length: gabarito.num_questoes })
                                         .slice(block.start, block.end);

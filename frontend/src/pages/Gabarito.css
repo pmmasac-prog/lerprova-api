@@ -321,15 +321,28 @@
     outline: none;
 }
 
-/* Questions Grid */
+/* Questions Grid - 4 Columns */
+.questions-grid-four-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+}
+
+.ui-question-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .question-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
+    gap: 12px;
+    padding: 12px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 18px;
+    border-radius: 14px;
     transition: all 0.2s;
 }
 

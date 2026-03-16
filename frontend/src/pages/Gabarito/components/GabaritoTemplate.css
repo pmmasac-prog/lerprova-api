@@ -132,15 +132,15 @@
     border: 1px solid #000;
 }
 
-/* Grid de Questões - 2 Colunas Fixas */
-.questions-grid-printable-industrial.two-columns {
+/* Grid de Questões - 4 Colunas Fixas */
+.questions-grid-printable-industrial.four-columns {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0;
     position: absolute;
     top: 15mm;
-    left: 15mm;
-    right: 15mm;
+    left: 10mm;
+    right: 10mm;
     bottom: 15mm;
     border: 1.5px solid #000;
 }
@@ -148,10 +148,10 @@
 .question-block {
     display: flex;
     flex-direction: column;
-    padding: 4mm;
+    padding: 2mm;
 }
 
-.question-block:first-child {
+.question-block:not(:last-child) {
     border-right: 1.5px solid #000;
 }
 

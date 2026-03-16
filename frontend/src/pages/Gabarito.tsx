@@ -507,13 +507,27 @@ export const Gabarito: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="questions-grid">
-                            {Array.from({ length: numQuestions }).map((_, i) => (
-                                <div key={i} className="question-row">
-                                    <span className="question-num">{String(i + 1).padStart(2, '0')}</span>
-                                    <div className="options">
-                                        {['A', 'B', 'C', 'D', 'E'].map(opt => renderOption(i, opt))}
-                                    </div>
+                        <div className="questions-grid-four-columns">
+                            {[
+                                { start: 0, end: 7 },
+                                { start: 7, end: 14 },
+                                { start: 14, end: 21 },
+                                { start: 21, end: numQuestions }
+                            ].map((block, bIdx) => (
+                                <div key={bIdx} className="ui-question-block">
+                                    {Array.from({ length: numQuestions })
+                                        .slice(block.start, block.end)
+                                        .map((_, i) => {
+                                            const idx = block.start + i;
+                                            return (
+                                                <div key={idx} className="question-row">
+                                                    <span className="question-num">{String(idx + 1).padStart(2, '0')}</span>
+                                                    <div className="options">
+                                                        {['A', 'B', 'C', 'D', 'E'].map(opt => renderOption(idx, opt))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                 </div>
                             ))}
                         </div>
