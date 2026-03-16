@@ -1,6 +1,5 @@
-// ScannerModal.tsx – Scanner OMR com 3 fases: Câmera → Prévia → Resultado
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { X, RefreshCw, CheckCircle, AlertCircle, Info, Camera, ZoomIn } from 'lucide-react';
+import { X, RefreshCw, CheckCircle, AlertCircle, Info, Camera, ZoomIn, Zap, ZapOff } from 'lucide-react';
 import { api } from '../../../services/api';
 import './ScannerModal.css';
 
@@ -13,6 +12,7 @@ interface ScannerModalProps {
 }
 
 type Phase = 'camera' | 'preview' | 'result';
+type FlashMode = 'off' | 'auto' | 'on';
 type Anchor = [number, number]; // [x_rel, y_rel] 0..1
 
 // ─── Componente ──────────────────────────────────────────────────────────────
@@ -48,6 +48,10 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
     const [processing, setProcessing]       = useState(false);
     const [activeTab, setActiveTab]         = useState<'original' | 'processed' | 'audit'>('audit');
 
+    // Flash e Câmera
+    const [flashMode, setFlashMode]         = useState<FlashMode>('off');
+    const [hasFlash, setHasFlash]           = useState(false);
+
     // ─── Câmera ──────────────────────────────────────────────────────────────
     const stopPolling = useCallback(() => {
         if (pollingRef.current) {
@@ -68,6 +72,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
             v.src = '';
         }
         setIsCamReady(false);
+        setHasFlash(false);
     }, [stopPolling]);
 
     const startCamera = useCallback(async () => {
@@ -79,12 +84,24 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                     facingMode: { ideal: 'environment' },
                     width:  { ideal: 1920 },
                     height: { ideal: 1080 },
+                    aspectRatio: { ideal: 1.7777777778 }, // Forçar proporção paisagem (16:9)
                     // Tenta configurar foco manual para documentos OMR
-                    // @ts-ignore – focusMode não é parte oficial do tipo TS
-                    advanced: [{ focusMode: 'continuous' }],
+                    // @ts-ignore
+                    advanced: [{ 
+                        focusMode: 'continuous',
+                        // @ts-ignore
+                        torch: flashMode === 'on'
+                    }],
                 },
                 audio: false,
             });
+
+            const track = stream.getVideoTracks()[0];
+            const caps = track.getCapabilities?.() || {};
+            // @ts-ignore
+            if (caps.torch) {
+                setHasFlash(true);
+            }
 
             streamRef.current = stream;
             const v = videoRef.current;
@@ -99,10 +116,38 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
             };
             v.addEventListener('loadedmetadata', onLoaded);
             setIsCamReady(true);
-        } catch {
+        } catch (err) {
+            console.error('Erro ao iniciar câmera:', err);
             setError('Não foi possível acessar a câmera. Verifique as permissões.');
         }
+    }, [flashMode]);
+    // ─── Controle de Flash ───────────────────────────────────────────────────
+    const applyTorch = useCallback(async (on: boolean) => {
+        const track = streamRef.current?.getVideoTracks()[0];
+        if (!track || !hasFlash) return;
+        try {
+            await track.applyConstraints({
+                // @ts-ignore
+                advanced: [{ torch: on }]
+            });
+        } catch (e) {
+            console.warn('Falha ao acionar flash:', e);
+        }
+    }, [hasFlash]);
+
+    const toggleFlash = useCallback(() => {
+        setFlashMode(prev => {
+            if (prev === 'off') return 'auto';
+            if (prev === 'auto') return 'on';
+            return 'off';
+        });
     }, []);
+
+    useEffect(() => {
+        if (isCamReady && phase === 'camera') {
+            applyTorch(flashMode === 'on');
+        }
+    }, [flashMode, isCamReady, phase, applyTorch]);
 
     // Cleanup na desmontagem
     useEffect(() => {
@@ -137,8 +182,19 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
     }, []);
 
     // ─── Ao capturar foto: para câmera, vai para pré-visualização ────────────
-    const handleCapture = useCallback(() => {
+    const handleCapture = useCallback(async () => {
+        if (flashMode === 'auto') {
+            await applyTorch(true);
+            // Pequeno delay para o flash estabilizar
+            await new Promise(r => setTimeout(r, 300));
+        }
+
         const img = captureFrame();
+        
+        if (flashMode === 'auto') {
+            await applyTorch(false);
+        }
+
         if (!img) {
             setError('Câmera não está pronta. Aguarde e tente novamente.');
             return;
@@ -151,7 +207,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
 
         setCapturedImage(img);
         setPhase('preview');
-    }, [captureFrame, stopCamera]);
+    }, [captureFrame, stopCamera, flashMode, applyTorch]);
 
     // ─── Processar imagem capturada ───────────────────────────────────────────
     const processCapture = useCallback(async () => {
@@ -285,6 +341,26 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                             <div className="sm-corner sm-bl" />
                             <div className="sm-corner sm-br" />
                             {anchors.length < 4 && <div className="sm-scan-line" />}
+                        </div>
+
+                        {/* Controles da câmera (Flash) */}
+                        <div className="sm-camera-controls">
+                            {hasFlash && (
+                                <button 
+                                    className={`sm-control-btn ${flashMode !== 'off' ? 'active' : ''}`}
+                                    onClick={toggleFlash}
+                                    title={`Flash: ${flashMode === 'off' ? 'Desligado' : flashMode === 'auto' ? 'Disparo Único' : 'Lanterna'}`}
+                                >
+                                    {flashMode === 'off' && <ZapOff size={22} />}
+                                    {flashMode === 'auto' && (
+                                        <div className="relative">
+                                            <Zap size={22} />
+                                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full border border-black"></span>
+                                        </div>
+                                    )}
+                                    {flashMode === 'on' && <Zap size={22} className="text-yellow-400 fill-yellow-400" />}
+                                </button>
+                            )}
                         </div>
 
                         {/* Overlay SVG das âncoras detectadas */}

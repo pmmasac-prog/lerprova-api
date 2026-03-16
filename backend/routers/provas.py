@@ -21,6 +21,15 @@ from utils.answers import parse_json_list, dump_json_list
 SCANNER_FOTO_DIR = Path(__file__).parent.parent / "scannerfoto"
 SCANNER_FOTO_DIR.mkdir(parents=True, exist_ok=True)
 
+def cleanup_old_scans(directory: Path, limit: int = 200):
+    try:
+        files = sorted(list(directory.glob("*.jpg")), key=lambda f: f.stat().st_mtime)
+        if len(files) > limit:
+            for i in range(len(files) - limit):
+                files[i].unlink()
+    except Exception as e:
+        logger.error(f"Erro ao limpar scannerfoto: {e}")
+
 router = APIRouter(tags=["provas"])
 logger = logging.getLogger("lerprova-api")
 omr = OMREngine()
@@ -378,6 +387,8 @@ async def salvar_foto_scanner(req: SalvarFotoRequest, current_user: users_db.Use
         filename = f"{ts}_{uid}.jpg"
         filepath = SCANNER_FOTO_DIR / filename
         filepath.write_bytes(img_bytes)
+        
+        cleanup_old_scans(SCANNER_FOTO_DIR, limit=200)
 
         logger.info(f"SCANNER_FOTO: {filename} ({len(img_bytes)} bytes) user={current_user.id}")
         return {"saved": True, "filename": filename}

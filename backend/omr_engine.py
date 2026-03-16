@@ -10,8 +10,11 @@ import logging
 from typing import Any, Dict, List, Optional, Union, cast
 
 # Configuração de Logs e Diretórios de Debug
-DEBUG_LOG_DIR = Path(__file__).parent / "debug_logs"
+BASE_DIR = Path(__file__).parent
+DEBUG_LOG_DIR = BASE_DIR / "debug_logs"
 DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
+AUDIT_DIR = DEBUG_LOG_DIR / "auditoria"
+AUDIT_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -303,6 +306,10 @@ class OMREngine:
                 _, buffer_audit = cv2.imencode('.jpg', audit_map, [cv2.IMWRITE_JPEG_QUALITY, 70])
                 response["audit_map"] = f"data:image/jpeg;base64,{base64.b64encode(buffer_audit).decode('utf-8')}"
             
+            # Limpar logs antigos para economizar espaço (Manter últimos 100)
+            self._cleanup_old_files(audit_dir, limit=300) # 300 arquivos = ~100 eventos (jpg+json)
+            self._cleanup_old_files(DEBUG_LOG_DIR, limit=50)
+
             return response
             
         except Exception as e:
@@ -310,6 +317,20 @@ class OMREngine:
             if 'img_original' in locals():
                 self._log_debug_event(img_original, f"Erro Crítico: {str(e)}")
             return {"success": False, "error": f"Erro interno: {str(e)}"}
+
+    def _cleanup_old_files(self, directory: Path, limit: int = 100):
+        """
+        Mantém apenas os arquivos mais recentes no diretório.
+        """
+        try:
+            files = sorted(list(directory.glob("*")), key=lambda f: f.stat().st_mtime)
+            if len(files) > limit:
+                for i in range(len(files) - limit):
+                    f = files[i]
+                    if f.is_file():
+                        f.unlink()
+        except Exception as e:
+            logger.error(f"Erro ao limpar diretório {directory}: {e}")
 
     def _log_debug_event(self, image, message, context=None):
         """
