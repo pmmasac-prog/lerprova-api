@@ -727,7 +727,7 @@ class OMREngine:
         # O gerador do frontend (GabaritoTemplate) usa colunas verticais (blocos)
         # Isso significa que ele preenche Bloco 1: Q1-Q7 | Bloco 2: Q8-Q14...
         # Invertemos a ordem: Column -> Row
-        q_idx = 0
+        q_idx: int = 0
         num_cols_val = int(cast(Union[int, float], num_cols))
         num_rows_val = int(cast(Union[int, float], num_rows))
         num_q_val = int(cast(Union[int, float], num_questions))
@@ -767,10 +767,10 @@ class OMREngine:
                     })
                 
                 results.append({
-                    'question': q_idx + 1,
+                    'question': q_idx + 1,  # type: ignore
                     'bubbles': bubbles_data
                 })
-                q_idx += 1
+                q_idx += 1  # type: ignore
         
         return results
     
