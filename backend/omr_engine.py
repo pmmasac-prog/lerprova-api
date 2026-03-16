@@ -702,9 +702,9 @@ class OMREngine:
         """
         try:
             H, W = warped.shape[:2]
-            # Barra está em ~4mm de 180mm total da largura do wrapper
-            x1 = int(W * (4.0/180.0))
-            x2 = int(W * (7.0/180.0))
+            # Barra está em ~2mm de 180mm total da largura do wrapper
+            x1 = int(W * (2.0/180.0))
+            x2 = int(W * (4.0/180.0))
             roi_strip = warped[int(H*0.2):int(H*0.8), x1:x2]
             gray_strip = cv2.cvtColor(roi_strip, cv2.COLOR_BGR2GRAY)
             

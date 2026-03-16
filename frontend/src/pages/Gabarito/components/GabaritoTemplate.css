@@ -121,12 +121,12 @@
     border-radius: 1mm;
 }
 
-/* Barra de Calibração (Lado Esquerdo - INTERNA para ser vista pelo Scanner) */
+/* Barra de Calibração (Lado Esquerdo - TOTALMENTE EXTERNA) */
 .calibration-bar {
     position: absolute;
-    left: 4mm;
+    left: 2mm;
     top: 20mm;
-    width: 3mm;
+    width: 2mm;
     height: 150mm;
     background: linear-gradient(to bottom, #000, #333, #666, #999, #ccc, #fff);
     border: 1px solid #000;
