@@ -552,7 +552,7 @@ class OMREngine:
                     best_d, best_i = d, i
             if best_i >= 0:
                 used.add(best_i)
-                final.append(pts_indexed[best_i])
+                final.append(pts_indexed[best_i])  # type: ignore
         return final
 
     def _corner_black_ratio(self, warped):
@@ -767,10 +767,10 @@ class OMREngine:
                     })
                 
                 results.append({
-                    'question': int(q_idx) + 1,
+                    'question': q_idx + 1,
                     'bubbles': bubbles_data
                 })
-                q_idx = int(q_idx) + 1
+                q_idx += 1
         
         return results
     
