@@ -264,40 +264,44 @@ class OMREngine:
 
             # ===== 9. SALVAR DIAGNÓSTICOS (DIAGNÓSTICOS PERMANENTES) =====
             try:
-                diag_dir = Path(__file__).parent / "diagnostics"
-                if not diag_dir.exists():
-                    diag_dir.mkdir(parents=True, exist_ok=True)
+                # Criar pasta de auditoria estruturada
+                audit_dir = DEBUG_LOG_DIR / "auditoria"
+                audit_dir.mkdir(parents=True, exist_ok=True)
                 
-                timestamp = int(time.time() * 1000)
-                prefix = f"scan_{timestamp}_{'success' if quality == 'ok' else 'check'}"
+                timestamp = int(time.time())
+                prefix = f"{timestamp}_{'OK' if quality == 'ok' else 'CHECK'}"
                 
                 # Salvar Original
-                cv2.imwrite(str(diag_dir / f"{prefix}_orig.jpg"), img_original)
+                cv2.imwrite(str(audit_dir / f"{prefix}_0_orig.jpg"), img_original)
                 
                 # Salvar Warped (Retificada)
-                cv2.imwrite(str(diag_dir / f"{prefix}_warped.jpg"), warped)
+                cv2.imwrite(str(audit_dir / f"{prefix}_1_warped.jpg"), warped)
                 
                 # Salvar Audit (Com marcações)
                 audit_map = self.generate_audit_map(warped, bubble_results, num_questions)
-                cv2.imwrite(str(diag_dir / f"{prefix}_audit.jpg"), audit_map)
+                cv2.imwrite(str(audit_dir / f"{prefix}_2_audit.jpg"), audit_map)
                 
-                logger.debug(f"Diagnostics saved to {diag_dir}")
+                # Salvar Metadados JSON
+                with open(audit_dir / f"{prefix}_meta.json", 'w', encoding='utf-8') as f:
+                    json.dump(response, f, indent=4, default=str)
+                
+                logger.info(f"Auditoria salva em {audit_dir} (prefixo: {prefix})")
             except Exception as e:
-                logger.error(f"Erro ao salvar diagnósticos: {e}")
+                logger.error(f"Erro ao salvar auditoria física: {e}")
             
             if return_images:
                 _, buffer_warped = cv2.imencode('.jpg', warped, [cv2.IMWRITE_JPEG_QUALITY, 70])
-                response["processed_image"] = f"data:image/jpg;base64,{base64.b64encode(buffer_warped).decode('utf-8')}"
+                response["processed_image"] = f"data:image/jpeg;base64,{base64.b64encode(buffer_warped).decode('utf-8')}"
                 
-                # Original só manda se explicitamente pedido (vou manter fixo True por enquanto para compatibilidade se o app não mandar o flag)
-                response["original_image"] = f"data:image/jpg;base64,{original_base64}"
+                # Original
+                response["original_image"] = f"data:image/jpeg;base64,{original_base64}"
             
             if return_audit:
                 # Se não geramos antes nos diagnósticos, gera agora
                 if 'audit_map' not in locals():
                     audit_map = self.generate_audit_map(warped, bubble_results, num_questions)
                 _, buffer_audit = cv2.imencode('.jpg', audit_map, [cv2.IMWRITE_JPEG_QUALITY, 70])
-                response["audit_map"] = f"data:image/jpg;base64,{base64.b64encode(buffer_audit).decode('utf-8')}"
+                response["audit_map"] = f"data:image/jpeg;base64,{base64.b64encode(buffer_audit).decode('utf-8')}"
             
             return response
             

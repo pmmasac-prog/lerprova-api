@@ -1,289 +1,344 @@
-Plano de implementação detalhado (com trechos de código) para corrigir todos os problemas que já apareceram + avaliação objetiva do OMR
-1) Padronizar o modelo de dados (eliminar “duas fontes de verdade”)
-1.1 Aluno ↔ Turma: escolha 1 regra
+1. Estrutura geral do componente
 
-Hoje você tem M2M (aluno_turma) e ao mesmo tempo Aluno.turma_id. Isso quebra filtro, relatório e autorização.
+O arquivo principal é:
 
-Recomendação: manter M2M (mais flexível) e remover Aluno.turma_id.
+GabaritoTemplate.tsx
 
-models.py (ajuste)
+Ele gera uma página por aluno contendo:
 
-class Aluno(Base):
-    __tablename__ = "alunos"
+cabeçalho com informações da prova
 
-    id = Column(Integer, primary_key=True, index=True)
-    nome = Column(String)
-    codigo = Column(String, index=True)
-    # REMOVER turma_id
-    # turma_id = Column(Integer, ForeignKey("turmas.id"))
-    qr_token = Column(String, unique=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+QR Code identificando aluno + prova
 
-    turmas = relationship("Turma", secondary="aluno_turma", back_populates="alunos")
-    resultados = relationship("Resultado", back_populates="aluno", cascade="all, delete-orphan")
+identificação do aluno
 
+instruções
 
-Migração: remover coluna turma_id e popular aluno_turma com base no valor antigo (se existir).
+área OMR com bolhas
 
-1.2 Gabarito ↔ Turma: escolha 1 regra
+marcadores fiduciais (cantos)
 
-Hoje você tem Gabarito.turma_id e também M2M gabarito_turma.
+Estrutura simplificada:
 
-Recomendação: manter M2M e remover Gabarito.turma_id.
+Página
+ ├── Header (informações + QR)
+ ├── Área do aluno
+ ├── Instruções
+ ├── Área OMR
+ │    ├── fiducial TL
+ │    ├── fiducial TR
+ │    ├── fiducial BL
+ │    ├── fiducial BR
+ │    └── grid de questões
+ └── Rodapé
 
-class Gabarito(Base):
-    __tablename__ = "gabaritos"
-    id = Column(Integer, primary_key=True, index=True)
-    # REMOVER turma_id
-    # turma_id = Column(Integer, ForeignKey("turmas.id"), nullable=True)
+Arquiteturalmente está correto.
 
-    titulo = Column(String)
-    assunto = Column(String, nullable=True)
-    disciplina = Column(String, nullable=True)
-    data_prova = Column(String, nullable=True)
-    num_questoes = Column(Integer, default=10)
-    respostas_corretas = Column(Text)  # JSON string lista
-    periodo = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+Mas existem alguns riscos sérios para leitura automática.
 
-    turmas = relationship("Turma", secondary="gabarito_turma", back_populates="gabaritos")
-    resultados = relationship("Resultado", back_populates="gabarito", cascade="all, delete-orphan")
+2. Identificação por QR Code
 
-2) Normalização de respostas (gabarito e aluno) sempre como JSON-lista
+Você colocou:
 
-Crie um util central (ex: utils/answers.py) e use nos endpoints.
+const qrData = JSON.stringify({
+    aid: student.id,
+    gid: gabarito.id
+});
 
-import json
-from fastapi import HTTPException
+e gera:
 
-def parse_json_list(value, field_name="value"):
-    if value is None:
-        return []
-    if isinstance(value, list):
-        return [str(x).strip() if x is not None else None for x in value]
-    if isinstance(value, str):
-        s = value.strip()
-        if not s:
-            return []
-        # tenta JSON
-        if s.startswith("["):
-            try:
-                arr = json.loads(s)
-                if isinstance(arr, list):
-                    return [str(x).strip() if x is not None else None for x in arr]
-            except json.JSONDecodeError:
-                pass
-        # fallback CSV
-        if "," in s:
-            return [x.strip() for x in s.split(",")]
-        return [s]
-    raise HTTPException(status_code=422, detail=f"{field_name} inválido (esperado lista/string)")
+QRCodeSVG size={100}
+Pontos positivos
 
-def dump_json_list(arr):
-    return json.dumps(arr, ensure_ascii=False)
+identificação única da folha
 
-2.1 Corrigir gabaritos.py (create/update)
+evita erro de aluno
 
-sempre salvar respostas_corretas como JSON lista
+permite leitura antes do OMR
 
-validar tamanho = num_questoes
+Problema importante
 
-Trecho (exemplo no create):
+QR code dentro do gabarito pode interferir no threshold global da imagem.
 
-from utils.answers import parse_json_list, dump_json_list
+Dependendo da câmera ou scanner, o QR gera área muito contrastada.
 
-num_questoes = int(data.get("questoes") or data.get("num_questoes") or 10)
-corretas = parse_json_list(data.get("respostas"), "respostas")
+Recomendação profissional:
 
-if corretas and len(corretas) != num_questoes:
-    raise HTTPException(status_code=422, detail=f"respostas deve ter {num_questoes} itens")
+Colocar o QR fora da área OMR calibrada.
 
-novo_gabarito.respostas_corretas = dump_json_list(corretas)
+Exemplo seguro:
 
-3) Consertar a nota/acertos no fluxo automático (bug mais grave)
-3.1 Bug atual (em provas.py)
+┌─────────────────────┐
+│ HEADER              │
+│         QR          │
+├─────────────────────┤
+│                     │
+│   AREA OMR          │
+│                     │
+└─────────────────────┘
 
-Você calcula:
+Nunca misturar QR com região de leitura.
 
-total = min(len(corretas), len(detectadas))
-nota = (acertos / total) * 10
+3. Marcadores Fiduciais (âncoras)
 
+Você colocou:
 
-Isso infla nota quando a leitura vem incompleta.
+<div class="fiducial tl"></div>
+<div class="fiducial tr"></div>
+<div class="fiducial bl"></div>
+<div class="fiducial br"></div>
 
-3.2 Correção (obrigatória)
+Isso é essencial para correção de perspectiva.
 
-total = gabarito.num_questoes (ou len(corretas) se for mais confiável)
+Mas existem dois pontos críticos.
 
-padronizar listas para terem o mesmo tamanho
+Problema 1 — posição relativa
 
-usar status/confiança para bloquear leituras ruins
+Eles estão dentro do wrapper do gabarito.
 
-Substitua o bloco de correção em /provas/processar por:
+Isso significa que qualquer corte ou dobra pode deslocar a referência.
 
-from utils.answers import parse_json_list, dump_json_list
+O ideal industrial:
 
-# 1) parse corretas robusto
-corretas = parse_json_list(gabarito.respostas_corretas, "gabarito.respostas_corretas")
-total = gabarito.num_questoes or len(corretas)
-total = max(total, len(corretas))
+┌───────────────┐
+■               ■
+│               │
+│   GABARITO    │
+│               │
+■               ■
+└───────────────┘
 
-# 2) respostas detectadas padronizadas
-detectadas = result.get("answers") or []
-# garante tamanho total
-detectadas = (detectadas + [None] * total)[:total]
-corretas = (corretas + [None] * total)[:total]
+Os marcadores devem ficar nos limites da área OMR.
 
-# 3) qualidade OMR (não salva se ruim)
-status_counts = result.get("status_counts") or {}
-avg_conf = float(result.get("avg_confidence") or 0.0)
+Problema 2 — formato desconhecido
 
-if status_counts.get("invalid", 0) > 0:
-    return {"success": False, "error": "Marcação múltipla detectada. Refaça a foto.", "status_counts": status_counts}
-if status_counts.get("ambiguous", 0) > 3 or avg_conf < 0.75:
-    return {"success": False, "error": "Leitura com baixa confiança. Refaça a foto.", "status_counts": status_counts, "avg_confidence": avg_conf}
+Seu código não mostra o CSS, mas se os fiduciais forem quadrados simples, a detecção pode falhar.
 
-# 4) acertos/nota com base no total do gabarito
-acertos = sum(
-    1 for i in range(total)
-    if detectadas[i] is not None and corretas[i] is not None and detectadas[i] == corretas[i]
-)
-nota = (acertos / total) * 10 if total else 0.0
+Padrão profissional:
 
-4) Corrigir autorização no /provas/processar (falha de segurança)
+█ █
+█ █
 
-Hoje qualquer professor pode passar gabarito_id e corrigir.
+ou
 
-Conserto:
+■
 
-if current_user.role != "admin":
-    gabarito = db.query(models.Gabarito).filter(
-        models.Gabarito.id == gabarito_id,
-        models.Gabarito.turmas.any(models.Turma.user_id == current_user.id)
-    ).first()
-else:
-    gabarito = db.query(models.Gabarito).filter(models.Gabarito.id == gabarito_id).first()
+com:
 
-if not gabarito:
-    return {"success": False, "error": "Gabarito não encontrado ou acesso negado."}
+tamanho fixo
 
-5) Validar QR (evitar aluno/gabarito trocado)
+contraste alto
 
-Regras recomendadas:
+borda branca ao redor
 
-Se o request informou gabarito_id, e QR traz gid, tem que bater.
+Tamanho ideal:
 
-Se QR trouxe aid, validar se o aluno está em alguma turma do gabarito.
+10mm a 12mm
+4. Organização das questões
 
-Trecho:
+Você divide as questões em blocos:
 
-qr = result.get("qr_data")
-if qr and isinstance(qr, dict):
-    qr_aid = int(qr.get("aid") or 0)
-    qr_gid = int(qr.get("gid") or 0)
+{ start: 0, end: 7 }
+{ start: 7, end: 14 }
+{ start: 14, end: 21 }
+{ start: 21, end: 26 }
 
-    if req.gabarito_id and qr_gid and qr_gid != req.gabarito_id:
-        return {"success": False, "error": "QR Code não corresponde ao gabarito selecionado."}
+Ou seja:
 
-    if qr_gid:
-        gabarito_id = qr_gid
-    if qr_aid:
-        aluno_id = qr_aid
+7 + 7 + 7 + 5 = 26 questões.
 
-# valida aluno pertence à turma do gabarito
-if aluno_id:
-    aluno_ok = db.query(models.Aluno).filter(
-        models.Aluno.id == aluno_id,
-        models.Aluno.turmas.any(models.Turma.id.in_([t.id for t in gabarito.turmas]))
-    ).first()
-    if not aluno_ok:
-        return {"success": False, "error": "Aluno não pertence às turmas deste gabarito."}
+Isso cria 4 colunas verticais.
 
-6) Guardar auditoria do OMR no banco (para suporte e relatórios)
+Layout visual aproximado:
 
-Adicione campos em Resultado:
+01 ○ ○ ○ ○ ○
+02 ○ ○ ○ ○ ○
+...
+07 ○ ○ ○ ○ ○
 
-status_list (JSON)
+08 ○ ○ ○ ○ ○
+...
+Isso é bom?
 
-confidence_scores (JSON)
+Sim, mas tem um problema.
 
-avg_confidence (float)
+Se o sistema usa x_centers_pct, colunas precisam ser fixas e previsíveis.
 
-layout_version (string)
+Exemplo profissional:
 
-anchors_found (int)
+col1 col2
 
-Exemplo no model:
+Ou no máximo:
 
-class Resultado(Base):
-    __tablename__ = "resultados"
-    ...
-    respostas_aluno = Column(Text, nullable=True)
-    status_list = Column(Text, nullable=True)          # JSON list
-    confidence_scores = Column(Text, nullable=True)    # JSON list
-    avg_confidence = Column(Float, default=0.0)
-    layout_version = Column(String, nullable=True)
-    anchors_found = Column(Integer, default=0)
+col1 col2 col3
 
+Quatro blocos aumenta complexidade.
 
-Salvando:
+5. Bolhas de marcação
 
-resultado_existente.status_list = json.dumps(result.get("question_status"))
-resultado_existente.confidence_scores = json.dumps(result.get("confidence_scores"))
-resultado_existente.avg_confidence = float(result.get("avg_confidence") or 0)
-resultado_existente.layout_version = layout_version
-resultado_existente.anchors_found = int(result.get("anchors_found") or 0)
+Você gera:
 
-7) Arrumar o OMREngine (erros reais no código)
-7.1 Função duplicada validate_questions
+<div class="option-circle"></div>
 
-Você tem duas definições. Remova a incompleta.
+Sem letra dentro.
 
-7.2 Inconsistência: generate_audit_map usa bubble['confidence'] antiga
+Isso é excelente para OMR.
 
-Seu validate_questions por z-score redefine marked mas não recalcula confidence.
+Mas o sucesso depende de três fatores.
 
-Ajuste: recalcular a confiança no validador ou fazer o audit map usar o status final.
+1 — tamanho da bolha
 
-Exemplo simples: retornar final_marked_idx e status por questão e desenhar com base nisso.
+Padrão industrial:
 
-# no validate_questions, para cada questão:
-question_data["final_status"] = status
-question_data["final_index"] = idx if status in ("valid","ambiguous") else None
-question_data["final_conf"] = conf
+5mm a 6mm diâmetro
 
+Menor que isso gera erro.
 
-E no audit:
+2 — espessura da borda
 
-status = question_data.get("final_status")
-idx = question_data.get("final_index")
-conf = question_data.get("final_conf", 0)
+Ideal:
 
-if status == "blank": ...
-elif status == "invalid": ...
-else:
-    bubble = question_data["bubbles"][idx]
-    # usar conf final, não bubble['confidence']
+0.5mm a 0.8mm
 
-7.3 Ajustar ROI do layout (reduzir instabilidade)
+Borda muito fina desaparece na digitalização.
 
-Com teu layout:
+3 — distância entre bolhas
 
-step vertical ~43px
+Ideal:
 
-ROI ~39px (muito apertado)
+mínimo 2.5x o diâmetro
 
-Recomendação prática:
+Se for menor, sombras interferem.
 
-roi_size_pct_of_width = 0.030 (≈33.6px) ou 0.028 (≈31px)
+6. Numeração das questões
 
-8) Segurança do API_KEY_SECRET (reports/batch)
+Você usa:
 
-Não use default hardcoded.
+<span class="q-num">01</span>
 
-API_KEY_SECRET = os.getenv("API_KEY_SECRET")
-if not API_KEY_SECRET:
-    raise RuntimeError("API_KEY_SECRET não configurada")
+Boa prática.
 
+Mas cuidado:
 
-E ideal: colocar o batch sob get_current_user + role == admin.
+número não pode encostar na bolha.
+
+Distância mínima recomendada:
+
+6mm
+7. Grid de questões
+
+Classe usada:
+
+questions-grid-printable-industrial
+
+Se esse CSS estiver usando:
+
+display: grid
+
+isso é bom.
+
+Mas a impressão precisa ser determinística.
+
+Evite:
+
+auto-fit
+auto-fill
+
+Use sempre:
+
+grid-template-columns: fixed
+8. Impressão
+
+Você usa:
+
+pageBreakAfter: 'always'
+
+Boa prática.
+
+Mas faltam duas coisas essenciais para OMR.
+
+1 — tamanho fixo da página
+
+Deve existir no CSS:
+
+@page {
+  size: A4;
+  margin: 0;
+}
+2 — área de segurança
+
+Scanner sempre corta bordas.
+
+Deixe margem:
+
+15mm
+9. Problema crítico detectado
+
+O maior risco do template é este:
+
+omr-anchor-wrapper
+
+Se o wrapper não tiver tamanho fixo absoluto, o algoritmo de leitura quebra.
+
+Exemplo correto:
+
+width: 180mm
+height: 220mm
+position: relative
+
+Sem isso, o warp nunca será consistente.
+
+10. O que está excelente no seu design
+
+Seu template já possui várias boas práticas raras em sistemas educacionais:
+
+✔ QR por folha
+✔ identificação automática
+✔ marcadores fiduciais
+✔ separação de área OMR
+✔ bolhas sem texto
+✔ grid consistente
+
+Isso já coloca seu projeto muito acima de sistemas escolares comuns.
+
+11. Melhorias que eu recomendaria imediatamente
+1 — adicionar marcador central de alinhamento
+
+Muito usado em OMR profissional.
+
+     ■
+■        ■
+
+     ■
+
+■        ■
+
+Ajuda na correção de distorção.
+
+2 — padronizar colunas
+
+Use:
+
+2 colunas
+
+ou
+
+3 colunas
+
+Nunca 4 blocos.
+
+3 — definir ROI fixo
+
+Seu sistema usa:
+
+roi_size_pct_of_width
+
+Então as bolhas precisam respeitar grid matemático.
+
+4 — inserir barras de calibração
+
+Exemplo:
+
+████████
+
+Isso ajuda na binarização.
