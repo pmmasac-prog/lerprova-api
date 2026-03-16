@@ -5,6 +5,9 @@ import json
 import time
 import logging
 import os
+import base64
+import uuid
+from pathlib import Path
 from pydantic import BaseModel
 from typing import Optional
 import models
@@ -13,6 +16,10 @@ from database import get_db
 from dependencies import get_current_user
 from omr_engine import OMREngine
 from utils.answers import parse_json_list, dump_json_list
+
+# Pasta de armazenamento de fotos capturadas pelo scanner
+SCANNER_FOTO_DIR = Path(__file__).parent.parent / "scannerfoto"
+SCANNER_FOTO_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter(tags=["provas"])
 logger = logging.getLogger("lerprova-api")
@@ -344,3 +351,37 @@ def revisar_prova(req: ReviewRequest, db: Session = Depends(get_db), current_use
         "acertos": acertos,
         "nota": round(nota, 1)
     }
+
+
+# ─────────────────────────────────────────────
+# Salvar foto do scanner para auditoria
+# ─────────────────────────────────────────────
+
+class SalvarFotoRequest(BaseModel):
+    image: str
+    timestamp: Optional[str] = None
+
+@router.post("/provas/salvar-foto")
+async def salvar_foto_scanner(req: SalvarFotoRequest, current_user: users_db.User = Depends(get_current_user)):
+    """
+    Salva a foto capturada pelo scanner na pasta scannerfoto/ para auditoria.
+    """
+    try:
+        if not req.image:
+            return {"saved": False, "error": "Imagem vazia"}
+
+        raw = req.image.split(",")[-1]
+        img_bytes = base64.b64decode(raw)
+
+        ts = req.timestamp or datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        uid = str(uuid.uuid4())[:8]
+        filename = f"{ts}_{uid}.jpg"
+        filepath = SCANNER_FOTO_DIR / filename
+        filepath.write_bytes(img_bytes)
+
+        logger.info(f"SCANNER_FOTO: {filename} ({len(img_bytes)} bytes) user={current_user.id}")
+        return {"saved": True, "filename": filename}
+
+    except Exception as e:
+        logger.error(f"Erro ao salvar foto scanner: {e}")
+        return {"saved": False, "error": str(e)}

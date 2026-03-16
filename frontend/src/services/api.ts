@@ -365,6 +365,15 @@ export const api = {
         });
     },
 
+    async salvarFotoScanner(data: { image: string, timestamp?: string }) {
+        return request(`${API_URL}/provas/salvar-foto`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+    },
+
+
     // Admin Endpoints
     admin: {
         listUsers: async () => {
