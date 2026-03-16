@@ -51,9 +51,9 @@ class OMREngine:
             "roi_size_pct_of_width": 0.028,
             "options": ["A", "B", "C", "D", "E"],
             "x_centers_pct": [0.245, 0.318, 0.392, 0.465, 0.538],
-            "y_start_pct": 0.21,
+            "y_start_pct": 0.1079,
             "y_end_pct": 0.88,
-            "num_questions": 25
+            "num_questions": 26
         }
 
         p = Path(__file__).parent / f"layout_{version_str}.json"
@@ -241,7 +241,7 @@ class OMREngine:
                 review_reasons.append("invalid_marks")
             if status_counts.get("ambiguous", 0) > 2:
                 review_reasons.append("too_many_ambiguous")
-            if avg_conf < 0.75:
+            if avg_conf < self.MIN_CONFIDENCE:
                 review_reasons.append("low_confidence")
             
             # Adicionar aviso se perspectiva foi muito inclinada
@@ -459,7 +459,8 @@ class OMREngine:
                 
             # Margem relaxada: as âncoras agora podem estar mais longe das bordas 
             # já que cercam apenas o gabarito e não a folha toda.
-            margin = 0.35 
+            # Margem mais rigorosa para reduzir falsos positivos (0.28 industrial)
+            margin = 0.28 
             valid = (
                 (cX < W*margin and cY < H*margin) or
                 (cX > W*(1-margin) and cY < H*margin) or
@@ -469,7 +470,35 @@ class OMREngine:
             if not valid:
                 continue
 
-            candidates.append({"cx": cX, "cy": cY, "area": area, "score": max(circ, 0.9 if is_square else 0)})
+            # Filtros Robustos Extras
+            # 1. Aspect Ratio (Quadrados/Círculos devem ser próximos a 1:1)
+            x, y, w, h = cv2.boundingRect(cnt)
+            aspect_ratio = float(w) / float(h)
+            if aspect_ratio < 0.7 or aspect_ratio > 1.4:
+                continue
+                
+            # 2. Densidade Interna (Deve ser bem preto)
+            # Criamos uma máscara local para o ROI da âncora
+            roi_mask = np.zeros(strict_thresh.shape, dtype=np.uint8)
+            cv2.drawContours(roi_mask, [cnt], -1, 255, -1)
+            mean_val = cv2.mean(gray, mask=roi_mask)[0]
+            # O fundo é ~200+, preto é <100. Se a média for >110, não é uma âncora sólida
+            if mean_val > 110:
+                continue
+
+            # 3. Distância Euclidiana ao Canto Esperado (Score Bonus)
+            # Definir cantos alvos
+            targets = [ (0,0), (W,0), (W,H), (0,H) ]
+            dists = [np.sqrt((cX-tx)**2 + (cY-ty)**2) for tx, ty in targets]
+            min_dist = min(dists)
+            dist_score = 1.0 / (1.0 + min_dist/100.0) # Bonus que decai com a distância
+
+            candidates.append({
+                "cx": cX, 
+                "cy": cY, 
+                "area": area, 
+                "score": (max(circ, 0.9 if is_square else 0) * 0.7) + (dist_score * 0.3)
+            })
 
         if len(candidates) < 4:
             return []
@@ -731,15 +760,13 @@ class OMREngine:
 
         options = cast(List[str], layout_dict.get("options", ["A", "B", "C", "D", "E"]))
         x_centers_pct = cast(List[float], layout_dict.get("x_centers_pct", [0.245, 0.318, 0.392, 0.465, 0.538]))
-        y_start_pct = float(layout_dict.get("y_start_pct", 0.21))
-        y_end_pct = float(layout_dict.get("y_end_pct", 0.88))
+        num_questions_raw = layout.get("num_questions", num_questions)
+        q_count: int = int(num_questions_raw) if num_questions_raw is not None else 26
 
         num_cols = int(layout.get("num_columns", 1))
-        num_rows_val = math.ceil(num_questions / num_cols)
+        num_rows_val = math.ceil(q_count / num_cols)
         
         # O gerador industrial usa passo fixo de 11mm em um wrapper de 190mm
-        # y_step_pct = 11/190 ≈ 0.0579
-        # y_start_pct = (15mm base + 5.5mm center) / 190mm ≈ 0.1079
         y_step_pct = float(layout.get("y_step_pct_fixed", 0.0579))
         y_start_pct = float(layout.get("y_start_pct_fixed", 0.1079))
         
@@ -768,12 +795,11 @@ class OMREngine:
         # Invertemos a ordem: Column -> Row
         q_idx: int = 0
         num_cols_val = int(cast(Union[int, float], num_cols))
-        num_rows_val = int(cast(Union[int, float], num_rows_val)) # Corrected this line to use num_rows_val
-        num_q_val = int(cast(Union[int, float], num_questions))
+        num_rows_val = int(cast(Union[int, float], num_rows_val))
+        num_q_val = int(cast(Union[int, float], q_count))
 
         for col in range(num_cols_val):
-            offsets_list = cast(List[float], x_offsets_pct)
-            col_offset_pct = offsets_list[col] if col < len(offsets_list) else 0.0
+            x_offset = float(x_offsets_pct[col]) * float(self.target_width)
             
             for row in range(num_rows_val):
                 if int(q_idx) >= int(num_q_val):
@@ -837,44 +863,51 @@ class OMREngine:
         for question_data in bubble_results:
             bubbles = question_data['bubbles']
             
-            # Ordenar bolhas por score do maior para o menor
-            sorted_bubbles = sorted(bubbles, key=lambda b: b['score'], reverse=True)
+            # 1. ANALISAR TOP 1 E TOP 2 COM SINAL ÚTIL DO BG_SCORE
+            # bg_score mede sujeira/borda perto da bolha. Bolha real tem bg_score baixo.
+            # Se bg_score for alto (ex > 0.10), penalizamos o score da bolha
+            def adjusted_score(b):
+                penalty = max(0.0, b['bg_score'] - 0.05) * 0.5
+                return max(0.0, b['score'] - penalty)
+
+            # Ordenar bolhas por score ajustado
+            sorted_bubbles = sorted(bubbles, key=adjusted_score, reverse=True)
             
             top1_b = sorted_bubbles[0]
             top2_b = sorted_bubbles[1] if len(sorted_bubbles) > 1 else None
             
-            top1_score = top1_b['score']
-            top2_score = top2_b['score'] if top2_b else 0.0
+            t1_score = adjusted_score(top1_b)
+            t2_score = adjusted_score(top2_b) if top2_b else 0.0
             
-            margin = top1_score - top2_score
+            margin = t1_score - t2_score
             
-            # 1. Checar se está em branco (o Top 1 é tão fraco que não chega nem a rascunho)
-            if top1_score < amb_thr:
+            # 1. Checar se está em branco (Mesmo o Top 1 é irrelevante)
+            if t1_score < amb_thr:
                 status = "blank"
                 ans = None
-                conf = 1.0 - (top1_score / amb_thr) # Confiança proporcional ao quão "vazio" está
+                conf = 1.0 - (t1_score / amb_thr)
                 final_idx = None
             
-            # 2. Checar múltiplas marcações reais (Top 1 e Top 2 estão pintados de verdade)
-            elif top2_score >= marked_thr:
-                status = "invalid"  # Aluno pintou duas claras
+            # 2. Checar múltiplas marcações reais
+            # Para ser inválido, t2_score deve ser alto E o margin deve ser pequeno
+            # Se margin for grande (> 0.10), provavelmente t2 é apenas sujeira
+            elif t2_score >= marked_thr and margin < 0.10:
+                status = "invalid"
                 ans = None
                 conf = 0.0
                 final_idx = None
                 
-            # 3. Checar ambiguidade (Top 1 e Top 2 estão muito próximos, ex: borrado)
-            elif top2_score >= amb_thr and margin < margin_thr:
+            # 3. Checar ambiguidade
+            elif t2_score >= amb_thr and margin < margin_thr:
                 status = "ambiguous"
                 ans = top1_b['option']
-                # Tenta ajudar a revisão fornecendo a opção mais provável
-                conf = max(0.0, margin / margin_thr) # Confiança proporcional à margem
+                conf = max(0.0, margin / margin_thr)
                 final_idx = bubbles.index(top1_b)
                 
-            # 4. Válido e claro (Top 1 se destaca)
+            # 4. Válido e claro
             else:
                 status = "valid"
                 ans = top1_b['option']
-                # Se a margem for maior que 3x a margem mínima, confiança é 1.0 (perfeita)
                 conf = min(1.0, margin / (margin_thr * 2.5)) if margin_thr > 0 else 1.0
                 final_idx = bubbles.index(top1_b)
 
