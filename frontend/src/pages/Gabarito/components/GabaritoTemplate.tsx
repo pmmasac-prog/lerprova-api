@@ -33,24 +33,17 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
                 });
 
                 return (
-                    <div key={student.id} className="printable-page" style={{ pageBreakAfter: 'always' }}>
+                    <div key={student.id} className="printable-page">
                         <header className="template-header">
+                            <div className="qr-float">
+                                <QRCodeSVG value={qrData} size={110} level="M" />
+                            </div>
                             <div className="header-text">
                                 <h1 className="template-title">FOLHA DE RESPOSTAS - LERPROVA</h1>
                                 <div className="exam-info">
-                                    <div className="info-row">
-                                        <p><strong>Prova:</strong> {gabarito.assunto}</p>
-                                        {gabarito.sala && <p><strong>Sala:</strong> {gabarito.sala}</p>}
-                                    </div>
-                                    <div className="info-row">
-                                        <p><strong>Disciplina:</strong> {gabarito.disciplina || 'Geral'}</p>
-                                        <p><strong>Turma:</strong> {turmaNome}</p>
-                                        <p><strong>Data:</strong> {gabarito.data}</p>
-                                    </div>
+                                    <p><strong>Prova:</strong> {gabarito.assunto} | <strong>Turma:</strong> {turmaNome}</p>
+                                    <p><strong>Disciplina:</strong> {gabarito.disciplina || 'Geral'} | <strong>Data:</strong> {gabarito.data}</p>
                                 </div>
-                            </div>
-                            <div className="qr-container">
-                                <QRCodeSVG value={qrData} size={100} level="Q" includeMargin />
                             </div>
                         </header>
 
@@ -66,27 +59,31 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
                         </section>
 
                         <div className="instructions">
-                            Preencha completamente o círculo da resposta correta com caneta preta ou azul.
+                            Preencha completamente o círculo com caneta preta. Não amasse esta folha.
                         </div>
 
                         <div className="omr-anchor-wrapper">
-                            {/* Marcadores de Canto (Fiducial Markers) - Agora cercam apenas o gabarito */}
+                            {/* Marcadores de Canto Industriais */}
                             <div className="fiducial tl"></div>
                             <div className="fiducial tr"></div>
                             <div className="fiducial bl"></div>
                             <div className="fiducial br"></div>
 
-                            <main className="questions-grid-printable-industrial">
+                            {/* Marcador Central de Alinhamento */}
+                            <div className="fiducial center-marker"></div>
+
+                            {/* Barra de Calibração (Lado Esquerdo) */}
+                            <div className="calibration-bar"></div>
+
+                            <main className="questions-grid-printable-industrial two-columns">
                                 {[
-                                    { start: 0, end: 7 },
-                                    { start: 7, end: 14 },
-                                    { start: 14, end: 21 },
-                                    { start: 21, end: 26 }
+                                    { start: 0, end: Math.ceil(gabarito.num_questoes / 2) },
+                                    { start: Math.ceil(gabarito.num_questoes / 2), end: gabarito.num_questoes }
                                 ].map((block, bIdx) => {
                                     const questionsInBlock = Array.from({ length: gabarito.num_questoes })
-                                        .slice(block.start, Math.min(block.end, gabarito.num_questoes));
+                                        .slice(block.start, block.end);
                                     
-                                    if (questionsInBlock.length === 0 && block.start >= gabarito.num_questoes) return null;
+                                    if (questionsInBlock.length === 0) return null;
 
                                     return (
                                         <div key={bIdx} className="question-block">
@@ -99,9 +96,8 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
                                                             {['A', 'B', 'C', 'D', 'E'].map(opt => (
                                                                 <div key={opt} className="option-container">
                                                                     <div className="option-circle"></div>
-                                                                    {/* Letras removidas conforme solicitado */}
                                                                 </div>
-                                                            ))}
+                                                                ))}
                                                         </div>
                                                     </div>
                                                 );
