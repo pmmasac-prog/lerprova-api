@@ -216,12 +216,12 @@ class OMREngine:
             del gray_clahe
             
             # ===== 4.1 VALIDAÇÃO PÓS-WARP =====
-            ratios = self._corner_black_ratio(warped)
-            if sum(1 for x in ratios if x > 0.10) < 3:
+            # Verifica se os cantos da imagem retificada realmente contêm as âncoras pretas
+            if not self.validate_warped_anchors(warped):
                 return {
                     "success": False, 
                     "quality": "reject",
-                    "error": "Alinhamento inválido (cantos não conferem). Refaça a foto.", 
+                    "error": "Alinhamento inválido (âncoras não confirmadas após retificação). Refaça a foto.", 
                     "anchors_found": 4
                 }
             
@@ -797,8 +797,8 @@ class OMREngine:
                 bubbles_data: List[Dict[str, Any]] = []
                 
                 for j, x_pct_rel in enumerate(x_centers_pct):
-                    # Coordenada X absoluta = (Offset da Coluna + Posição Relativa da Bolha) * Largura
-                    x_center = (float(col_offset_pct) + float(x_pct_rel)) * float(self.target_width)
+                    # Coordenada X absoluta = x_offset (da coluna) + (x_pct_rel * largura)
+                    x_center = x_offset + (float(x_pct_rel) * float(self.target_width))
                     
                     # Definir ROI
                     x1 = max(0, int(x_center - float(roi_size)/2))
