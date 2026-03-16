@@ -416,21 +416,32 @@ class OMREngine:
         Versão Profissional: Suporta âncoras circulares (legado) e quadradas (novas).
         """
         H, W = thresh.shape[:2]
+        total_area = H * W
+        
+        # blockSize deve ser ímpar e proporcional à largura da imagem
+        block_size = int(W / 35)
+        if block_size % 2 == 0: block_size += 1
+        block_size = max(3, block_size)
+
         # Usar adaptiveThreshold no lugar de um valor duro de 70 para garantir suporte a múltiplas iluminações
         strict_thresh = cv2.adaptiveThreshold(
             gray, 255, 
             cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
             cv2.THRESH_BINARY_INV, 
-            31, 10
+            block_size, 10
         )
         
         contours, _ = cv2.findContours(strict_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         candidates = []
 
+        # Limites relativos para o tamanho das âncoras (0.005% a 2% da imagem)
+        min_anchor_area = total_area * 0.00005
+        max_anchor_area = total_area * 0.02
+
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            # Relaxar para radar/preview e evitar falsos negativos
-            if area < 100 or area > 5000: 
+            # Relaxar para radar/preview e evitar falsos negativos usando limites proporcionais
+            if area < min_anchor_area or area > max_anchor_area: 
                 continue
             
             # Filtro de Forma: Circularidade ou Quadrado
@@ -545,8 +556,14 @@ class OMREngine:
 
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-            # Sincronizar com (31, 10) que é o filtro industrial robusto contra sombras
-            thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 31, 10)
+            
+            # Cálculo do blockSize proporcional para o radar
+            block_size = int(W / 35)
+            if block_size % 2 == 0: block_size += 1
+            block_size = max(3, block_size)
+            
+            # Sincronizar com o filtro industrial robusto contra sombras
+            thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block_size, 10)
 
             anchors = self.detect_anchors_robust(thresh, gray)
             
@@ -602,8 +619,11 @@ class OMREngine:
         gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
-        # Verificar ROIs pequenos nos 4 cantos
-        roi_size = 40
+        # Verificar ROIs pequenos nos 4 cantos, proporcionais ao tamanho do warped
+        h_w, w_w = warped.shape[:2]
+        roi_size = int(min(h_w, w_w) * 0.04) # 4% do menor lado
+        roi_size = max(10, roi_size)
+        
         corners = [
             thresh[0:roi_size, 0:roi_size], # TL
             thresh[0:roi_size, -roi_size:], # TR

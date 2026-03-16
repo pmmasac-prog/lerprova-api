@@ -109,6 +109,41 @@ def _rbac_check_plano_owner(user: users_db.User, plano_user_id: int) -> None:
         raise HTTPException(status_code=403, detail="Acesso negado")
 
 
+@router.get("")
+async def list_todos_planos(
+    user: users_db.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retorna todos os planos (sequências didáticas) do professor logado."""
+    planos = (
+        db.query(models.Plano)
+        .filter(models.Plano.user_id == user.id)
+        .options(joinedload(models.Plano.aulas), joinedload(models.Plano.turma))
+        .all()
+    )
+
+    result = []
+    for p in planos:
+        total_aulas = len(p.aulas)
+        aulas_done = len([a for a in p.aulas if a.status == "done"])
+        progresso = int((aulas_done / total_aulas) * 100) if total_aulas > 0 else 0
+        result.append(
+            {
+                "id": p.id,
+                "titulo": p.titulo,
+                "disciplina": p.disciplina or (p.turma.disciplina if p.turma else None),
+                "data_inicio": p.data_inicio,
+                "total_aulas": total_aulas,
+                "aulas_concluidas": aulas_done,
+                "progresso": progresso,
+                "turma_id": p.turma_id,
+                "turma_nome": p.turma.nome if p.turma else "Turma desconhecida",
+            }
+        )
+
+    return result
+
+
 @router.get("/{plano_id}")
 async def get_plano_detalhado(
     plano_id: int,

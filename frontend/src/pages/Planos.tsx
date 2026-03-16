@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, BookOpen, Clock, Calendar, ChevronRight, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Plus, BookOpen, Clock, Calendar, ChevronRight, X, GraduationCap } from 'lucide-react';
 import { api } from '../services/api';
 import './Planos.css';
 
@@ -29,11 +30,24 @@ interface PlanoPeriodo {
   procedimentos_avaliativos: string;
   referencias: string;
 }
+interface PlanoSequencia {
+  id: number;
+  titulo: string;
+  disciplina: string;
+  data_inicio: string;
+  total_aulas: number;
+  aulas_concluidas: number;
+  progresso: number;
+  turma_id: number;
+  turma_nome: string;
+}
 
 const Planos: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'anuais' | 'periodos'>('anuais');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'anuais' | 'periodos' | 'sequencias'>('sequencias');
   const [anuais, setAnuais] = useState<PlanoAnual[]>([]);
   const [periodos, setPeriodos] = useState<PlanoPeriodo[]>([]);
+  const [sequencias, setSequencias] = useState<PlanoSequencia[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal Novo Plano Anual
@@ -60,12 +74,14 @@ const Planos: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [resAnuais, resPeriodos] = await Promise.all([
+      const [resAnuais, resPeriodos, resSequencias] = await Promise.all([
         api.getPlanosAnuais(),
-        api.getPlanosPeriodos()
+        api.getPlanosPeriodos(),
+        api.getPlanosAll()
       ]);
-      setAnuais(resAnuais);
-      setPeriodos(resPeriodos);
+      setAnuais(resAnuais || []);
+      setPeriodos(resPeriodos || []);
+      setSequencias(resSequencias || []);
     } catch (error) {
       console.error('Erro ao buscar planos:', error);
     } finally {
@@ -127,6 +143,12 @@ const Planos: React.FC = () => {
 
       <div className="planos-tabs">
         <button 
+          className={`tab-btn ${activeTab === 'sequencias' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sequencias')}
+        >
+          Sequências Didáticas
+        </button>
+        <button 
           className={`tab-btn ${activeTab === 'anuais' ? 'active' : ''}`}
           onClick={() => setActiveTab('anuais')}
         >
@@ -146,6 +168,57 @@ const Planos: React.FC = () => {
         </div>
       ) : (
         <div className="planos-content">
+          {activeTab === 'sequencias' && (
+            sequencias.length === 0 ? (
+              <div className="empty-state">
+                <FileText size={48} />
+                <h3>Nenhuma Sequência Didática</h3>
+                <p>Crie uma nova sequência didática para suas turmas.</p>
+              </div>
+            ) : (
+              <div className="planos-list">
+                {sequencias.map(plano => (
+                  <div key={plano.id} className="plano-card border-l-4 border-l-purple-500">
+                    <div className="plano-card-header">
+                      <h3>{plano.titulo}</h3>
+                      <span className="plano-badge bg-purple-100 text-purple-800">
+                        {plano.disciplina || 'Geral'}
+                      </span>
+                    </div>
+                    <div className="plano-info">
+                      <div className="plano-info-item">
+                        <GraduationCap size={16} />
+                        Turma: {plano.turma_nome}
+                      </div>
+                      <div className="plano-info-item">
+                        <Calendar size={16} />
+                        Início: {new Date(plano.data_inicio).toLocaleDateString('pt-BR')}
+                      </div>
+                      
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>Progresso</span>
+                          <span>{plano.progresso}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                          <div className="bg-purple-600 h-1.5 rounded-full" style={{ width: `${plano.progresso}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="plano-actions">
+                      <button 
+                        className="action-btn primary"
+                        onClick={() => navigate(`/planejamento?turmaId=${plano.turma_id}`)}
+                      >
+                        Abrir Planejamento <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+
           {activeTab === 'anuais' && (
             anuais.length === 0 ? (
               <div className="empty-state">
