@@ -34,12 +34,6 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
 
                 return (
                     <div key={student.id} className="printable-page" style={{ pageBreakAfter: 'always' }}>
-                        {/* Marcadores de Canto (Fiducial Markers) */}
-                        <div className="fiducial tl"></div>
-                        <div className="fiducial tr"></div>
-                        <div className="fiducial bl"></div>
-                        <div className="fiducial br"></div>
-
                         <header className="template-header">
                             <div className="header-text">
                                 <h1 className="template-title">FOLHA DE RESPOSTAS - LERPROVA</h1>
@@ -75,40 +69,48 @@ export const GabaritoTemplate = forwardRef<HTMLDivElement, GabaritoTemplateProps
                             Preencha completamente o círculo da resposta correta com caneta preta ou azul.
                         </div>
 
-                        <main className="questions-grid-printable-industrial">
-                            {[
-                                { start: 0, end: 7 },
-                                { start: 7, end: 14 },
-                                { start: 14, end: 21 },
-                                { start: 21, end: 26 }
-                            ].map((block, bIdx) => {
-                                const questionsInBlock = Array.from({ length: gabarito.num_questoes })
-                                    .slice(block.start, Math.min(block.end, gabarito.num_questoes));
-                                
-                                if (questionsInBlock.length === 0 && block.start >= gabarito.num_questoes) return null;
+                        <div className="omr-anchor-wrapper">
+                            {/* Marcadores de Canto (Fiducial Markers) - Agora cercam apenas o gabarito */}
+                            <div className="fiducial tl"></div>
+                            <div className="fiducial tr"></div>
+                            <div className="fiducial bl"></div>
+                            <div className="fiducial br"></div>
 
-                                return (
-                                    <div key={bIdx} className="question-block">
-                                        {questionsInBlock.map((_, i) => {
-                                            const qIdx = block.start + i;
-                                            return (
-                                                <div key={qIdx} className="template-question-row">
-                                                    <span className="q-num">{String(qIdx + 1).padStart(2, '0')}</span>
-                                                    <div className="q-options">
-                                                        {['A', 'B', 'C', 'D', 'E'].map(opt => (
-                                                            <div key={opt} className="option-container">
-                                                                <div className="option-circle"></div>
-                                                                <span className="option-label">{opt}</span>
-                                                            </div>
-                                                        ))}
+                            <main className="questions-grid-printable-industrial">
+                                {[
+                                    { start: 0, end: 7 },
+                                    { start: 7, end: 14 },
+                                    { start: 14, end: 21 },
+                                    { start: 21, end: 26 }
+                                ].map((block, bIdx) => {
+                                    const questionsInBlock = Array.from({ length: gabarito.num_questoes })
+                                        .slice(block.start, Math.min(block.end, gabarito.num_questoes));
+                                    
+                                    if (questionsInBlock.length === 0 && block.start >= gabarito.num_questoes) return null;
+
+                                    return (
+                                        <div key={bIdx} className="question-block">
+                                            {questionsInBlock.map((_, i) => {
+                                                const qIdx = block.start + i;
+                                                return (
+                                                    <div key={qIdx} className="template-question-row">
+                                                        <span className="q-num">{String(qIdx + 1).padStart(2, '0')}</span>
+                                                        <div className="q-options">
+                                                            {['A', 'B', 'C', 'D', 'E'].map(opt => (
+                                                                <div key={opt} className="option-container">
+                                                                    <div className="option-circle"></div>
+                                                                    {/* Letras removidas conforme solicitado */}
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                );
-                            })}
-                        </main>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </main>
+                        </div>
 
                         <footer className="template-footer">
                             Desenvolvido por LERPROVA - Sistema OMR Profissional

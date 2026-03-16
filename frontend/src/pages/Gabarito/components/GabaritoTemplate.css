@@ -18,32 +18,38 @@
 }
 
 /* Marcadores Fiduciais (Quadrados Pretos Sólidos para OMR Industrial) */
+.omr-anchor-wrapper {
+    position: relative;
+    padding: 12mm; /* Espaço para os marcadores sem sobrepor o grid */
+    border: 1px solid #eee; /* Guia visual opcional */
+    margin-bottom: 10mm;
+}
+
 .fiducial {
     position: absolute;
-    width: 12mm;
-    height: 12mm;
+    width: 10mm;
+    height: 10mm;
     background-color: #000;
-    box-sizing: border-box;
 }
 
 .tl {
-    top: 8mm;
-    left: 8mm;
+    top: 0;
+    left: 0;
 }
 
 .tr {
-    top: 8mm;
-    right: 8mm;
+    top: 0;
+    right: 0;
 }
 
 .bl {
-    bottom: 8mm;
-    left: 8mm;
+    bottom: 0;
+    left: 0;
 }
 
 .br {
-    bottom: 8mm;
-    right: 8mm;
+    bottom: 0;
+    right: 0;
 }
 
 .template-header {
@@ -123,7 +129,7 @@
     font-size: 10pt;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 10mm;
+    margin-bottom: 5mm;
     text-transform: uppercase;
 }
 
@@ -132,27 +138,25 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0;
-    border: 2.5px solid #000;
-    margin-bottom: 15mm;
-    min-height: 120mm;
+    border: 2px solid #000;
 }
 
 .question-block {
     display: flex;
     flex-direction: column;
-    padding: 5mm 3mm;
+    padding: 3mm 2mm;
 }
 
 /* Linhas pontilhadas delimitando grupos (entre as colunas) */
 .question-block:not(:last-child) {
-    border-right: 2px dotted #000;
+    border-right: 1.5px dotted #000;
 }
 
 .template-question-row {
     display: flex;
     align-items: center;
-    padding: 3.5mm 0;
-    border-bottom: 1px solid #eee;
+    padding: 2.5mm 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .template-question-row:last-child {
@@ -161,33 +165,33 @@
 
 .q-num {
     font-weight: bold;
-    width: 9mm;
-    font-size: 12pt;
+    width: 8mm;
+    font-size: 11pt;
 }
 
 .q-options {
     display: flex;
-    gap: 3.5mm;
+    gap: 3mm;
 }
 
 .option-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5mm;
+    /* Reduzido espaço pois não há mais letras */
+    gap: 0;
 }
 
 .option-circle {
     width: 6.5mm;
     height: 6.5mm;
-    border: 2px solid #000;
+    border: 1.8px solid #000;
     border-radius: 50%;
     background: #fff;
 }
 
 .option-label {
-    font-size: 9pt;
-    font-weight: bold;
+    display: none; /* Removido conforme solicitado */
 }
 
 .template-footer {
