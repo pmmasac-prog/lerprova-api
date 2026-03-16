@@ -8,7 +8,7 @@
         "marked": 0.18,
         "ambiguous": 0.08
     },
-    "roi_size_pct_of_width": 0.0214,
+    "roi_size_pct_of_width": 0.0152,
     "num_columns": 4,
     "num_questions": 26,
     "anchor_offsets_pct": {
@@ -18,17 +18,17 @@
     "y_step_pct_fixed": 0.0381,
     "y_start_pct_fixed": 0.0952,
     "x_offsets_pct": [
-        0.5724,
-        0.5724,
-        0.5724,
+        0.0673,
+        0.2357,
+        0.4040,
         0.5724
     ],
     "x_centers_pct": [
         0.0,
         0.0269,
         0.0538,
-        0.0807,
-        0.1076
+        0.0808,
+        0.1077
     ],
     "options": [
         "A",
