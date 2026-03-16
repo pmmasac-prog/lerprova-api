@@ -591,21 +591,6 @@ class OMREngine:
                 final.append(pts_indexed[best_i])  # type: ignore
         return final
 
-    def _corner_black_ratio(self, warped):
-        gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
-        _, bw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        H, W = bw.shape[:2]
-        s = int(min(W, H) * 0.045)  # ROI ~4.5% do menor lado para maior precisão (âncora 7mm)
-        rois = [
-            bw[0:s, 0:s],                 # TL
-            bw[0:s, W-s:W],               # TR
-            bw[H-s:H, W-s:W],             # BR
-            bw[H-s:H, 0:s],               # BL
-        ]
-        ratios = []
-        for r in rois:
-            ratios.append(cv2.countNonZero(r) / float(r.size))
-        return ratios
 
     def validate_warped_anchors(self, warped):
         """Validação secundária: as âncoras devem estar nos cantos do warped."""
