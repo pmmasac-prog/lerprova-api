@@ -12,6 +12,7 @@ import { Admin } from './pages/Admin';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminSidebar } from './components/AdminSidebar';
 import { Planejamento } from './pages/Planejamento';
+import Planos from './pages/Planos';
 import { ImportMaster } from './pages/ImportMaster';
 import { StudentPortal } from './pages/StudentPortal';
 import { SchoolManagement } from './pages/SchoolManagement';
@@ -87,6 +88,7 @@ function App() {
           <Route path="/dashboard/relatorios" element={<PrivateRoute><MainLayout><Relatorios /></MainLayout></PrivateRoute>} />
           <Route path="/dashboard/gabarito" element={<PrivateRoute><MainLayout><Gabarito /></MainLayout></PrivateRoute>} />
           <Route path="/dashboard/planejamento" element={<PrivateRoute><MainLayout><Planejamento /></MainLayout></PrivateRoute>} />
+          <Route path="/dashboard/planos" element={<PrivateRoute><MainLayout><Planos /></MainLayout></PrivateRoute>} />
           <Route path="/dashboard/debug" element={<PrivateRoute><Debug /></PrivateRoute>} />
 
           {/* Admin Routes */}

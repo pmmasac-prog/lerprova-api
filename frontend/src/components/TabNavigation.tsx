@@ -11,6 +11,7 @@ export const TabNavigation: React.FC = () => {
         { id: 'home', path: '/dashboard', icon: Home, label: 'Início' },
         { id: 'turmas', path: '/dashboard/turmas', icon: Users, label: 'Turmas' },
         { id: 'gabarito', path: '/dashboard/gabarito', icon: ClipboardList, label: 'Gabarito' },
+        { id: 'planos', path: '/dashboard/planos', icon: ClipboardList, label: 'Planos' },
         { id: 'relatorios', path: '/dashboard/relatorios', icon: TrendingUp, label: 'Relatórios' },
     ];
 

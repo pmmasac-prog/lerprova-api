@@ -438,6 +438,34 @@ export const api = {
             headers: getAuthHeaders()
         });
     },
+    
+    // --- Novos endpoints Planos Anuais e Período ---
+    async getPlanosAnuais() {
+        return request(`${API_URL}/planos/anuais`, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    async createPlanoAnual(data: any) {
+        return request(`${API_URL}/planos/anuais`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+    },
+
+    async getPlanosPeriodos() {
+        return request(`${API_URL}/planos/periodo`, {
+            headers: getAuthHeaders()
+        });
+    },
+
+    async gerarPlanoPeriodo(planoAnualId: number, bimestre: number) {
+        return request(`${API_URL}/planos/anuais/${planoAnualId}/gerar-periodo?bimestre=${bimestre}`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+    },
 
     async getPlano(id: number) {
         return request(`${API_URL}/planos/${id}`, {

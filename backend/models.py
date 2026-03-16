@@ -169,6 +169,65 @@ class Plano(Base):
     turma = relationship("Turma")
     aulas = relationship("AulaPlanejada", back_populates="plano", cascade="all, delete-orphan")
 
+# ============== NOVOS MODELOS: PLANEJAMENTO DOCENTE ==============
+
+class PlanoAnual(Base):
+    __tablename__ = "planos_anuais"
+
+    id = Column(Integer, primary_key=True, index=True)
+    professor_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    serie = Column(String)
+    turno = Column(String)
+    area_conhecimento = Column(String)
+    componente_curricular = Column(String)
+    
+    # 1º Bimestre
+    objetos_conhecimento_b1 = Column(Text, nullable=True)
+    interlocucao_b1 = Column(Text, nullable=True)
+    # 2º Bimestre
+    objetos_conhecimento_b2 = Column(Text, nullable=True)
+    interlocucao_b2 = Column(Text, nullable=True)
+    # 3º Bimestre
+    objetos_conhecimento_b3 = Column(Text, nullable=True)
+    interlocucao_b3 = Column(Text, nullable=True)
+    # 4º Bimestre
+    objetos_conhecimento_b4 = Column(Text, nullable=True)
+    interlocucao_b4 = Column(Text, nullable=True)
+    
+    metodologias = Column(Text, nullable=True)
+    avaliacao = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relacionamentos
+    professor = relationship("User")
+    planos_periodo = relationship("PlanoPeriodo", back_populates="plano_anual", cascade="all, delete-orphan")
+
+class PlanoPeriodo(Base):
+    __tablename__ = "planos_periodo"
+
+    id = Column(Integer, primary_key=True, index=True)
+    plano_anual_id = Column(Integer, ForeignKey("planos_anuais.id", ondelete="CASCADE"), nullable=True)
+    professor_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    
+    componente_curricular = Column(String)
+    serie = Column(String)
+    turmas = Column(String) # Ex: "26RMV-CNS-200, 26RMV-ETT-200"
+    periodo_letivo = Column(String) # Ex: "1º Período" / "1º Bimestre"
+    
+    habilidades_bncc = Column(Text, nullable=True)
+    objetos_conhecimento = Column(Text, nullable=True)
+    conteudos = Column(Text, nullable=True)
+    procedimentos_metodologicos = Column(Text, nullable=True)
+    recursos = Column(Text, nullable=True)
+    procedimentos_avaliativos = Column(Text, nullable=True)
+    referencias = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relacionamentos
+    plano_anual = relationship("PlanoAnual", back_populates="planos_periodo")
+    professor = relationship("User")
+
 class AulaPlanejada(Base):
     __tablename__ = "aulas_planejadas"
 

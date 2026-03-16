@@ -322,3 +322,122 @@ async def get_heatmap(turma_id: int, user: users_db.User = Depends(get_current_u
         })
     
     return result
+
+# --- Endpoints para Novos Modelos (PlanoAnual e PlanoPeriodo) ---
+
+class PlanoAnualCreate(BaseModel):
+    serie: str
+    turno: str
+    area_conhecimento: str
+    componente_curricular: str
+    objetos_conhecimento_b1: Optional[str] = None
+    interlocucao_b1: Optional[str] = None
+    objetos_conhecimento_b2: Optional[str] = None
+    interlocucao_b2: Optional[str] = None
+    objetos_conhecimento_b3: Optional[str] = None
+    interlocucao_b3: Optional[str] = None
+    objetos_conhecimento_b4: Optional[str] = None
+    interlocucao_b4: Optional[str] = None
+    metodologias: Optional[str] = None
+    avaliacao: Optional[str] = None
+
+class PlanoPeriodoCreate(BaseModel):
+    plano_anual_id: Optional[int] = None
+    componente_curricular: str
+    serie: str
+    turmas: str
+    periodo_letivo: str
+    habilidades_bncc: Optional[str] = None
+    objetos_conhecimento: Optional[str] = None
+    conteudos: Optional[str] = None
+    procedimentos_metodologicos: Optional[str] = None
+    recursos: Optional[str] = None
+    procedimentos_avaliativos: Optional[str] = None
+    referencias: Optional[str] = None
+
+@app.post("/planos/anuais")
+async def create_plano_anual(data: PlanoAnualCreate, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    plano = models.PlanoAnual(
+        professor_id=user.id,
+        **data.dict()
+    )
+    db.add(plano)
+    db.commit()
+    db.refresh(plano)
+    return plano
+
+@app.get("/planos/anuais")
+async def get_planos_anuais(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role == "admin":
+        planos = db.query(models.PlanoAnual).all()
+    else:
+        planos = db.query(models.PlanoAnual).filter(models.PlanoAnual.professor_id == user.id).all()
+    return planos
+
+@app.post("/planos/periodo")
+async def create_plano_periodo(data: PlanoPeriodoCreate, user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    plano = models.PlanoPeriodo(
+        professor_id=user.id,
+        **data.dict()
+    )
+    db.add(plano)
+    db.commit()
+    db.refresh(plano)
+    return plano
+
+@app.get("/planos/periodo")
+async def get_planos_periodo(user: users_db.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role == "admin":
+        planos = db.query(models.PlanoPeriodo).all()
+    else:
+        planos = db.query(models.PlanoPeriodo).filter(models.PlanoPeriodo.professor_id == user.id).all()
+    return planos
+
+@app.post("/planos/anuais/{plano_anual_id}/gerar-periodo")
+async def gerar_plano_periodo(
+    plano_anual_id: int, 
+    bimestre: int, 
+    user: users_db.User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    anual = db.query(models.PlanoAnual).filter(models.PlanoAnual.id == plano_anual_id).first()
+    if not anual:
+        raise HTTPException(status_code=404, detail="Plano Anual não encontrado")
+    if anual.professor_id != user.id and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    objetos = ""
+    interlocucao = ""
+    if bimestre == 1:
+        objetos = anual.objetos_conhecimento_b1 or ""
+        interlocucao = anual.interlocucao_b1 or ""
+    elif bimestre == 2:
+        objetos = anual.objetos_conhecimento_b2 or ""
+        interlocucao = anual.interlocucao_b2 or ""
+    elif bimestre == 3:
+        objetos = anual.objetos_conhecimento_b3 or ""
+        interlocucao = anual.interlocucao_b3 or ""
+    elif bimestre == 4:
+        objetos = anual.objetos_conhecimento_b4 or ""
+        interlocucao = anual.interlocucao_b4 or ""
+    else:
+        raise HTTPException(status_code=400, detail="Bimestre inválido. Escolha entre 1, 2, 3 ou 4.")
+    
+    novo_plano = models.PlanoPeriodo(
+        plano_anual_id=anual.id,
+        professor_id=user.id,
+        componente_curricular=anual.componente_curricular,
+        serie=anual.serie,
+        turmas="",
+        periodo_letivo=f"{bimestre}º Bimestre",
+        objetos_conhecimento=objetos,
+        conteudos=interlocucao,
+        procedimentos_metodologicos=anual.metodologias,
+        procedimentos_avaliativos=anual.avaliacao
+    )
+    
+    db.add(novo_plano)
+    db.commit()
+    db.refresh(novo_plano)
+    
+    return novo_plano
