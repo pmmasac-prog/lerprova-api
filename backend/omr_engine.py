@@ -196,7 +196,7 @@ class OMREngine:
                     "error": "Folha muito inclinada ou âncoras erradas detectadas localmente. Refaça a foto com o celular mais paralelo ao papel."
                 }
 
-            warped = self.four_point_transform(img, rect)
+            warped = self.four_point_transform(img, rect, current_layout)
             
             # ===== 4.0 VALIDAÇÃO DE PERSPECTIVA EXTREMA =====
             # Se a câmera estava muito inclinada (ângulo > 60°), o ratio pode estar fora do esperado
@@ -214,7 +214,7 @@ class OMREngine:
             
             # ===== 4.1 VALIDAÇÃO PÓS-WARP =====
             # Verifica se os cantos da imagem retificada realmente contêm as âncoras pretas
-            if not self.validate_warped_anchors(warped):
+            if not self.validate_warped_anchors(warped, current_layout):
                 return {
                     "success": False, 
                     "quality": "reject",
@@ -635,26 +635,37 @@ class OMREngine:
         return final
 
 
-    def validate_warped_anchors(self, warped):
-        """Validação secundária: as âncoras devem estar nos cantos do warped."""
+    def validate_warped_anchors(self, warped, layout=None):
+        """Validação secundária: as âncoras devem estar nas posições de offset do warped."""
         gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
-        # Verificar ROIs pequenos nos 4 cantos, proporcionais ao tamanho do warped
         h_w, w_w = warped.shape[:2]
         roi_size = int(min(h_w, w_w) * 0.04) # 4% do menor lado
         roi_size = max(10, roi_size)
+
+        # Usar offsets do layout se disponíveis, senão assumir cantos (legado)
+        offsets = layout.get("anchor_offsets_pct", {"x": 0.0, "y": 0.0}) if layout else {"x": 0.0, "y": 0.0}
+        ox = int(offsets["x"] * w_w)
+        oy = int(offsets["y"] * h_w)
         
-        corners = [
-            thresh[0:roi_size, 0:roi_size], # TL
-            thresh[0:roi_size, -roi_size:], # TR
-            thresh[-roi_size:, -roi_size:], # BR
-            thresh[-roi_size:, 0:roi_size]  # BL
+        # Posições dos centros esperados
+        anchor_positions = [
+            (ox, oy),           # TL
+            (w_w - ox, oy),     # TR
+            (w_w - ox, h_w - oy), # BR
+            (ox, h_w - oy)      # BL
         ]
         
-        for i, roi in enumerate(corners):
+        for (cx, cy) in anchor_positions:
+            # Extrair ROI centrada no offset
+            y1, y2 = max(0, cy - roi_size//2), min(h_w, cy + roi_size//2)
+            x1, x2 = max(0, cx - roi_size//2), min(w_w, cx + roi_size//2)
+            roi = thresh[y1:y2, x1:x2]
+            
+            if roi.size == 0: return False
             density = cv2.countNonZero(roi) / float(roi.size)
-            if density < 0.3: # Exige pelo menos 30% de preto no canto
+            if density < 0.3: # Exige pelo menos 30% de preto na região da âncora
                 return False
         return True
     
@@ -687,22 +698,24 @@ class OMREngine:
 
         return np.array(rect, dtype="float32")
     
-    def four_point_transform(self, image, rect):
-        """Aplica transformação de perspectiva (homografia) e valida orientação resultante"""
+    def four_point_transform(self, image, rect, layout=None):
+        """Aplica transformação de perspectiva (homografia) usando centros das âncoras como destino"""
+        # Se não houver layout (legado), usa os cantos do canvas
+        offsets = layout.get("anchor_offsets_pct", {"x": 0.0, "y": 0.0}) if layout else {"x": 0.0, "y": 0.0}
+        
+        ox = offsets["x"] * self.target_width
+        oy = offsets["y"] * self.target_height
+        
+        # O destino (dst) agora representa os CENTROS das âncoras no template perfeito
         dst = np.array([
-            [0, 0],
-            [self.target_width - 1, 0],
-            [self.target_width - 1, self.target_height - 1],
-            [0, self.target_height - 1]
+            [ox, oy],                                 # TL
+            [self.target_width - ox - 1, oy],         # TR
+            [self.target_width - ox - 1, self.target_height - oy - 1], # BR
+            [ox, self.target_height - oy - 1]         # BL
         ], dtype="float32")
         
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(image, M, (self.target_width, self.target_height))
-        
-        # VALIDAÇÃO DE ORIENTAÇÃO: Se a imagem resultante estiver muito "larga" (landscape),
-        # pode indicar que a transformação foi aplicada com pontos em ordem errada.
-        # Isso é comum quando a câmera está muito inclinada de cima para baixo.
-        # 
         # Nota: target_width=1120 e target_height=1600, então é sempre retrato por design.
         # Se mesmo assim a imagem parecer "errada", validamos checando as âncoras.
         
