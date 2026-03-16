@@ -31,7 +31,7 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
 
     const [anchors, setAnchors] = useState<AnchorPoint[]>([]);
     const [trackingScore, setTrackingScore] = useState(0);
-    const [activeTab, setActiveTab] = useState<'audit' | 'processed'>('audit');
+    const [activeTab, setActiveTab] = useState<'audit' | 'processed' | 'original'>('audit');
 
     const trackingScoreRef = useRef(0);
     const pollingRef = useRef<number | null>(null);
@@ -382,12 +382,26 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                                             >
                                                 Retificada
                                             </button>
+                                            <button 
+                                                className={`gallery-tab ${activeTab === 'original' ? 'active' : ''}`} 
+                                                onClick={() => setActiveTab('original')}
+                                            >
+                                                Original
+                                            </button>
                                         </div>
                                         <div className="gallery-content">
                                             <div className="audit-preview">
                                                 <img 
-                                                    src={activeTab === 'audit' ? result.audit_map : result.processed_image} 
-                                                    alt={activeTab === 'audit' ? "Mapa de auditoria" : "Imagem retificada"} 
+                                                    src={
+                                                        activeTab === 'audit' ? result.audit_map : 
+                                                        activeTab === 'processed' ? result.processed_image : 
+                                                        result.original_image
+                                                    } 
+                                                    alt={
+                                                        activeTab === 'audit' ? "Mapa de auditoria" : 
+                                                        activeTab === 'processed' ? "Imagem retificada" : 
+                                                        "Foto original"
+                                                    } 
                                                 />
                                             </div>
                                         </div>
