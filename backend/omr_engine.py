@@ -1,4 +1,3 @@
-
 # OMR Engine reconstruído para layout industrial
 import cv2
 import numpy as np
@@ -6,6 +5,7 @@ import base64
 import json
 from pathlib import Path
 import math
+import time
 
 class OMRLayout:
     def __init__(self):
