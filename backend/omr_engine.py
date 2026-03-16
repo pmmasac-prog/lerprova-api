@@ -7,7 +7,7 @@ from pathlib import Path
 import math
 import time
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 # Configuração de Logs e Diretórios de Debug
 DEBUG_LOG_DIR = Path(__file__).parent / "debug_logs"
@@ -67,8 +67,9 @@ class OMREngine:
             # Fusing with default to ensure no missing keys
             merged: Dict[str, Any] = {**default_layout, **layout_data}
             
-            self.target_width = int(merged["warped_size"]["w"])
-            self.target_height = int(merged["warped_size"]["h"])
+            warped_size = cast(Dict[str, int], merged["warped_size"])
+            self.target_width = int(warped_size["w"])
+            self.target_height = int(warped_size["h"])
 
             self.layout_cache[version_str] = merged
             return merged
@@ -690,15 +691,17 @@ class OMREngine:
         layout = self.load_layout(layout_version)
         if not layout or not isinstance(layout, dict):
             return []
+        
+        layout_dict = cast(Dict[str, Any], layout)
 
-        thr = layout.get("thresholds", {})
+        thr = cast(Dict[str, float], layout_dict.get("thresholds", {}))
         marked_thr = float(thr.get("marked", 0.20))
         amb_thr = float(thr.get("ambiguous", 0.10))
 
-        options = layout.get("options", ["A", "B", "C", "D", "E"])
-        x_centers_pct = layout.get("x_centers_pct", [0.245, 0.318, 0.392, 0.465, 0.538])
-        y_start_pct = float(layout.get("y_start_pct", 0.21))
-        y_end_pct = float(layout.get("y_end_pct", 0.88))
+        options = cast(List[str], layout_dict.get("options", ["A", "B", "C", "D", "E"]))
+        x_centers_pct = cast(List[float], layout_dict.get("x_centers_pct", [0.245, 0.318, 0.392, 0.465, 0.538]))
+        y_start_pct = float(layout_dict.get("y_start_pct", 0.21))
+        y_end_pct = float(layout_dict.get("y_end_pct", 0.88))
 
         num_cols = int(layout.get("num_columns", 1))
         # O gerador do frontend (GabaritoTemplate) usa CSS Grid repeat(2, 1fr)
@@ -720,14 +723,18 @@ class OMREngine:
         # Isso significa que ele preenche Linha 1: Q1, Q2 | Linha 2: Q3, Q4...
         # Precisamos de um loop que percorra as linhas e depois as colunas dentro da linha
         q_idx = 0
-        for row in range(num_rows):
-            y_center = (y_start_pct + (row * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
+        num_rows_val = int(cast(Union[int, float], num_rows))
+        for row in range(num_rows_val):
+            y_center = (y_start_pct + (float(row) * y_step_pct) + (y_step_pct / 2.0)) * self.target_height
             
-            for col in range(num_cols):
-                if q_idx >= num_questions:
+            num_cols_val = int(cast(Union[int, float], num_cols))
+            for col in range(num_cols_val):
+                num_q_val = int(cast(Union[int, float], num_questions))
+                if q_idx >= num_q_val:
                     break
                     
-                col_offset_pct = x_offsets_pct[col] if col < len(x_offsets_pct) else 0.0
+                offsets_list = cast(List[float], x_offsets_pct)
+                col_offset_pct = offsets_list[col] if col < len(offsets_list) else 0.0
                 bubbles_data = []
                 
                 for j, x_pct_rel in enumerate(x_centers_pct):
@@ -744,10 +751,10 @@ class OMREngine:
                     
                     fill_ratio, bg_ratio = self._masked_ratio(roi)
                     bubbles_data.append({
-                        'option': options[j],
-                        'score': fill_ratio,
-                        'bg_score': bg_ratio,
-                        'coords': [x1, y1, x2, y2]
+                        'option': str(options[j]),
+                        'score': float(fill_ratio),
+                        'bg_score': float(bg_ratio),
+                        'coords': [int(x1), int(y1), int(x2), int(y2)]
                     })
                 
                 results.append({
@@ -758,14 +765,15 @@ class OMREngine:
         
         return results
     
-    def validate_questions(self, bubble_results, layout_version="v1"):
+    def validate_questions(self, bubble_results: List[Dict[str, Any]], layout_version="v1"):
         """
         Lógica de Densidade Relativa por Score e Margem.
         Compara o Score da opção mais pintada (Top 1) com a segunda mais pintada (Top 2).
         Anota final_status/final_conf/final_index na question_data para o audit_map.
         """
         layout = self.load_layout(layout_version)
-        thr = layout.get("thresholds", {})
+        layout_dict = cast(Dict[str, Any], layout)
+        thr = cast(Dict[str, Any], layout_dict.get("thresholds", {}))
         
         marked_thr = float(thr.get("marked", 0.15))   # Acima disso, consideramos que tem tinta real
         amb_thr = float(thr.get("ambiguous", 0.08))      # Abaixo disso, é sujeira ou nada (em branco)
@@ -838,23 +846,18 @@ class OMREngine:
             'avg_confidence': float(np.mean(confidence_scores)) if confidence_scores else 0.0
         }
     
-    def generate_audit_map(self, warped, bubble_results, num_questions):
+    def generate_audit_map(self, warped, bubble_results: List[Dict[str, Any]], num_questions):
         """
         Gera mapa visual destacando as bolhas detectadas.
         Usa final_status anotado pelo validate_questions para cores consistentes.
-        
-        Cores:
-        - Verde: bolha marcada com alta confiança
-        - Amarelo: bolha marcada com baixa confiança (ambígua)
-        - Vermelho: múltiplas marcações (inválida)
-        - Azul: questão em branco
         """
         audit_img = warped.copy()
         
         for question_data in bubble_results:
-            status = question_data.get("final_status")
-            final_idx = question_data.get("final_index")
-            conf = question_data.get("final_conf", 0)
+            status = str(question_data.get("final_status", ""))
+            final_idx_val = question_data.get("final_index")
+            final_idx = cast(Optional[int], final_idx_val)
+            conf = float(question_data.get("final_conf", 0.0))
             
             if status == "blank":
                 for bubble in question_data['bubbles']:
