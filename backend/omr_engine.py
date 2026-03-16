@@ -628,47 +628,33 @@ class OMREngine:
         return True
     
     def order_points(self, pts):
-        """Ordena pontos: TL, TR, BR, BL (sentido horário) de forma robusta a inclinações
-        Garante que a aresta entre os 2 primeiros pontos seja uma aresta curta (Topo do retrato).
-        Funciona corretamente mesmo com câmera inclinada de cima para baixo.
+        """Ordena pontos: TL, TR, BR, BL (sentido horário) de forma robusta e industrial.
+        Combina soma/diferença (clássico) com ordenação angular para máxima robustez.
         """
-        # 1. Obter o centro geométrico
-        center = np.mean(pts, axis=0)
+        # 1. Soma e Diferença (Melhor para TV/Monitores/Fotos Planas)
+        s = pts.sum(axis=1)
+        diff = np.diff(pts, axis=1)
         
-        # 2. Ordenar pontos em sentido horário usando atan2
-        angles = np.arctan2(pts[:, 1] - center[1], pts[:, 0] - center[0])
-        pts_sorted = pts[np.argsort(angles)]
+        # TL tem menor soma, BR tem maior soma
+        tl_idx = np.argmin(s)
+        br_idx = np.argmax(s)
+        # TR tem menor diferença, BL tem maior diferença
+        tr_idx = np.argmin(diff)
+        bl_idx = np.argmax(diff)
         
-        # 3. Calcular distâncias entre pontos consecutivos
-        distances = []
-        for i in range(4):
-            p_next = pts_sorted[(i + 1) % 4]
-            dist = np.linalg.norm(pts_sorted[i] - p_next)
-            distances.append(dist)
+        rect = np.array([pts[tl_idx], pts[tr_idx], pts[br_idx], pts[bl_idx]], dtype="float32")
         
-        # 4. Identificar qual é a aresta curta (superior, no caso retrato)
-        # Aresta 0 é pts_sorted[0] -> pts_sorted[1]
-        # Queremos forçar o formato Retrato, ou seja, Aresta Superior (0) deve ser menor que Lateral (1)
-        if distances[0] > distances[1]:
-            # Aresta 0 é longa, então rotaciona o array em 1 para que a aresta 0 passe a ser a curta (Top)
-            pts_sorted = np.roll(pts_sorted, -1, axis=0)
-        
-        # 5. VALIDAÇÃO ADICIONAL: Garantir que Top < Bottom e Left < Right (coordenadas Y e X)
-        # Isso é crítico para fotos tiradas de ângulos extremos (câmera de cima)
-        tl, tr, br, bl = pts_sorted
-        
-        # Y coordinate validation: topo deve ter Y menor que base
-        if tl[1] > br[1]:  # Se topo tiver Y maior, há inversão vertical
-            # Rotaciona 180 graus na ordem dos pontos: [TL,TR,BR,BL] -> [BR,BL,TL,TR]
-            pts_sorted = np.roll(pts_sorted, 2, axis=0)
-        
-        # X coordinate validation: esquerda deve ter X menor que direita
-        tl, tr, br, bl = pts_sorted
-        if tl[0] > tr[0]:  # Se esquerda tiver X maior, há inversão horizontal
-            # Inverte esquerda-direita: [TL,TR,BR,BL] -> [TR,TL,BL,BR]
-            pts_sorted = np.array([pts_sorted[1], pts_sorted[0], pts_sorted[3], pts_sorted[2]], dtype="float32")
-            
-        return np.array(pts_sorted, dtype="float32")
+        # 2. VALIDAÇÃO GEOMÉTRICA (Check de Sanidade)
+        # Se os índices colidirem, ou a área for muito pequena, fallback para angular
+        if len(set([tl_idx, tr_idx, br_idx, bl_idx])) < 4:
+            center = np.mean(pts, axis=0)
+            angles = np.arctan2(pts[:, 1] - center[1], pts[:, 0] - center[0])
+            pts_sorted = pts[np.argsort(angles)]
+            # Alinhar TL ao primeiro quadrante
+            tl_cand = np.argmin([np.linalg.norm(p - [0,0]) for p in pts_sorted])
+            rect = np.roll(pts_sorted, -tl_cand, axis=0)
+
+        return np.array(rect, dtype="float32")
     
     def four_point_transform(self, image, rect):
         """Aplica transformação de perspectiva (homografia) e valida orientação resultante"""
