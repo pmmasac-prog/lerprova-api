@@ -36,6 +36,7 @@ class Turma(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String)
+    ano = Column(String, nullable=True) # Ex: "2026"
     disciplina = Column(String, nullable=True)
     dias_semana = Column(JSON, nullable=True) # Lista de inteiros
     quantidade_aulas = Column(Integer, default=1)

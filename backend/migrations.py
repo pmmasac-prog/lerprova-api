@@ -98,6 +98,10 @@ def run_migrations(engine):
                 # Nota: Em SQLite o REFERENCES em ALTER TABLE pode ser limitado, mas o SA cuidará disso se possível.
                 conn.execute(text("ALTER TABLE turmas ADD COLUMN user_id INTEGER NULL"))
 
+            if "ano" not in columns_turmas:
+                logger.info("Adicionando coluna 'ano' em 'turmas'...")
+                conn.execute(text("ALTER TABLE turmas ADD COLUMN ano VARCHAR NULL"))
+
             # Migrações para RESULTADOS (continuação...)
             columns_resultados = [c["name"] for c in inspector.get_columns("resultados")]
             

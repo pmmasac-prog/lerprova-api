@@ -27,7 +27,7 @@ def listar_turmas(current_user=None) -> str:
         
         result = []
         for t in turmas:
-            result.append(f"ID: {t.id} - Nome: {t.nome} - Disciplina: {t.disciplina}")
+            result.append(f"ID: {t.id} - Nome: {t.nome} ({t.ano or 'N/A'}) - Disciplina: {t.disciplina}")
         
         return "\n".join(result)
     except Exception as e:
