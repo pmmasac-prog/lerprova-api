@@ -3,6 +3,7 @@ from sqlalchemy import or_ # type: ignore
 from database import SessionLocal # type: ignore
 import models # type: ignore
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -401,10 +402,13 @@ def create_aluno(nome: str, matricula: str, turma_id: int, current_user=None) ->
              
         # Senha padrão para acesso do aluno via portal
         hashed = get_password_hash("aluno123")
+        u_str = str(uuid.uuid4())
+        token = u_str[:12].upper()
         novo_aluno = models.Aluno(
             nome=nome, 
             codigo=matricula, 
-            hashed_password=hashed
+            hashed_password=hashed,
+            qr_token=token
         )
         # Vincula à turma através do relacionamento M2M
         novo_aluno.turmas.append(turma)

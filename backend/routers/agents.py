@@ -262,7 +262,7 @@ def execute_tool_call(name: str, args: dict, current_user) -> str:
         return f"Erro ao executar '{name}': {str(e)}"
     
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_agent(request: ChatRequest, current_user = Depends(get_current_user)):
+async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depends(get_current_user)):
     """
     Envia uma mensagem para o assistente de IA com suporte a ferramentas de banco de dados e RBAC integrado.
     """
@@ -282,7 +282,7 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
             # Carrega mensagens anteriores do banco de dados para dar contexto/memória ao agente
             db_session = SessionLocal()
             history = db_session.query(models.AgentChatMessage).filter(
-                models.AgentChatMessage.user_id == current_user.id
+                models.AgentChatMessage.user_id == getattr(current_user, "id", None)
             ).order_by(models.AgentChatMessage.created_at.asc()).limit(20).all()
             db_session.close()
 
@@ -324,13 +324,13 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                         try:
                             # Salva a pergunta do usuário
                             db_save.add(models.AgentChatMessage(
-                                user_id=current_user.id,
+                                user_id=getattr(current_user, "id", None),
                                 role="user",
                                 content=request.prompt
                             ))
                             # Salva a resposta do agente
                             db_save.add(models.AgentChatMessage(
-                                user_id=current_user.id,
+                                user_id=getattr(current_user, "id", None),
                                 role="model",
                                 content=text
                             ))
