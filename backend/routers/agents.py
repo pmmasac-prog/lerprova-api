@@ -438,6 +438,7 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
                 continue
 
         error_msg = str(last_error) if last_error else "Erro desconhecido"
+        if "429" in error_msg or "quota" in error_msg.lower():
             return {"response": "Olá! No momento estamos com muita demanda nos nossos servidores de IA. Por favor, aguarde alguns instantes e tente novamente. Já estou trabalhando para normalizar!"}
         
         raise HTTPException(status_code=500, detail=f"Erro no Agente Especialista: {error_msg}")
