@@ -65,12 +65,16 @@ export const NotificationCenter: React.FC<{ onClose?: () => void }> = ({ onClose
         }
     }, []);
 
+    // Efeito para carregar lista completa (apenas quando o componente monta ou filtros mudam)
     useEffect(() => {
         fetchNotifications();
-        // Poll para atualizar contador a cada 30 segundos
-        const interval = setInterval(fetchUnreadCount, 30000);
+    }, [fetchNotifications]);
+
+    // Efeito separado para polling do contador (mais leve)
+    useEffect(() => {
+        const interval = setInterval(fetchUnreadCount, 60000); // Polling a cada 60s
         return () => clearInterval(interval);
-    }, [fetchNotifications, fetchUnreadCount]);
+    }, [fetchUnreadCount]);
 
     const handleMarkAsRead = async (notificationId: number) => {
         try {
@@ -228,7 +232,7 @@ export const NotificationBell: React.FC = () => {
         };
 
         fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 30000);
+        const interval = setInterval(fetchUnreadCount, 60000);
         return () => clearInterval(interval);
     }, []);
 
