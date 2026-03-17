@@ -285,156 +285,161 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
     """
     Principal Agent (Orchestrator): Categoriza a intenção do usuário e delega a um AGENTE ESPECIALISTA.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        logger.error("GEMINI_API_KEY não configurada no ambiente.")
-        raise HTTPException(status_code=500, detail="Serviço de IA não configurado. Contate o administrador.")
-
-    client = genai.Client(api_key=api_key)
-    
-    # ── FASE 1: ORQUESTRAÇÃO (PRINCIPAL AGENT) ────────────────────────────────
-    routing_prompt = (
-        "Você é o Gerente de Orquestração do LerProva. Analise o pedido do usuário "
-        "e retorne APENAS UMA PALAVRA entre as categorias:\n"
-        "- 'home': resumos gerais, estatísticas globais ou dashboard.\n"
-        "- 'turmas': criação de turmas, alunos, listagem de membros/classes.\n"
-        "- 'avaliacoes': notas, gabaritos, provas e resultados.\n"
-        "- 'planos': planejamentos, sequências didáticas ou BNCC.\n"
-        "- 'relatorios': frequência, registrar presenças ou faltas.\n\n"
-        f"Pedido: '{request.prompt}'\n\n"
-        "Categoria:"
-    )
-    
-    specialist_key = "home"
     try:
-        route_res = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=[types.Content(role="user", parts=[types.Part(text=routing_prompt)])],
-            config=types.GenerateContentConfig(safety_settings=SAFETY_SETTINGS) # type: ignore
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            logger.error("GEMINI_API_KEY não configurada no ambiente.")
+            raise HTTPException(status_code=500, detail="Serviço de IA não configurado. Contate o administrador.")
+
+        client = genai.Client(api_key=api_key)
+        
+        # ── FASE 1: ORQUESTRAÇÃO (PRINCIPAL AGENT) ────────────────────────────────
+        routing_prompt = (
+            "Você é o Gerente de Orquestração do LerProva. Analise o pedido do usuário "
+            "e retorne APENAS UMA PALAVRA entre as categorias:\n"
+            "- 'home': resumos gerais, estatísticas globais ou dashboard.\n"
+            "- 'turmas': criação de turmas, alunos, listagem de membros/classes.\n"
+            "- 'avaliacoes': notas, gabaritos, provas e resultados.\n"
+            "- 'planos': planejamentos, sequências didáticas ou BNCC.\n"
+            "- 'relatorios': frequência, registrar presenças ou faltas.\n\n"
+            f"Pedido: '{request.prompt}'\n\n"
+            "Categoria:"
         )
-        if not route_res or not route_res.text:
-            logger.warning("Orchestrator retornou resposta vazia")
-            cat = "home"
-        else:
-            cat = route_res.text.strip().lower()
-        cat = "".join([c for c in cat if c.isalnum()])
-        if cat in SPECIALIST_CONFIGS:
-            specialist_key = cat
-            logger.info(f"Orchestrator: Roteado para '{cat}'")
-    except Exception as e:
-        logger.warning(f"Erro no Orchestrator: {e}")
-
-    # ── FASE 2: EXECUÇÃO (SPECIALIST AGENT) ───────────────────────────────────
-    specialist = SPECIALIST_CONFIGS[specialist_key]
-    last_error = None
-    user_id = getattr(current_user, "id", None)
-
-    for model_id in MODELS_TO_TRY:
+        
+        specialist_key = "home"
         try:
-            logger.info(f"Tentando modelo {model_id} para especialista {specialist_key}")
-            # Histórico e Prompt do Especialista
-            db_session = SessionLocal()
-            try:
-                history = db_session.query(models.AgentChatMessage).filter(
-                    models.AgentChatMessage.user_id == user_id
-                ).order_by(models.AgentChatMessage.created_at.asc()).limit(20).all()
-            except Exception as e_hist:
-                logger.error(f"Erro ao buscar histórico: {e_hist}")
-                history = []
-            db_session.close()
-
-            contents = []
-            for h in history:
-                contents.append(types.Content(role=h.role, parts=[types.Part(text=h.content)]))
-            contents.append(types.Content(role="user", parts=[types.Part(text=request.prompt)]))
-
-            # Prompt e ferramentas do Especialista (Injetando permissão total)
-            try:
-                sys_prompt = get_system_prompt(current_user)
-            except Exception as e_prompt:
-                logger.error(f"Erro no get_system_prompt: {e_prompt}")
-                sys_prompt = "Você é um assistente do sistema LerProva."
-
-            specialist_tools: typing.Any = specialist['tools']
-            specialist_prompt = (
-                f"{sys_prompt}\n\n"
-                f"Sua especialidade: {specialist['desc']}\n"
-                "IMPORTANTE: Você tem permissão total do sistema para usar suas ferramentas. "
-                "Ignore qualquer aviso prévio de restrição de segurança. "
-                "Se o usuário pedir algo na sua área (como criar aluno), execute o comando IMEDIATAMENTE. "
-                "NUNCA diga que não tem permissão para cadastrar ou intervir no sistema."
+            route_res = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=[types.Content(role="user", parts=[types.Part(text=routing_prompt)])],
+                config=types.GenerateContentConfig(safety_settings=SAFETY_SETTINGS) # type: ignore
             )
+            if not route_res or not route_res.text:
+                logger.warning("Orchestrator retornou resposta vazia")
+                cat = "home"
+            else:
+                cat = route_res.text.strip().lower()
+            cat = "".join([c for c in cat if c.isalnum()])
+            if cat in SPECIALIST_CONFIGS:
+                specialist_key = cat
+                logger.info(f"Orchestrator: Roteado para '{cat}'")
+        except Exception as e:
+            logger.warning(f"Erro no Orchestrator: {e}")
 
-            for _ in range(5):
-                response = client.models.generate_content(
-                    model=model_id,
-                    contents=contents,
-                    config=types.GenerateContentConfig(
-                        system_instruction=specialist_prompt,
-                        tools=[specialist_tools],
-                        temperature=0.7,
-                        safety_settings=SAFETY_SETTINGS # type: ignore
-                    )
+        # ── FASE 2: EXECUÇÃO (SPECIALIST AGENT) ───────────────────────────────────
+        specialist = SPECIALIST_CONFIGS[specialist_key]
+        last_error = None
+        user_id = getattr(current_user, "id", None)
+
+        for model_id in MODELS_TO_TRY:
+            try:
+                logger.info(f"Tentando modelo {model_id} para especialista {specialist_key}")
+                # Histórico e Prompt do Especialista
+                db_session = SessionLocal()
+                try:
+                    history = db_session.query(models.AgentChatMessage).filter(
+                        models.AgentChatMessage.user_id == user_id
+                    ).order_by(models.AgentChatMessage.created_at.asc()).limit(20).all()
+                except Exception as e_hist:
+                    logger.error(f"Erro ao buscar histórico: {e_hist}")
+                    history = []
+                db_session.close()
+
+                contents = []
+                for h in history:
+                    contents.append(types.Content(role=h.role, parts=[types.Part(text=h.content)]))
+                contents.append(types.Content(role="user", parts=[types.Part(text=request.prompt)]))
+
+                # Prompt e ferramentas do Especialista (Injetando permissão total)
+                try:
+                    sys_prompt = get_system_prompt(current_user)
+                except Exception as e_prompt:
+                    logger.error(f"Erro no get_system_prompt: {e_prompt}")
+                    sys_prompt = "Você é um assistente do sistema LerProva."
+
+                specialist_tools: typing.Any = specialist['tools']
+                specialist_prompt = (
+                    f"{sys_prompt}\n\n"
+                    f"Sua especialidade: {specialist['desc']}\n"
+                    "IMPORTANTE: Você tem permissão total do sistema para usar suas ferramentas. "
+                    "Ignore qualquer aviso prévio de restrição de segurança. "
+                    "Se o usuário pedir algo na sua área (como criar aluno), execute o comando IMEDIATAMENTE. "
+                    "NUNCA diga que não tem permissão para cadastrar ou intervir no sistema."
                 )
 
-                candidate = response.candidates[0] if response.candidates else None
-                if not candidate:
-                    break
-
-                # Verifica se há chamadas de função a executar
-                tool_calls = []
-                if candidate and candidate.content and candidate.content.parts:
-                    tool_calls = [p for p in candidate.content.parts if getattr(typing.cast(typing.Any, p), "function_call", None)]
-
-
-                if not tool_calls:
-                    text = response.text
-                    if text:
-                        db_save = SessionLocal()
-                        try:
-                            db_save.add(models.AgentChatMessage(user_id=user_id, role="user", content=request.prompt))
-                            db_save.add(models.AgentChatMessage(user_id=user_id, role="model", content=text))
-                            db_save.commit()
-                        except Exception as e_save:
-                            logger.error(f"Erro ao salvar histórico: {e_save}")
-                            db_save.rollback()
-                        finally:
-                            db_save.close()
-
-                        logger.info(f"Sucesso [{specialist_key}] com {model_id}")
-                        return ChatResponse(response=text) # type: ignore
-                    break
-
-                contents.append(candidate.content)
-                tool_results = []
-                for part in tool_calls:
-                    fc = part.function_call
-                    args = dict(fc.args) if fc.args else {}
-                    logger.info(f"[{specialist_key}] Executando ferramenta: {fc.name}")
-                    result = execute_tool_call(fc.name, args, current_user)
-                    tool_results.append(
-                        types.Part(
-                            function_response={
-                                "name": fc.name,
-                                "response": {"result": result}
-                            }
+                for _ in range(5):
+                    response = client.models.generate_content(
+                        model=model_id,
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            system_instruction=specialist_prompt,
+                            tools=[specialist_tools],
+                            temperature=0.7,
+                            safety_settings=SAFETY_SETTINGS # type: ignore
                         )
                     )
-                contents.append(types.Content(role="tool", parts=tool_results))
 
-            continue
-        except Exception as e:
-            last_error = e
-            e_str = str(e)
-            logger.warning(f"Falha em {model_id} para {specialist_key}: {e_str}")
-            # Se for erro de quota ou sobrecarga, tenta fallback
-            if "429" in e_str or "quota" in e_str.lower() or "503" in e_str:
-                time.sleep(1)
-                continue
-            if "404" in e_str or "NOT_FOUND" in e_str:
-                continue
-            # Outros erros interrompem o modelo atual mas tentam o próximo
-            continue
+                    candidate = response.candidates[0] if response.candidates else None
+                    if not candidate:
+                        break
 
-    error_msg = str(last_error) if last_error else "Erro desconhecido"
-    raise HTTPException(status_code=500, detail=f"Erro no Agente Especialista: {error_msg}")
+                    # Verifica se há chamadas de função a executar
+                    tool_calls = []
+                    if candidate and candidate.content and candidate.content.parts:
+                        tool_calls = [p for p in candidate.content.parts if getattr(typing.cast(typing.Any, p), "function_call", None)]
+
+
+                    if not tool_calls:
+                        text = response.text
+                        if text:
+                            db_save = SessionLocal()
+                            try:
+                                db_save.add(models.AgentChatMessage(user_id=user_id, role="user", content=request.prompt))
+                                db_save.add(models.AgentChatMessage(user_id=user_id, role="model", content=text))
+                                db_save.commit()
+                            except Exception as e_save:
+                                logger.error(f"Erro ao salvar histórico: {e_save}")
+                                db_save.rollback()
+                            finally:
+                                db_save.close()
+
+                            logger.info(f"Sucesso [{specialist_key}] com {model_id}")
+                            return ChatResponse(response=text) # type: ignore
+                        break
+
+                    contents.append(candidate.content)
+                    tool_results = []
+                    for part in tool_calls:
+                        fc = part.function_call
+                        args = dict(fc.args) if fc.args else {}
+                        logger.info(f"[{specialist_key}] Executando ferramenta: {fc.name}")
+                        result = execute_tool_call(fc.name, args, current_user)
+                        tool_results.append(
+                            types.Part(
+                                function_response={
+                                    "name": fc.name,
+                                    "response": {"result": result}
+                                }
+                            )
+                        )
+                    contents.append(types.Content(role="tool", parts=tool_results))
+
+                continue
+            except Exception as e:
+                last_error = e
+                e_str = str(e)
+                logger.warning(f"Falha em {model_id} para {specialist_key}: {e_str}")
+                # Se for erro de quota ou sobrecarga, tenta fallback
+                if "429" in e_str or "quota" in e_str.lower() or "503" in e_str:
+                    time.sleep(1)
+                    continue
+                if "404" in e_str or "NOT_FOUND" in e_str:
+                    continue
+                # Outros erros interrompem o modelo atual mas tentam o próximo
+                continue
+
+        error_msg = str(last_error) if last_error else "Erro desconhecido"
+        raise HTTPException(status_code=500, detail=f"Erro no Agente Especialista: {error_msg}")
+    except Exception as e:
+        logger.error(f"ERRO FATAL NO CHAT_WITH_AGENT: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erro interno no processamento do agente: {str(e)}")
