@@ -70,11 +70,13 @@ export const NotificationCenter: React.FC<{ onClose?: () => void }> = ({ onClose
         fetchNotifications();
     }, [fetchNotifications]);
 
-    // Efeito separado para polling do contador (mais leve)
+    // Efeito separado para polling do contador (DESATIVADO temporariamente para economizar recursos)
+    /*
     useEffect(() => {
         const interval = setInterval(fetchUnreadCount, 60000); // Polling a cada 60s
         return () => clearInterval(interval);
     }, [fetchUnreadCount]);
+    */
 
     const handleMarkAsRead = async (notificationId: number) => {
         try {
@@ -232,8 +234,9 @@ export const NotificationBell: React.FC = () => {
         };
 
         fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 60000);
-        return () => clearInterval(interval);
+        // Polling desativado para evitar consumo excessivo de minutos de pipeline
+        // const interval = setInterval(fetchUnreadCount, 60000);
+        // return () => clearInterval(interval);
     }, []);
 
     return (
