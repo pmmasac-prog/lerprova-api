@@ -404,9 +404,11 @@ def create_aluno(nome: str, matricula: str, turma_id: int, current_user=None) ->
         novo_aluno = models.Aluno(
             nome=nome, 
             codigo=matricula, 
-            turma_id=turma_id,
             hashed_password=hashed
         )
+        # Vincula à turma através do relacionamento M2M
+        novo_aluno.turmas.append(turma)
+        
         db.add(novo_aluno)
         db.commit()
         db.refresh(novo_aluno)

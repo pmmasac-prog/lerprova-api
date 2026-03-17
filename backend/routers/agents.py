@@ -10,6 +10,7 @@ from google import genai # type: ignore
 from google.genai import types # type: ignore
 from fastapi import Depends # type: ignore
 from sqlalchemy.orm import Session # type: ignore
+from database import SessionLocal # type: ignore
 from dependencies import get_current_user # type: ignore
 import models # type: ignore
 from agents.agent_tools import ( # type: ignore
@@ -277,8 +278,21 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
         try:
             logger.info(f"Tentando modelo: {model_id}")
 
-            # Histórico da conversa (começa com a mensagem do usuário)
-            contents = [types.Content(role="user", parts=[types.Part(text=request.prompt)])]
+            # Histórico da conversa
+            # Carrega mensagens anteriores do banco de dados para dar contexto/memória ao agente
+            db_session = SessionLocal()
+            history = db_session.query(models.AgentChatMessage).filter(
+                models.AgentChatMessage.user_id == current_user.id
+            ).order_by(models.AgentChatMessage.created_at.asc()).limit(20).all()
+            db_session.close()
+
+            contents = []
+            for h in history:
+                contents.append(types.Content(role=h.role, parts=[types.Part(text=h.content)]))
+            
+            # Adiciona a mensagem atual do usuário
+            current_user_content = types.Content(role="user", parts=[types.Part(text=request.prompt)])
+            contents.append(current_user_content)
 
             # Loop para resolver chamadas de ferramentas (function calling)
             for _ in range(5):  # max 5 rodadas de tool calling
@@ -305,6 +319,28 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                     # Sem tool calls — pega o texto final
                     text = response.text
                     if text:
+                        # Salva a interação no histórico (Banco de Dados) para persistência
+                        db_save = SessionLocal()
+                        try:
+                            # Salva a pergunta do usuário
+                            db_save.add(models.AgentChatMessage(
+                                user_id=current_user.id,
+                                role="user",
+                                content=request.prompt
+                            ))
+                            # Salva a resposta do agente
+                            db_save.add(models.AgentChatMessage(
+                                user_id=current_user.id,
+                                role="model",
+                                content=text
+                            ))
+                            db_save.commit()
+                        except Exception as e_save:
+                            logger.error(f"Erro ao salvar histórico de chat: {e_save}")
+                            db_save.rollback()
+                        finally:
+                            db_save.close()
+
                         logger.info(f"Sucesso com modelo: {model_id}")
                         return ChatResponse(response=text) # type: ignore
                     break

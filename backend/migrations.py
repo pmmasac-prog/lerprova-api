@@ -197,6 +197,31 @@ def run_migrations(engine):
                 if "hora_entrada" not in columns_frequencia:
                     logger.info("Adicionando coluna 'hora_entrada' em 'frequencia'...")
                     conn.execute(text("ALTER TABLE frequencia ADD COLUMN hora_entrada VARCHAR NULL"))
+
+            # Criação da tabela agent_chat_messages se não existir
+            if not inspector.has_table("agent_chat_messages"):
+                logger.info("Criando tabela 'agent_chat_messages'...")
+                conn.execute(text("""
+                    CREATE TABLE agent_chat_messages (
+                        id SERIAL PRIMARY KEY if NOT EXISTS, 
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        role VARCHAR,
+                        content TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                # Ajuste para SQLite (caso não suporte SERIAL or IF NOT EXISTS na criação manual)
+                if not is_postgres:
+                    conn.execute(text("""
+                        CREATE TABLE IF NOT EXISTS agent_chat_messages (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                            role TEXT,
+                            content TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                logger.info("Tabela 'agent_chat_messages' criada.")
             
     except Exception as e:
         logger.error(f"FALHA CRÍTICA NA MIGRAÇÃO: {e}")

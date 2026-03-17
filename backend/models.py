@@ -450,3 +450,15 @@ class ConfiguracaoFrequencia(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class AgentChatMessage(Base):
+    """Armazena o histórico de conversas com o agente de IA."""
+    __tablename__ = "agent_chat_messages"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    role = Column(String) # 'user' ou 'model'
+    content = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User")
