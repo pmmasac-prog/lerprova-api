@@ -59,161 +59,173 @@ def get_system_prompt(user) -> str:
     return base_prompt
 
 # ── Declaração das ferramentas para o Gemini ──────────────────────────────────
-TOOLS_DECLARATION = types.Tool(
-    function_declarations=[
-        types.FunctionDeclaration(
-            name="listar_turmas",
-            description="Retorna a lista de todas as turmas cadastradas no sistema. Use quando o usuário perguntar sobre turmas disponíveis.",
-            parameters=types.Schema(type=types.Type.OBJECT, properties={})
-        ),
-        types.FunctionDeclaration(
-            name="listar_alunos_da_turma",
-            description="Retorna a lista de alunos de uma turma específica pelo ID da turma.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "turma_id": types.Schema(
-                        type=types.Type.INTEGER,
-                        description="O ID numérico da turma."
-                    )
-                },
-                required=["turma_id"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="resumo_frequencia_aluno",
-            description="Busca o resumo de frequência (presenças, faltas, percentual) de um aluno pelo nome.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "nome_aluno": types.Schema(
-                        type=types.Type.STRING,
-                        description="O nome ou parte do nome do aluno."
-                    )
-                },
-                required=["nome_aluno"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="consultar_notas",
-            description="Consulta as notas das avaliações. Para professores, lista as notas da turma. Para alunos, lista apenas suas notas nessa turma.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma.")
-                },
-                required=["turma_id"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="listar_avaliacoes",
-            description="Lista os gabaritos/avaliações cadastrados para uma turma específica.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma.")
-                },
-                required=["turma_id"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="listar_planejamentos",
-            description="Lista os planejamentos (sequências didáticas) cadastrados para uma turma.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma.")
-                },
-                required=["turma_id"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="criar_planejamento",
-            description="Ação: Cria um NOVO planejamento escolar para o professor em uma turma. Requer título e data inicial.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma."),
-                    "titulo": types.Schema(type=types.Type.STRING, description="Título do planejamento. Ex: 'Frações e Decimais'"),
-                    "data_inicio": types.Schema(type=types.Type.STRING, description="Data prevista de início (YYYY-MM-DD)")
-                },
-                required=["turma_id", "titulo", "data_inicio"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="registrar_frequencia_aluno",
-            description="Ação: Registra ou altera a presença/falta de um aluno específico em uma turma.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma."),
-                    "aluno_id": types.Schema(type=types.Type.INTEGER, description="ID numérico do aluno."),
-                    "presente": types.Schema(type=types.Type.BOOLEAN, description="True para presente, False para falta."),
-                    "justificativa": types.Schema(type=types.Type.STRING, description="(Opcional) Justificativa enviada para faltas.")
-                },
-                required=["turma_id", "aluno_id", "presente"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="resumo_geral_sistema",
-            description="Lê rapidamente todas as estatísticas gerais do perfil (total de turmas, alunos, avaliações, planos). Use quando o usuário pedir análises globais do tipo 'o que tem no meu sistema' ou resumos amplos.",
-            parameters=types.Schema(type=types.Type.OBJECT, properties={})
-        ),
-        types.FunctionDeclaration(
-            name="create_turma",
-            description="Ação: Cria/Cadastra uma NOVA turma no sistema para o professor atual.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "nome": types.Schema(type=types.Type.STRING, description="Nome da turma. Ex: '1º Ano A'"),
-                    "ano": types.Schema(type=types.Type.STRING, description="Ano ou série. Ex: '2026' ou '1º Ano'"),
-                    "disciplina_nome": types.Schema(type=types.Type.STRING, description="Nome da disciplina da turma. Ex: 'Matemática'"),
-                    "dias_semana": types.Schema(type=types.Type.STRING, description="Dias da semana formatados. Ex: 'SEG, QUA, SEX'")
-                },
-                required=["nome", "ano", "disciplina_nome"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="create_disciplina",
-            description="Ação: Cadastra ou valida uma disciplina no sistema para ser usada nas turmas.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "nome": types.Schema(type=types.Type.STRING, description="Nome da disciplina. Ex: 'História'"),
-                    "codigo": types.Schema(type=types.Type.STRING, description="(Opcional) Código interno da disciplina.")
-                },
-                required=["nome"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="create_usuario",
-            description="Ação: Cadastra um novo professor ou admin (Requer perfil admin).",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "nome": types.Schema(type=types.Type.STRING, description="Nome completo do usuário."),
-                    "email": types.Schema(type=types.Type.STRING, description="E-mail de acesso."),
-                    "role": types.Schema(type=types.Type.STRING, description="Papel: 'professor' ou 'admin'"),
-                    "senha_padrao": types.Schema(type=types.Type.STRING, description="(Opcional) Senha provisória. Default: '123456'")
-                },
-                required=["nome", "email", "role"]
-            )
-        ),
-        types.FunctionDeclaration(
-            name="create_aluno",
-            description="Ação: Cadastra um novo aluno em uma turma específica.",
-            parameters=types.Schema(
-                type=types.Type.OBJECT,
-                properties={
-                    "nome": types.Schema(type=types.Type.STRING, description="Nome completo do aluno."),
-                    "matricula": types.Schema(type=types.Type.STRING, description="Matrícula/Código único do aluno."),
-                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma à qual o aluno pertencerá.")
-                },
-                required=["nome", "matricula", "turma_id"]
-            )
-        ),
-    ]
-)
+# ── Definições de Ferramentas por Especialidade ────────────────────────────────
+
+# Especialidade: Home (Dasboard/Geral)
+HOME_FUNCTIONS = [
+    types.FunctionDeclaration(
+        name="resumo_geral_sistema",
+        description="Lê rapidamente todas as estatísticas gerais do perfil (total de turmas, alunos, avaliações, planos). Use para análises globais.",
+        parameters=types.Schema(type=types.Type.OBJECT, properties={})
+    ),
+]
+
+# Especialidade: Turmas (Gestão de Classes e Alunos)
+TURMAS_FUNCTIONS = [
+    types.FunctionDeclaration(
+        name="listar_turmas",
+        description="Retorna a lista de todas as turmas cadastradas no sistema.",
+        parameters=types.Schema(type=types.Type.OBJECT, properties={})
+    ),
+    types.FunctionDeclaration(
+        name="listar_alunos_da_turma",
+        description="Retorna a lista de alunos de uma turma específica pelo ID.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={"turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma.")},
+            required=["turma_id"]
+        )
+    ),
+    types.FunctionDeclaration(
+        name="create_turma",
+        description="Ação: Cria/Cadastra uma NOVA turma no sistema.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "nome": types.Schema(type=types.Type.STRING, description="Ex: '1º Ano A'"),
+                "ano": types.Schema(type=types.Type.STRING, description="Ex: '2026'"),
+                "disciplina_nome": types.Schema(type=types.Type.STRING, description="Ex: 'Matemática'"),
+                "dias_semana": types.Schema(type=types.Type.STRING, description="Ex: 'SEG, QUA'")
+            },
+            required=["nome", "ano", "disciplina_nome"]
+        )
+    ),
+    types.FunctionDeclaration(
+        name="create_aluno",
+        description="Ação: Cadastra um novo aluno em uma turma específica.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "nome": types.Schema(type=types.Type.STRING, description="Nome completo."),
+                "matricula": types.Schema(type=types.Type.STRING, description="Matrícula/Código único."),
+                "turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma.")
+            },
+            required=["nome", "matricula", "turma_id"]
+        )
+    ),
+    types.FunctionDeclaration(
+        name="create_disciplina",
+        description="Ação: Cadastra uma nova disciplina.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={"nome": types.Schema(type=types.Type.STRING, description="Ex: 'História'")},
+            required=["nome"]
+        )
+    ),
+]
+
+# Especialidade: Avaliações (Gabaritos e Notas)
+AVALIACOES_FUNCTIONS = [
+    types.FunctionDeclaration(
+        name="consultar_notas",
+        description="Consulta as notas das avaliações de uma turma.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={"turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma.")},
+            required=["turma_id"]
+        )
+    ),
+    types.FunctionDeclaration(
+        name="listar_avaliacoes",
+        description="Lista gabaritos/avaliações de uma turma.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={"turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma.")},
+            required=["turma_id"]
+        )
+    ),
+]
+
+# Especialidade: Planos (Planejamento Escolar)
+PLANOS_FUNCTIONS = [
+    types.FunctionDeclaration(
+        name="listar_planejamentos",
+        description="Lista os planejamentos de uma turma.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={"turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma.")},
+            required=["turma_id"]
+        )
+    ),
+    types.FunctionDeclaration(
+        name="criar_planejamento",
+        description="Ação: Cria um NOVO planejamento escolar.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma."),
+                "titulo": types.Schema(type=types.Type.STRING, description="Título do plano."),
+                "data_inicio": types.Schema(type=types.Type.STRING, description="Data YYYY-MM-DD")
+            },
+            required=["turma_id", "titulo", "data_inicio"]
+        )
+    ),
+]
+
+# Especialidade: Relatórios (Frequência e Estatísticas)
+RELATORIOS_FUNCTIONS = [
+    types.FunctionDeclaration(
+        name="resumo_frequencia_aluno",
+        description="Busca resumo de frequência de um aluno pelo nome.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={"nome_aluno": types.Schema(type=types.Type.STRING, description="Nome do aluno.")},
+            required=["nome_aluno"]
+        )
+    ),
+    types.FunctionDeclaration(
+        name="registrar_frequencia_aluno",
+        description="Ação: Registra presença/falta.",
+        parameters=types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "turma_id": types.Schema(type=types.Type.INTEGER, description="ID da turma."),
+                "aluno_id": types.Schema(type=types.Type.INTEGER, description="ID do aluno."),
+                "presente": types.Schema(type=types.Type.BOOLEAN, description="True=Presente, False=Falta."),
+                "justificativa": types.Schema(type=types.Type.STRING)
+            },
+            required=["turma_id", "aluno_id", "presente"]
+        )
+    ),
+]
+
+# Coleção global para facilitar a busca (Legado mantido para compatibilidade se necessário)
+ALL_FUNCTIONS = HOME_FUNCTIONS + TURMAS_FUNCTIONS + AVALIACOES_FUNCTIONS + PLANOS_FUNCTIONS + RELATORIOS_FUNCTIONS
+TOOLS_DECLARATION = types.Tool(function_declarations=ALL_FUNCTIONS)
+
+# Mapeamento para o Orchestrator selecionar o conjunto de ferramentas
+SPECIALIST_CONFIGS = {
+    "home": {
+        "tools": types.Tool(function_declarations=HOME_FUNCTIONS),
+        "desc": "Especialista em visão geral, dashboards e estatísticas globais do sistema.",
+    },
+    "turmas": {
+        "tools": types.Tool(function_declarations=TURMAS_FUNCTIONS),
+        "desc": "Especialista em gestão de turmas, alunos e disciplinas. Cuida de cadastros e listagens de membros.",
+    },
+    "avaliacoes": {
+        "tools": types.Tool(function_declarations=AVALIACOES_FUNCTIONS),
+        "desc": "Especialista em avaliações, gabaritos e notas. Focado em desempenho escolar.",
+    },
+    "planos": {
+        "tools": types.Tool(function_declarations=PLANOS_FUNCTIONS),
+        "desc": "Especialista em planejamento pedagógico, sequências didáticas e BNCC.",
+    },
+    "relatorios": {
+        "tools": types.Tool(function_declarations=RELATORIOS_FUNCTIONS),
+        "desc": "Especialista em frequência, faltas e relatórios de assiduidade dos alunos.",
+    }
+}
 
 # Mapa de ferramentas disponíveis
 TOOL_MAP = {
@@ -264,7 +276,7 @@ def execute_tool_call(name: str, args: dict, current_user) -> str:
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depends(get_current_user)):
     """
-    Envia uma mensagem para o assistente de IA com suporte a ferramentas de banco de dados e RBAC integrado.
+    Principal Agent (Orchestrator): Categoriza a intenção do usuário e delega a um AGENTE ESPECIALISTA.
     """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -272,36 +284,66 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
         raise HTTPException(status_code=500, detail="Serviço de IA não configurado. Contate o administrador.")
 
     client = genai.Client(api_key=api_key)
+    
+    # ── FASE 1: ORQUESTRAÇÃO (PRINCIPAL AGENT) ────────────────────────────────
+    routing_prompt = (
+        "Você é o Gerente de Orquestração do LerProva. Analise o pedido do usuário "
+        "e retorne APENAS UMA PALAVRA entre as categorias:\n"
+        "- 'home': resumos gerais, estatísticas globais ou dashboard.\n"
+        "- 'turmas': criação de turmas, alunos, listagem de membros/classes.\n"
+        "- 'avaliacoes': notas, gabaritos, provas e resultados.\n"
+        "- 'planos': planejamentos, sequências didáticas ou BNCC.\n"
+        "- 'relatorios': frequência, registrar presenças ou faltas.\n\n"
+        f"Pedido: '{request.prompt}'\n\n"
+        "Categoria:"
+    )
+    
+    specialist_key = "home"
+    try:
+        route_res = client.models.generate_content(model="gemini-2.0-flash", contents=routing_prompt)
+        cat = route_res.text.strip().lower()
+        cat = "".join([c for c in cat if c.isalnum()])
+        if cat in SPECIALIST_CONFIGS:
+            specialist_key = cat
+            logger.info(f"Orchestrator: Roteado para '{cat}'")
+    except Exception as e:
+        logger.warning(f"Erro no Orchestrator: {e}")
+
+    # ── FASE 2: EXECUÇÃO (SPECIALIST AGENT) ───────────────────────────────────
+    specialist = SPECIALIST_CONFIGS[specialist_key]
     last_error = None
+    user_id = getattr(current_user, "id", None)
 
     for model_id in MODELS_TO_TRY:
         try:
-            logger.info(f"Tentando modelo: {model_id}")
-
-            # Histórico da conversa
-            # Carrega mensagens anteriores do banco de dados para dar contexto/memória ao agente
+            # Histórico e Prompt do Especialista
             db_session = SessionLocal()
             history = db_session.query(models.AgentChatMessage).filter(
-                models.AgentChatMessage.user_id == getattr(current_user, "id", None)
+                models.AgentChatMessage.user_id == user_id
             ).order_by(models.AgentChatMessage.created_at.asc()).limit(20).all()
             db_session.close()
 
             contents = []
             for h in history:
                 contents.append(types.Content(role=h.role, parts=[types.Part(text=h.content)]))
-            
-            # Adiciona a mensagem atual do usuário
-            current_user_content = types.Content(role="user", parts=[types.Part(text=request.prompt)])
-            contents.append(current_user_content)
+            contents.append(types.Content(role="user", parts=[types.Part(text=request.prompt)]))
 
-            # Loop para resolver chamadas de ferramentas (function calling)
-            for _ in range(5):  # max 5 rodadas de tool calling
+            # Prompt e ferramentas do Especialista
+            specialist_tools: typing.Any = specialist['tools']
+            specialist_prompt = (
+                f"{get_system_prompt(current_user)}\n\n"
+                f"Sua especialidade: {specialist['desc']}\n"
+                "Use apenas suas ferramentas especializadas. Se for algo de outra área, avise ao usuário."
+            )
+
+            for _ in range(5):
                 response = client.models.generate_content(
                     model=model_id,
                     contents=contents,
                     config=types.GenerateContentConfig(
-                        system_instruction=get_system_prompt(current_user),
-                        tools=[TOOLS_DECLARATION],
+                        system_instruction=specialist_prompt,
+                        tools=[specialist_tools],
+                        temperature=0.7
                     )
                 )
 
@@ -316,86 +358,49 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
 
 
                 if not tool_calls:
-                    # Sem tool calls — pega o texto final
                     text = response.text
                     if text:
-                        # Salva a interação no histórico (Banco de Dados) para persistência
                         db_save = SessionLocal()
                         try:
-                            # Salva a pergunta do usuário
-                            db_save.add(models.AgentChatMessage(
-                                user_id=getattr(current_user, "id", None),
-                                role="user",
-                                content=request.prompt
-                            ))
-                            # Salva a resposta do agente
-                            db_save.add(models.AgentChatMessage(
-                                user_id=getattr(current_user, "id", None),
-                                role="model",
-                                content=text
-                            ))
+                            db_save.add(models.AgentChatMessage(user_id=user_id, role="user", content=request.prompt))
+                            db_save.add(models.AgentChatMessage(user_id=user_id, role="model", content=text))
                             db_save.commit()
                         except Exception as e_save:
-                            logger.error(f"Erro ao salvar histórico de chat: {e_save}")
+                            logger.error(f"Erro ao salvar histórico: {e_save}")
                             db_save.rollback()
                         finally:
                             db_save.close()
 
-                        logger.info(f"Sucesso com modelo: {model_id}")
+                        logger.info(f"Sucesso [{specialist_key}] com {model_id}")
                         return ChatResponse(response=text) # type: ignore
                     break
 
-                # Executa as ferramentas e adiciona os resultados à conversa
                 contents.append(candidate.content)
                 tool_results = []
                 for part in tool_calls:
                     fc = part.function_call
                     args = dict(fc.args) if fc.args else {}
-                    logger.info(f"Executando ferramenta: {fc.name}({args}) via RBAC de {current_user.nome}")
+                    logger.info(f"[{specialist_key}] Executando ferramenta: {fc.name}")
                     result = execute_tool_call(fc.name, args, current_user)
-                    result_str = str(result)
-                    logger.info(f"Resultado de {fc.name}: {result_str[0:50]}") # type: ignore
                     tool_results.append(
                         types.Part(
-                            function_response=types.FunctionResponse(
-                                name=fc.name,
-                                response={"result": result}
-                            )
+                            function_response={
+                                "name": fc.name,
+                                "response": {"result": result}
+                            }
                         )
                     )
                 contents.append(types.Content(role="tool", parts=tool_results))
 
-            logger.warning(f"Modelo {model_id} não gerou resposta final.")
             continue
-
         except Exception as e:
-            error_msg = str(e)
             last_error = e
-            logger.warning(f"Falha no modelo {model_id}: {error_msg[0:150]}") # type: ignore
-
-            if "API_KEY" in error_msg or "PERMISSION_DENIED" in error_msg:
-                break
-            
-            # Se for 404 (NOT_FOUND), não adianta esperar, tenta o próximo modelo imediatamente
-            if "404" in error_msg or "NOT_FOUND" in error_msg:
-                logger.info(f"Modelo {model_id} não encontrado. Tentando próximo...")
+            e_str = str(e)
+            logger.warning(f"Falha em {model_id}: {e_str}")
+            if "404" in str(e) or "NOT_FOUND" in str(e):
                 continue
-
-            # Para outros erros (como 429), aplicar backoff de 2 segundos
-            logger.info(f"Aguardando 2s antes da próxima tentativa após erro em {model_id}...")
             time.sleep(2)
             continue
 
-    # Todos os modelos falharam
     error_msg = str(last_error) if last_error else "Erro desconhecido"
-    logger.error(f"Todos os modelos de IA falharam. Último erro: {error_msg}")
-
-    if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg or "quota" in error_msg.lower():
-        raise HTTPException(
-            status_code=429,
-            detail="O assistente está temporariamente indisponível. Tente novamente em 1 minuto."
-        )
-    if "404" in error_msg or "NOT_FOUND" in error_msg:
-        raise HTTPException(status_code=502, detail="Modelo de IA não encontrado no provedor.")
-
-    raise HTTPException(status_code=500, detail="Erro interno ao processar a solicitação com a IA.")
+    raise HTTPException(status_code=500, detail=f"Erro no Agente Especialista: {error_msg}")
