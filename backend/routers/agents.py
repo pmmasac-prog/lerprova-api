@@ -430,7 +430,7 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
                 logger.warning(f"Falha em {model_id} para {specialist_key}: {e_str}")
                 # Se for erro de quota ou sobrecarga, tenta fallback
                 if "429" in e_str or "quota" in e_str.lower() or "503" in e_str:
-                    time.sleep(1)
+                    time.sleep(2)
                     continue
                 if "404" in e_str or "NOT_FOUND" in e_str:
                     continue
@@ -438,6 +438,8 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
                 continue
 
         error_msg = str(last_error) if last_error else "Erro desconhecido"
+            return {"response": "Olá! No momento estamos com muita demanda nos nossos servidores de IA. Por favor, aguarde alguns instantes e tente novamente. Já estou trabalhando para normalizar!"}
+        
         raise HTTPException(status_code=500, detail=f"Erro no Agente Especialista: {error_msg}")
     except Exception as e:
         logger.error(f"ERRO FATAL NO CHAT_WITH_AGENT: {e}")
