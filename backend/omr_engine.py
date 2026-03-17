@@ -661,7 +661,7 @@ class OMREngine:
             # Extrair ROI centrada no offset
             y1, y2 = max(0, cy - roi_size//2), min(h_w, cy + roi_size//2)
             x1, x2 = max(0, cx - roi_size//2), min(w_w, cx + roi_size//2)
-            roi = thresh[y1:y2, x1:x2]
+            roi = thresh[y1:y2, x1:x2]  # type: ignore
             
             if roi.size == 0: return False
             density = cv2.countNonZero(roi) / float(roi.size)
