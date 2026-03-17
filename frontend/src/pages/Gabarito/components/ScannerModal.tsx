@@ -84,14 +84,12 @@ export const ScannerModal: React.FC<ScannerModalProps> = ({
                     facingMode: { ideal: 'environment' },
                     width:  { ideal: 1920 },
                     height: { ideal: 1080 },
-                    aspectRatio: { ideal: 1.7777777778 }, // Forçar proporção paisagem (16:9)
-                    // Tenta configurar foco manual para documentos OMR
-                    // @ts-ignore
+                    aspectRatio: { ideal: 1.7777777778 },
                     advanced: [{ 
                         focusMode: 'continuous',
                         torch: flashMode === 'on'
-                    } as any],
-                },
+                    }] as any[],
+                } as any,
                 audio: false,
             });
 
