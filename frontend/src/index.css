@@ -401,6 +401,7 @@ code {
   align-items: center;
   justify-content: center;
   z-index: 3000;
+  padding: 20px; /* Margem de segurança para telas pequenas */
 }
 
 .modal-content {
@@ -408,12 +409,14 @@ code {
   border-radius: 20px;
   padding: 32px;
   max-width: 500px;
-  width: 90%;
+  width: 100%; /* Ocupar largura disponível respeitando max-width */
   max-height: 85vh;
+  max-height: 85dvh; /* Altura máxima dinâmica para navegadores móveis */
   overflow-y: auto;
   border: 1px solid var(--border-color);
   color: var(--color-text);
   box-shadow: var(--shadow-lg);
+  margin: auto; /* Centralização extra */
 }
 
 .modal-header {
