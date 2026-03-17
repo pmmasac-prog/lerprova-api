@@ -83,7 +83,8 @@ export function ChatWidget() {
         content: 'Desculpe, encontrei um erro ao processar sua solicitação. Tente novamente mais tarde.'
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
+    }
+ finally {
       setIsLoading(false);
     }
   };

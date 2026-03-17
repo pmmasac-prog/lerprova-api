@@ -1,5 +1,5 @@
 import typing
-from fastapi import APIRouter, HTTPException # type: ignore
+from fastapi import APIRouter, HTTPException, Request # type: ignore
 from pydantic import BaseModel # type: ignore
 import logging
 import traceback
@@ -10,7 +10,7 @@ from google import genai # type: ignore
 from google.genai import types # type: ignore
 from fastapi import Depends # type: ignore
 from sqlalchemy.orm import Session # type: ignore
-from database import SessionLocal # type: ignore
+from database import SessionLocal, get_db # type: ignore
 from dependencies import get_current_user # type: ignore
 import models # type: ignore
 from agents.agent_tools import ( # type: ignore
@@ -247,10 +247,11 @@ TOOL_MAP = {
 
 # Modelos em ordem de preferência para fallback
 MODELS_TO_TRY = [
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-pro",
+    "gemini-2.0-flash", # O SDK genai aceita sem prefixo, mas vamos testar com e sem se necessário
+    "models/gemini-2.0-flash",
+    "models/gemini-1.5-flash",
+    "models/gemini-1.5-flash-8b",
+    "models/gemini-1.5-pro",
 ]
 
 class ChatRequest(BaseModel):
@@ -262,10 +263,10 @@ class ChatResponse(BaseModel):
 
 # Configuração de Segurança (Nível permissivo para ferramentas de sistema)
 SAFETY_SETTINGS = [
-    {"category": "HATE_SPEECH", "threshold": "BLOCK_NONE"},
-    {"category": "HARASSMENT", "threshold": "BLOCK_NONE"},
-    {"category": "SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-    {"category": "DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
 def execute_tool_call(name: str, args: dict, current_user) -> str:
