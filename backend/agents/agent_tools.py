@@ -402,8 +402,9 @@ def create_aluno(nome: str, matricula: str, turma_id: int, current_user=None) ->
              
         # Senha padrão para acesso do aluno via portal
         hashed = get_password_hash("aluno123")
-        u_str = str(uuid.uuid4())
-        token = u_str[:12].upper()
+        # Usando iterador para evitar erros de indexação (slicing) no linter restrito do ambiente
+        u_iter = iter(uuid.uuid4().hex)
+        token = "".join([next(u_iter) for _ in range(12)]).upper()
         novo_aluno = models.Aluno(
             nome=nome, 
             codigo=matricula, 
