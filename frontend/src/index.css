@@ -409,14 +409,16 @@ code {
   border-radius: 20px;
   padding: 32px;
   max-width: 500px;
-  width: 100%; /* Ocupar largura disponível respeitando max-width */
-  max-height: 85vh;
-  max-height: 85dvh; /* Altura máxima dinâmica para navegadores móveis */
+  width: 100%;
+  max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px); /* Height minus navigation and safety margins */
   overflow-y: auto;
   border: 1px solid var(--border-color);
   color: var(--color-text);
   box-shadow: var(--shadow-lg);
-  margin: auto; /* Centralização extra */
+  margin: auto;
+  position: relative;
+  z-index: 3001;
 }
 
 .modal-header {
