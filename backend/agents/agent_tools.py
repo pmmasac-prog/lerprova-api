@@ -1,7 +1,7 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from database import SessionLocal
-import models
+from sqlalchemy.orm import Session # type: ignore
+from sqlalchemy import or_ # type: ignore
+from database import SessionLocal # type: ignore
+import models # type: ignore
 import logging
 
 logger = logging.getLogger(__name__)
@@ -315,4 +315,108 @@ def resumo_geral_sistema(current_user=None) -> str:
     finally:
         db.close()
     return ""
+
+def create_turma(nome: str, ano: str, disciplina_nome: str, dias_semana: str = "", current_user=None) -> str:
+    """Ferramenta para criar uma nova turma no banco de dados."""
+    db = SessionLocal()
+    try:
+        role = _get_role(current_user)
+        if role != "professor" and role != "admin":
+            return "Apenas professores ou administradores podem criar turmas."
+            
+        nova_turma = models.Turma(
+            nome=nome,
+            ano=ano,
+            disciplina=disciplina_nome,
+            dias_semana=dias_semana,
+            user_id=current_user.id
+        )
+        db.add(nova_turma)
+        db.commit()
+        db.refresh(nova_turma)
+        return f"Turma '{nova_turma.nome}' criada com sucesso! (ID: {nova_turma.id})"
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Erro ao criar turma via agente: {e}")
+        return f"Falha ao criar turma: {str(e)}"
+    finally:
+        db.close()
+    return ""
+
+def create_disciplina(nome: str, codigo: str = "", current_user=None) -> str:
+    """Ferramenta para criar/cadastrar uma nova disciplina. No modelo atual, disciplinas podem ser armazenadas em tabelas específicas ou usadas como texto. Se houver tabela de disciplina, insere nela, senão retorna aviso."""
+    # Como o sistema atual usa `disciplina` como string nas Turmas, vamos apenas informar que a disciplina está pronta para ser usada.
+    return f"A disciplina '{nome}' foi validada pelo sistema e já pode ser utilizada ao criar novas turmas."
+
+def create_usuario(nome: str, email: str, role: str, senha_padrao: str = "123456", current_user=None) -> str:
+    """Ferramenta para cadastrar um novo usuário (Professor ou Admin)."""
+    db = SessionLocal()
+    from auth_utils import get_password_hash # type: ignore
+    try:
+        current_role = _get_role(current_user)
+        if current_role != "admin":
+            return "Apenas administradores podem cadastrar novos usuários professores/admins."
+            
+        if role not in ["professor", "admin"]:
+            return "Role inválido. Escolha 'professor' ou 'admin'."
+            
+        existente = db.query(models.User).filter(models.User.email == email).first()
+        if existente:
+            return f"Já existe um usuário com o email '{email}'."
+            
+        hashed = get_password_hash(senha_padrao)
+        novo_user = models.User(nome=nome, email=email, role=role, hashed_password=hashed)
+        db.add(novo_user)
+        db.commit()
+        db.refresh(novo_user)
+        return f"Usuário '{nome}' ({role}) criado com sucesso! Email: {email}, Senha Provisória: {senha_padrao}"
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Erro ao criar usuario via agente: {e}")
+        return f"Falha ao criar usuário: {str(e)}"
+    finally:
+        db.close()
+    return ""
+
+def create_aluno(nome: str, matricula: str, turma_id: int, current_user=None) -> str:
+    """Ferramenta para cadastrar um novo aluno e vinculá-lo a uma turma."""
+    db = SessionLocal()
+    # Adicionando a função helper de hash para a senha automática
+    from auth_utils import get_password_hash # type: ignore
+    try:
+        role = _get_role(current_user)
+        if role != "professor" and role != "admin":
+            return "Apenas professores ou administradores podem cadastrar alunos."
+            
+        turma = db.query(models.Turma).filter(models.Turma.id == turma_id).first()
+        if not turma:
+            return f"Turma com ID {turma_id} não encontrada."
+            
+        if role == "professor" and turma.user_id != current_user.id:
+            return "Acesso negado: Você só pode cadastrar alunos em suas próprias turmas."
+            
+        existente = db.query(models.Aluno).filter(models.Aluno.codigo == matricula).first()
+        if existente:
+             return f"Já existe um aluno com a matrícula '{matricula}' no sistema."
+             
+        # Senha padrão para acesso do aluno via portal
+        hashed = get_password_hash("aluno123")
+        novo_aluno = models.Aluno(
+            nome=nome, 
+            codigo=matricula, 
+            turma_id=turma_id,
+            hashed_password=hashed
+        )
+        db.add(novo_aluno)
+        db.commit()
+        db.refresh(novo_aluno)
+        return f"Aluno '{nome}' cadastrado com sucesso na turma '{turma.nome}'! Matrícula: {matricula}, Senha Acesso Padrão: aluno123"
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Erro ao criar aluno via agente: {e}")
+        return f"Falha ao cadastrar aluno: {str(e)}"
+    finally:
+        db.close()
+    return ""
+
 

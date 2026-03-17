@@ -6,11 +6,11 @@
 
 :root {
   /* Default Theme (Light) */
-  --bg-primary: #f8fafc;
+  --bg-primary: #f1f5f9;  /* Fundos levemente mais cinza para destacar cards brancos */
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
+  --bg-tertiary: #e2e8f0;
   --bg-card: #ffffff;
-  --bg-card-light: #f1f5f9;
+  --bg-card-light: #ffffff;
   
   /* Action Colors */
   --color-primary: #3b82f6;
@@ -28,16 +28,16 @@
   --bg-purple-soft: #f3e8ff;
   
   /* Semantic Text Colors */
-  --color-success-dark: #166534;
-  --color-warning-dark: #854d0e;
-  --color-danger-dark: #991b1b;
-  --color-info-dark: #1e40af;
+  --color-success-dark: #14532d; /* Ainda mais escuro e legível */
+  --color-warning-dark: #713f12;
+  --color-danger-dark: #7f1d1d;
+  --color-info-dark: #1e3a8a;
   
   /* Text Colors */
   --color-text: #0f172a;
   --color-text-dark: #020617;
-  --color-text-muted: #64748b;
-  --color-text-secondary: #475569;
+  --color-text-muted: #334155; /* Escurecido significativamente para maior contraste */
+  --color-text-secondary: #1e293b; /* Escurecido para leitura clara */
   
   /* Borders & Glass */
   --border-color: #e2e8f0;

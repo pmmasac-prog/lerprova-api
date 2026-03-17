@@ -14,7 +14,8 @@ import models
 from agents.agent_tools import (
     listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno,
     consultar_notas, listar_avaliacoes, listar_planejamentos,
-    criar_planejamento, registrar_frequencia_aluno, resumo_geral_sistema
+    criar_planejamento, registrar_frequencia_aluno, resumo_geral_sistema,
+    create_turma, create_disciplina, create_usuario, create_aluno
 )
 
 router = APIRouter(
@@ -156,6 +157,59 @@ TOOLS_DECLARATION = types.Tool(
             description="Lê rapidamente todas as estatísticas gerais do perfil (total de turmas, alunos, avaliações, planos). Use quando o usuário pedir análises globais do tipo 'o que tem no meu sistema' ou resumos amplos.",
             parameters=types.Schema(type=types.Type.OBJECT, properties={})
         ),
+        types.FunctionDeclaration(
+            name="create_turma",
+            description="Ação: Cria/Cadastra uma NOVA turma no sistema para o professor atual.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "nome": types.Schema(type=types.Type.STRING, description="Nome da turma. Ex: '1º Ano A'"),
+                    "ano": types.Schema(type=types.Type.STRING, description="Ano ou série. Ex: '2026' ou '1º Ano'"),
+                    "disciplina_nome": types.Schema(type=types.Type.STRING, description="Nome da disciplina da turma. Ex: 'Matemática'"),
+                    "dias_semana": types.Schema(type=types.Type.STRING, description="Dias da semana formatados. Ex: 'SEG, QUA, SEX'")
+                },
+                required=["nome", "ano", "disciplina_nome"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="create_disciplina",
+            description="Ação: Cadastra ou valida uma disciplina no sistema para ser usada nas turmas.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "nome": types.Schema(type=types.Type.STRING, description="Nome da disciplina. Ex: 'História'"),
+                    "codigo": types.Schema(type=types.Type.STRING, description="(Opcional) Código interno da disciplina.")
+                },
+                required=["nome"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="create_usuario",
+            description="Ação: Cadastra um novo professor ou admin (Requer perfil admin).",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "nome": types.Schema(type=types.Type.STRING, description="Nome completo do usuário."),
+                    "email": types.Schema(type=types.Type.STRING, description="E-mail de acesso."),
+                    "role": types.Schema(type=types.Type.STRING, description="Papel: 'professor' ou 'admin'"),
+                    "senha_padrao": types.Schema(type=types.Type.STRING, description="(Opcional) Senha provisória. Default: '123456'")
+                },
+                required=["nome", "email", "role"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="create_aluno",
+            description="Ação: Cadastra um novo aluno em uma turma específica.",
+            parameters=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "nome": types.Schema(type=types.Type.STRING, description="Nome completo do aluno."),
+                    "matricula": types.Schema(type=types.Type.STRING, description="Matrícula/Código único do aluno."),
+                    "turma_id": types.Schema(type=types.Type.INTEGER, description="ID numérico da turma à qual o aluno pertencerá.")
+                },
+                required=["nome", "matricula", "turma_id"]
+            )
+        ),
     ]
 )
 
@@ -169,8 +223,13 @@ TOOL_MAP = {
     "listar_planejamentos": listar_planejamentos,
     "criar_planejamento": criar_planejamento,
     "registrar_frequencia_aluno": registrar_frequencia_aluno,
-    "resumo_geral_sistema": resumo_geral_sistema
+    "resumo_geral_sistema": resumo_geral_sistema,
+    "create_turma": create_turma,
+    "create_disciplina": create_disciplina,
+    "create_usuario": create_usuario,
+    "create_aluno": create_aluno
 }
+
 
 # Modelos em ordem de preferência para fallback
 MODELS_TO_TRY = [
