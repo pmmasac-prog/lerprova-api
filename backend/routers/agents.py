@@ -1,17 +1,18 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+import typing
+from fastapi import APIRouter, HTTPException # type: ignore
+from pydantic import BaseModel # type: ignore
 import logging
 import traceback
 import os
 import json
 import time
-from google import genai
-from google.genai import types
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from dependencies import get_current_user
-import models
-from agents.agent_tools import (
+from google import genai # type: ignore
+from google.genai import types # type: ignore
+from fastapi import Depends # type: ignore
+from sqlalchemy.orm import Session # type: ignore
+from dependencies import get_current_user # type: ignore
+import models # type: ignore
+from agents.agent_tools import ( # type: ignore
     listar_turmas, listar_alunos_da_turma, resumo_frequencia_aluno,
     consultar_notas, listar_avaliacoes, listar_planejamentos,
     criar_planejamento, registrar_frequencia_aluno, resumo_geral_sistema,
@@ -297,7 +298,8 @@ async def chat_with_agent(request: ChatRequest, current_user = Depends(get_curre
                 # Verifica se há chamadas de função a executar
                 tool_calls = []
                 if candidate and candidate.content and candidate.content.parts:
-                    tool_calls = [p for p in candidate.content.parts if hasattr(p, "function_call") and getattr(p, "function_call", None)] # type: ignore
+                    tool_calls = [p for p in candidate.content.parts if getattr(typing.cast(typing.Any, p), "function_call", None)]
+
 
                 if not tool_calls:
                     # Sem tool calls — pega o texto final
