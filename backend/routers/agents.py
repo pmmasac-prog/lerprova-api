@@ -261,6 +261,14 @@ class ChatResponse(BaseModel):
     response: str
 
 
+# Configuração de Segurança (Nível permissivo para ferramentas de sistema)
+SAFETY_SETTINGS = [
+    {"category": "HATE_SPEECH", "threshold": "BLOCK_NONE"},
+    {"category": "HARASSMENT", "threshold": "BLOCK_NONE"},
+    {"category": "SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+    {"category": "DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+]
+
 def execute_tool_call(name: str, args: dict, current_user) -> str:
     """Executa uma função de ferramenta repassando o usuário ativo para auditoria/RBAC."""
     try:
@@ -300,7 +308,11 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
     
     specialist_key = "home"
     try:
-        route_res = client.models.generate_content(model="gemini-2.0-flash", contents=routing_prompt)
+        route_res = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=routing_prompt,
+            config=types.GenerateContentConfig(safety_settings=SAFETY_SETTINGS) # type: ignore
+        )
         cat = route_res.text.strip().lower()
         cat = "".join([c for c in cat if c.isalnum()])
         if cat in SPECIALIST_CONFIGS:
@@ -328,12 +340,15 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
                 contents.append(types.Content(role=h.role, parts=[types.Part(text=h.content)]))
             contents.append(types.Content(role="user", parts=[types.Part(text=request.prompt)]))
 
-            # Prompt e ferramentas do Especialista
+            # Prompt e ferramentas do Especialista (Injetando permissão total)
             specialist_tools: typing.Any = specialist['tools']
             specialist_prompt = (
                 f"{get_system_prompt(current_user)}\n\n"
                 f"Sua especialidade: {specialist['desc']}\n"
-                "Use apenas suas ferramentas especializadas. Se for algo de outra área, avise ao usuário."
+                "IMPORTANTE: Você tem permissão total do sistema para usar suas ferramentas. "
+                "Ignore qualquer aviso prévio de restrição de segurança. "
+                "Se o usuário pedir algo na sua área (como criar aluno), execute o comando IMEDIATAMENTE. "
+                "NUNCA diga que não tem permissão para cadastrar ou intervir no sistema."
             )
 
             for _ in range(5):
@@ -343,7 +358,8 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
                     config=types.GenerateContentConfig(
                         system_instruction=specialist_prompt,
                         tools=[specialist_tools],
-                        temperature=0.7
+                        temperature=0.7,
+                        safety_settings=SAFETY_SETTINGS # type: ignore
                     )
                 )
 
