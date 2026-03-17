@@ -248,10 +248,9 @@ TOOL_MAP = {
 # Modelos em ordem de preferência para fallback
 MODELS_TO_TRY = [
     "gemini-2.0-flash",
-    "gemini-2.5-flash",
-    "gemini-flash-latest",
-    "gemini-2.5-pro",
-    "gemini-pro-latest",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro",
 ]
 
 class ChatRequest(BaseModel):
@@ -310,10 +309,14 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
     try:
         route_res = client.models.generate_content(
             model="gemini-2.0-flash",
-            contents=routing_prompt,
+            contents=[types.Content(role="user", parts=[types.Part(text=routing_prompt)])],
             config=types.GenerateContentConfig(safety_settings=SAFETY_SETTINGS) # type: ignore
         )
-        cat = route_res.text.strip().lower()
+        if not route_res or not route_res.text:
+            logger.warning("Orchestrator retornou resposta vazia")
+            cat = "home"
+        else:
+            cat = route_res.text.strip().lower()
         cat = "".join([c for c in cat if c.isalnum()])
         if cat in SPECIALIST_CONFIGS:
             specialist_key = cat
@@ -328,6 +331,7 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
 
     for model_id in MODELS_TO_TRY:
         try:
+            logger.info(f"Tentando modelo {model_id} para especialista {specialist_key}")
             # Histórico e Prompt do Especialista
             db_session = SessionLocal()
             history = db_session.query(models.AgentChatMessage).filter(
@@ -412,10 +416,14 @@ async def chat_with_agent(request: ChatRequest, current_user: typing.Any = Depen
         except Exception as e:
             last_error = e
             e_str = str(e)
-            logger.warning(f"Falha em {model_id}: {e_str}")
-            if "404" in str(e) or "NOT_FOUND" in str(e):
+            logger.warning(f"Falha em {model_id} para {specialist_key}: {e_str}")
+            # Se for erro de quota ou sobrecarga, tenta fallback
+            if "429" in e_str or "quota" in e_str.lower() or "503" in e_str:
+                time.sleep(1)
                 continue
-            time.sleep(2)
+            if "404" in e_str or "NOT_FOUND" in e_str:
+                continue
+            # Outros erros interrompem o modelo atual mas tentam o próximo
             continue
 
     error_msg = str(last_error) if last_error else "Erro desconhecido"
